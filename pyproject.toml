@@ -1,0 +1,33 @@
+[project]
+name = "career-documents"
+version = "0.1.0"
+description = "Portable, provider-neutral resume and cover-letter plugin for AI coding agents"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+dependencies = []
+
+# Runtime dependencies are declared inline (PEP 723) in the careerdocs entry point so
+# the CLI runs standalone under `uv run` after a skills-only install. This extra exists
+# for repository development and CI: it installs the runtime libraries plus the
+# fixture-building and test tooling so the gate can exercise the CLI for real.
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "jsonschema",
+    "docxtpl",
+    "python-docx",
+    "pypdf",
+    "pdfplumber",
+    "pypdfium2",
+    "python-dateutil",
+    "reportlab",
+]
+
+# The repository root doubles as the Claude plugin; the installable Python lives inside
+# the core skill, not here. Tell uv not to treat the root as a distributable package so
+# `uv sync` provisions only the dependency environment.
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests/unit", "tests/integration"]
