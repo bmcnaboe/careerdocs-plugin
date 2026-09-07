@@ -73,6 +73,9 @@ def build_parser() -> argparse.ArgumentParser:
 
 def _register_feature_commands(subparsers, common: argparse.ArgumentParser) -> None:
     """Wire in each feature module's subcommands; extended as modules are added."""
+    from . import config as config_module
+
+    config_module.register(subparsers, common)
 
 
 
