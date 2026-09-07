@@ -1,7 +1,7 @@
 # Verification Evidence: Portable Resume and Cover-Letter Plugin
 
-Outcome map for every acceptance scenario in [spec.md](spec.md). Each user-story phase
-updates its rows before its verification task; `scripts/verification_evidence_check.py`
+Outcome map for every acceptance scenario in [spec.md](spec.md). The run plan's evidence tasks
+update these rows before each story's verification task; `scripts/verification_evidence_check.py`
 fails when a scenario has no row or a row has no evidence.
 
 Status values: `pending`, `pass`, `fail`, `skipped (reason)`.

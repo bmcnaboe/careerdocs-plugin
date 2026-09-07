@@ -1,22 +1,26 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: template → 1.0.0
-Bump rationale: MAJOR — initial ratification.
+Version change: 1.0.0 → 1.0.1
+Bump rationale: PATCH — clarifies where specifications live: a run directory under
+`linear-specs/` (run plan plus design documents) rather than `specs/` and
+`.specify/feature.json`.
 
-Modified principles: none (initial set of six).
-Added sections: Quality Gates; Development Workflow; Governance.
+Modified principles: none.
+Added sections: none.
 Removed sections: none.
 
 Templates reviewed:
-  ✅ .specify/templates/plan-template.md — Constitution Check gates map to the
-     principles below; no structural change needed.
-  ✅ .specify/templates/spec-template.md — no change needed.
-  ✅ .specify/templates/overrides/tasks-template.md — project override written
-     in the same change: gate tiers, [risky] surfaces, verification-evidence.
-  ✅ .specify/templates/checklist-template.md — no change needed.
+  ✅ .specify/templates/plan-template.md — unchanged.
+  ✅ .specify/templates/spec-template.md — unchanged.
+  ✅ .specify/templates/overrides/tasks-template.md — unchanged (the Spec Kit path
+     stays available for a future spec-first feature).
+  ✅ .specify/templates/checklist-template.md — unchanged.
 
 Follow-up TODOs: none.
+
+Amendment history:
+  - 1.0.0 (2026-09-07): initial ratification.
 -->
 
 # career-documents Constitution
@@ -100,8 +104,9 @@ the default branch.
 
 ## Development Workflow
 
-- Features are specified before they are built (Spec Kit: spec, plan, tasks); the
-  active feature is named in `.specify/feature.json`.
+- Work is specified before it is built: a run directory under `linear-specs/` carries
+  the run plan the loop executes and, beside it, the design of record (spec,
+  implementation plan, research, data model, contracts, verification evidence).
 - Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:`, `refactor:`, `test:`),
   no co-author trailers or agent footers.
 - Files synced from agent-layer are read-only here; edit them in agent-layer and
@@ -118,4 +123,4 @@ a Sync Impact Report, and a review of the templates it governs. Every plan's
 Constitution Check MUST cite these principles by number; every review verifies
 compliance.
 
-**Version**: 1.0.0 | **Ratified**: 2026-09-07 | **Last Amended**: 2026-09-07
+**Version**: 1.0.1 | **Ratified**: 2026-09-07 | **Last Amended**: 2026-09-07

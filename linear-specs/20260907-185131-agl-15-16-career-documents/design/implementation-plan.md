@@ -1,8 +1,8 @@
 # Implementation Plan: Portable Resume and Cover-Letter Plugin
 
-**Branch**: `20260907-182632-career-documents-plugin` | **Date**: 2026-09-07 | **Spec**: [spec.md](spec.md)
+**Branch**: `linear/agl-15-16-career-documents` | **Date**: 2026-09-07 | **Spec**: [spec.md](spec.md)
 
-**Input**: Feature specification from `/specs/20260907-182632-career-documents-plugin/spec.md`
+**Input**: Feature specification from `design/spec.md`; executed by the run plan one level up (`plan.md`)
 
 **Ticket**: AGL-15 (https://linear.app/agent-layer/issue/AGL-15/build-a-portable-resume-and-cover-letter-plugin). Commits reference it as `(AGL-15)`.
 
@@ -59,21 +59,17 @@ Post-design re-check (after Phase 1): unchanged, no violations; Complexity Track
 ### Documentation (this feature)
 
 ```text
-specs/20260907-182632-career-documents-plugin/
-├── plan.md                      # This file
-├── research.md                  # Phase 0 decisions R1–R17
-├── data-model.md                # Entities, rules, state transitions
-├── quickstart.md                # Dev setup, end-to-end runs, manual acceptance guidance
-├── verification-evidence.md     # Scenario → method → evidence → status
-├── contracts/
-│   ├── provider-contract.md
-│   ├── cli.md
-│   ├── artifacts.md
-│   ├── packages.md
-│   ├── career-profile.schema.json
-│   └── config.schema.json
-├── checklists/requirements.md
-└── tasks.md                     # Phase 2 output (/speckit-tasks)
+linear-specs/20260907-185131-agl-15-16-career-documents/
+├── plan.md                      # Run plan: 68 tasks in five tranches, ticket snapshots
+└── design/
+    ├── implementation-plan.md   # This file
+    ├── spec.md                  # User stories, requirements, success criteria
+    ├── research.md              # Decisions R1–R17
+    ├── data-model.md            # Entities, rules, state transitions
+    ├── quickstart.md            # Dev setup, end-to-end runs, manual acceptance guidance
+    ├── verification-evidence.md # Scenario → method → evidence → status
+    └── contracts/               # provider-contract.md, cli.md, artifacts.md, packages.md,
+                                 # career-profile.schema.json, config.schema.json
 ```
 
 ### Source Code (repository root)
@@ -153,7 +149,8 @@ install of the skills carries the CLI with it; repository-only tooling stays und
 ## Phase 0 and Phase 1 outputs
 
 - Phase 0: [research.md](research.md), decisions R1–R17, no unresolved unknowns.
-- Phase 1: [data-model.md](data-model.md), [contracts/](contracts/), [quickstart.md](quickstart.md), [verification-evidence.md](verification-evidence.md); agent context updated in `AGENTS.md` (the Spec Kit markers live there because `CLAUDE.md` is a pure pointer).
+- Phase 1: [data-model.md](data-model.md), [contracts/](contracts/), [quickstart.md](quickstart.md), [verification-evidence.md](verification-evidence.md).
+- Phase 2: the task list lives in the run plan (`../plan.md`), tranches A–D.
 
 ## Complexity Tracking
 

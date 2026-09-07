@@ -1,10 +1,10 @@
 # Feature Specification: Portable Resume and Cover-Letter Plugin
 
-**Feature Branch**: `20260907-182632-career-documents-plugin`
+**Feature Branch**: `linear/agl-15-16-career-documents`
 
 **Created**: 2026-09-07
 
-**Status**: Draft
+**Status**: Planned — executed by `linear-specs/20260907-185131-agl-15-16-career-documents/plan.md`
 
 **Input**: User description: "AGL-15 — Build a portable resume and cover-letter plugin (https://linear.app/agent-layer/issue/AGL-15/build-a-portable-resume-and-cover-letter-plugin). Create a standalone open-source `career-documents` plugin that works without agent-layer; agent-layer may install it. Keep one provider-neutral workflow source with thin packages for ChatGPT/Codex and Claude Code/Cowork. Model four authorities separately: qualifications, voice, document templates, and target role. Personal data and personal templates stay outside the public repository. Optional `career-documents.json` only locates providers, templates, outputs, and workflow policy; it stores no qualifications or credentials. Use a versioned `CareerProfile` model with stable IDs, provenance, verification state, dates, visibility, and conflict rules. Structured Markdown is the reference provider; Basic Memory is the first MCP provider. All authoritative updates are proposed as reviewable diffs. Implement four interactive flows: onboard/import; update qualifications; map a job description to evidence and generate a tailored resume; generate a complementary cover letter. Requirement mapping classifies evidence as direct, transferable, or a gap and supports executive and builder positioning through selection and emphasis. MVP uses existing file, MCP, and document tools. A hosted service, custom UI, and submitting applications are outside scope."
 

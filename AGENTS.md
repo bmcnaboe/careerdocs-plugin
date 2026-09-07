@@ -27,16 +27,17 @@ install it.
   agent-layer, then `layer sync-project`. Seeded files (`.claude/linear-workspace.md`,
   `CLAUDE.md`) are project-owned.
 
-## Spec Kit
+## Runs
 
-Features are specified before they are built: `specs/<stamp>-<name>/` holds the
-spec, plan, and tasks, and `.specify/feature.json` names the active feature. Spec Kit
-expects its current-plan pointer in `CLAUDE.md`; that file is a pure pointer here, so
-the markers live in this imported file instead.
+Work is planned as Linear runs: `linear-specs/<stamp>-<slug>/plan.md` is the run plan
+the Ralph loop executes (tasks, tranches, ticket snapshots), and `design/` beside it
+holds the design of record (spec, implementation plan, research, data model,
+contracts, quickstart, verification evidence). Spec Kit stays available for a future
+spec-first feature; it expects its current-plan pointer in `CLAUDE.md`, which is a pure
+pointer here, so the markers live in this imported file instead.
 
 <!-- SPECKIT START -->
-Active plan: `specs/20260907-182632-career-documents-plugin/plan.md` (spec, research,
-data model, contracts, and tasks sit beside it).
+No active Spec Kit feature. Current run: `linear-specs/20260907-185131-agl-15-16-career-documents/plan.md`.
 <!-- SPECKIT END -->
 
 ## Commands
