@@ -88,7 +88,7 @@ emit `<ralph>GUTTER</ralph>` with the root cause.
 
 ### Tranche A — Foundation: tooling, guards, core skill, schema, providers, fixtures (AGL-15)
 
-- [ ] T001 [AGL-15] Claim tranche: post the start comment on AGL-15 naming branch `linear/agl-15-16-career-documents` and this plan; capture the comment's `author.id`; ensure AGL-15 is In Progress with that assignee (it may already be, then only the comment is new).
+- [x] T001 [AGL-15] Claim tranche: post the start comment on AGL-15 naming branch `linear/agl-15-16-career-documents` and this plan; capture the comment's `author.id`; ensure AGL-15 is In Progress with that assignee (it may already be, then only the comment is new).
 - [ ] T002 [AGL-15] [risky] Create `pyproject.toml` (name `career-documents`, version `0.1.0`, `requires-python >= 3.11`, `[project.optional-dependencies] dev` = pytest, jsonschema, docxtpl, python-docx, pypdf, pdfplumber, pypdfium2, python-dateutil, reportlab), run `uv sync --extra dev` and commit `uv.lock`, and add `tests/unit/test_pyproject.py` asserting the file parses with `tomllib` and carries the version, so `./scripts/gate.sh basic` runs the unit suite for real
 - [ ] T003 [AGL-15] Add `LICENSE` (MIT), `README.md` (what the plugin is, the four flows, the four authorities, the no-applicant-data rule, install pointers to `docs/`), and `docs/README.md` as the documentation index
 - [ ] T004 [AGL-15] Implement `scripts/pii_guard.py` (standard library; scans `git ls-files` outside `examples/` and `tests/fixtures/` for email addresses not on `example.com`/`example.org`, telephone numbers not using `555`, and street-address patterns; prints `file:line: pattern`; exit 1 on findings) with `tests/unit/test_pii_guard.py`
