@@ -1,0 +1,48 @@
+# .ralph/command-policy — Ralph command policy (career-documents)
+#
+# Sections are scanned in order: [gates] → [rewrite] → [deny] → [wrap] →
+# [protect]. Every Bash command is canonicalized first (env-prefix + pipes /
+# redirects stripped), then matched. [rewrite] and [wrap] transparently correct
+# the agent's invocation; only [deny] hard-blocks.
+
+# ─────────────────────────────────────────────────────────────────────
+# [gates] — REQUIRED. One script owns the quality bar and takes the tier as an
+# argument, so these pins stay valid as the tiers' contents grow: basic runs
+# the unit tests and skills lint, full adds integration runs and the inventory,
+# version, and evidence checks, final adds shellcheck, gitleaks, the
+# applicant-data guard, and the agent-layer conformance check.
+
+[gates]
+basic | ./scripts/gate.sh basic
+full  | ./scripts/gate.sh full
+final | ./scripts/gate.sh final
+
+# ─────────────────────────────────────────────────────────────────────
+# [rewrite] — deliberately empty; everything here is plain `uv run`, `python3`,
+# or `./scripts/…`.
+
+[rewrite]
+
+# ─────────────────────────────────────────────────────────────────────
+# [deny] — outward-facing or machine-wide actions are never a loop's call.
+
+[deny]
+git push | publishing is the operator's call — commit locally, a human pushes
+layer install | relinks ~/.claude and ~/.codex — never a loop's call to make
+python3 bin/layer install | relinks ~/.claude and ~/.codex — never a loop's call to make
+layer adopt | subscribing another repo is a human decision
+
+# ─────────────────────────────────────────────────────────────────────
+# [wrap] — route the sub-gate commands through gate-run.sh so partial runs
+# leave the same breadcrumbs as a full tier.
+
+[wrap]
+uv run --extra dev python -m pytest | unit
+python3 scripts/lint_skills.py | lint
+python3 scripts/pii_guard.py | lint
+python3 scripts/check_inventory.py | lint
+
+# ─────────────────────────────────────────────────────────────────────
+# [protect] — (currently empty)
+
+[protect]

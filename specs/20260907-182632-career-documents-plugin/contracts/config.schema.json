@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/bmcnaboe/career-documents/schemas/config.schema.json#1.0.0",
+  "title": "career-documents.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version"],
+  "properties": {
+    "version": { "const": "1" },
+    "providers": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "authoritative": { "enum": ["markdown", "basic_memory"], "default": "markdown" },
+        "markdown": { "type": "object", "additionalProperties": false, "properties": { "path": { "type": "string", "default": "profile" } } },
+        "basic_memory": { "type": "object", "additionalProperties": false, "required": ["vault_path", "project"], "properties": { "vault_path": { "type": "string" }, "project": { "type": "string" }, "folder": { "type": "string", "default": "career" } } }
+      }
+    },
+    "templates": { "type": "object", "additionalProperties": false, "properties": { "dir": { "type": "string", "default": "templates" }, "resume": { "type": "string", "default": "resume" }, "cover_letter": { "type": "string", "default": "cover-letter" } } },
+    "voice": { "type": "object", "additionalProperties": false, "properties": { "path": { "type": "string", "default": "voice/voice.md" } } },
+    "outputs": { "type": "object", "additionalProperties": false, "properties": { "applications_dir": { "type": "string", "default": "applications" }, "baselines_dir": { "type": "string", "default": "baselines" } } },
+    "workflow": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "state_dir": { "type": "string", "default": ".career-documents/state" },
+        "positioning_default": { "enum": ["executive", "builder"], "default": "builder" },
+        "page_budget": { "type": "object", "additionalProperties": false, "properties": { "resume": { "type": "integer", "minimum": 1, "default": 2 }, "cover_letter": { "type": "integer", "minimum": 1, "default": 1 } } },
+        "approval_mode": { "const": "explicit", "default": "explicit" }
+      }
+    }
+  }
+}

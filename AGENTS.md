@@ -35,13 +35,22 @@ expects its current-plan pointer in `CLAUDE.md`; that file is a pure pointer her
 the markers live in this imported file instead.
 
 <!-- SPECKIT START -->
-No active plan yet.
+Active plan: `specs/20260907-182632-career-documents-plugin/plan.md` (spec, research,
+data model, contracts, and tasks sit beside it).
 <!-- SPECKIT END -->
 
 ## Commands
 
-None yet. The first feature's plan defines the quality gate, and
-`.ralph/command-policy` pins it for autonomous runs.
+```sh
+./scripts/gate.sh [basic|full|final] [--strict]   # quality gate; basic is the default
+```
+
+`basic` runs the unit tests and skills lint; `full` adds the integration runs and the
+inventory, version, and evidence checks; `final` adds shellcheck, gitleaks, the
+applicant-data guard, and the agent-layer conformance check. A component that does not
+exist yet reports `SKIP`; `--strict` makes that a failure. `final --strict` must be green
+before a commit lands on `main`. `.ralph/command-policy` pins the three tiers for
+autonomous runs.
 
 ## Tickets
 
