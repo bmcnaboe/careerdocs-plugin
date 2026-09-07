@@ -1,0 +1,27 @@
+name: agent-layer
+
+# Synced from agent-layer (module "agent-core") — edit there, not here.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: agent-layer conformance
+        run: python3 scripts/agent-layer/check.py
+      - name: docs lint
+        run: |
+          if [ -f scripts/agent-layer/docs_lint.py ]; then
+            python3 scripts/agent-layer/docs_lint.py
+          else
+            echo "docs-policy module not subscribed — skipped"
+          fi

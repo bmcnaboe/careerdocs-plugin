@@ -1,0 +1,10 @@
+.DS_Store
+__pycache__/
+*.pyc
+
+# Ralph run state is transient, except the command policy: worktrees carry it
+# via git, and the loop refuses to start without it. `.ralph/*` (not `.ralph/`)
+# so the negation can apply.
+.ralph/*
+!.ralph/command-policy
+.ralph-postmortems/

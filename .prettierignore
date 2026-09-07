@@ -1,0 +1,30 @@
+# >>> agent-layer:synced-files >>>
+# Synced from agent-layer — layer-owned files keep the layer's formatting.
+.claude/commands/speckit-full-spec.md
+.claude/commands/speckit-plan-task-analyze.md
+.claude/commands/speckit-specify-clarify.md
+.claude/hooks/block-claude-md-write.sh
+.claude/hooks/block-synced-edit.sh
+.claude/skills/linear-accept/SKILL.md
+.claude/skills/linear-fix/SKILL.md
+.claude/skills/linear-log/SKILL.md
+.claude/skills/linear-plan/SKILL.md
+.claude/skills/linear-verify-loop/SKILL.md
+.claude/skills/monitoring-ralph/SKILL.md
+.claude/skills/pending-changes-review/SKILL.md
+.claude/skills/speckit-analyze/SKILL.md
+.claude/skills/speckit-checklist/SKILL.md
+.claude/skills/speckit-clarify/SKILL.md
+.claude/skills/speckit-constitution/SKILL.md
+.claude/skills/speckit-implement/SKILL.md
+.claude/skills/speckit-plan/SKILL.md
+.claude/skills/speckit-specify/SKILL.md
+.claude/skills/speckit-tasks/SKILL.md
+.claude/skills/speckit-taskstoissues/SKILL.md
+.claude/skills/speckit-upgrade/SKILL.md
+.github/workflows/agent-layer.yml
+scripts/agent-layer/check.py
+scripts/dev/ralph/linear-eval-framing.md
+scripts/dev/ralph/linear-ledger-template.md
+.agent-layer.json
+# <<< agent-layer:synced-files <<<

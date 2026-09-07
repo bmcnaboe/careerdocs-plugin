@@ -1,0 +1,230 @@
+{
+  "version": 1,
+  "layer_repo": "https://github.com/bmcnaboe/agent-layer",
+  "layer_commit": "99862affe764af5599eebda6a9bc8f6dcb4e75c5",
+  "modules": [
+    "agent-core",
+    "linear",
+    "ralph",
+    "speckit"
+  ],
+  "mirror": true,
+  "settings_managed": {
+    "hooks": {
+      "PreToolUse": [
+        {
+          "matcher": "Write|Edit|MultiEdit",
+          "hooks": [
+            {
+              "type": "command",
+              "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/block-claude-md-write.sh\""
+            },
+            {
+              "type": "command",
+              "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/block-synced-edit.sh\""
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "format_ignore": [
+    ".prettierignore"
+  ],
+  "files": [
+    {
+      "path": ".claude/commands/speckit-full-spec.md",
+      "module": "speckit",
+      "source": "modules/speckit/commands/speckit-full-spec.md",
+      "mode": "synced",
+      "sha256": "c97f3f7a2d572de63e31153ee84b157432eb7af8a61fed2a82ad68949c5c5d8b"
+    },
+    {
+      "path": ".claude/commands/speckit-plan-task-analyze.md",
+      "module": "speckit",
+      "source": "modules/speckit/commands/speckit-plan-task-analyze.md",
+      "mode": "synced",
+      "sha256": "32d07498232b8cb7c75ece2512afb6e4050fa154269012ec7b634d982d664d44"
+    },
+    {
+      "path": ".claude/commands/speckit-specify-clarify.md",
+      "module": "speckit",
+      "source": "modules/speckit/commands/speckit-specify-clarify.md",
+      "mode": "synced",
+      "sha256": "13335f7822fe6a700985df01f845c30241c74b1aa0a0b3a02fb07dd49c17644c"
+    },
+    {
+      "path": ".claude/hooks/block-claude-md-write.sh",
+      "module": "agent-core",
+      "source": "modules/agent-core/hooks/block-claude-md-write.sh",
+      "mode": "synced",
+      "sha256": "ad115a21fb22fba511f1085bbec1aaf5a2b6c2e4262901ec5eb62e8955947937"
+    },
+    {
+      "path": ".claude/hooks/block-synced-edit.sh",
+      "module": "agent-core",
+      "source": "modules/agent-core/hooks/block-synced-edit.sh",
+      "mode": "synced",
+      "sha256": "8963c2354b3495539620726f31bbaf0db58916c22c369ad6f81333958c4ec94a"
+    },
+    {
+      "path": ".claude/linear-workspace.md",
+      "module": "linear",
+      "source": "modules/linear/templates/linear-workspace.md",
+      "mode": "seeded"
+    },
+    {
+      "path": ".claude/skills/linear-accept/SKILL.md",
+      "module": "linear",
+      "source": "modules/linear/skills/linear-accept/SKILL.md",
+      "mode": "synced",
+      "sha256": "494f153d34816373506225541edac29b46b73bcffd0dbd202c975d55af2f5425"
+    },
+    {
+      "path": ".claude/skills/linear-fix/SKILL.md",
+      "module": "linear",
+      "source": "modules/linear/skills/linear-fix/SKILL.md",
+      "mode": "synced",
+      "sha256": "2c2ac48568dfbcf2dfddcccc7bbe169331f25026b2fae59df5069dde113dd2cf"
+    },
+    {
+      "path": ".claude/skills/linear-log/SKILL.md",
+      "module": "linear",
+      "source": "modules/linear/skills/linear-log/SKILL.md",
+      "mode": "synced",
+      "sha256": "306ad8ae04946c5647fcd76a5fcd5cca7f1779a9428ca1c57f1eb6e6a7543ec9"
+    },
+    {
+      "path": ".claude/skills/linear-plan/SKILL.md",
+      "module": "linear",
+      "source": "modules/linear/skills/linear-plan/SKILL.md",
+      "mode": "synced",
+      "sha256": "ed63a892fe7cf7db85dfc7ea7fabb546f1d19e1f93c3e26830a37d790daf674a"
+    },
+    {
+      "path": ".claude/skills/linear-verify-loop/SKILL.md",
+      "module": "linear",
+      "source": "modules/linear/skills/linear-verify-loop/SKILL.md",
+      "mode": "synced",
+      "sha256": "f6e5e10d7f3cd6c2d777ed1078a202938c7b3cf0f073dd5573f44e872efc2d86"
+    },
+    {
+      "path": ".claude/skills/monitoring-ralph/SKILL.md",
+      "module": "ralph",
+      "source": "modules/ralph/skills/monitoring-ralph/SKILL.md",
+      "mode": "synced",
+      "sha256": "e793a546a3e880269ac546f6a3e197405aa229a66d429d894c7d0a2fa2af588f"
+    },
+    {
+      "path": ".claude/skills/pending-changes-review/SKILL.md",
+      "module": "agent-core",
+      "source": "modules/agent-core/skills/pending-changes-review/SKILL.md",
+      "mode": "synced",
+      "sha256": "2b8449af1e6cbbc8da7b4a0e062e6de9341415fe4c0f344a3855e9dcdb8568cc"
+    },
+    {
+      "path": ".claude/skills/speckit-analyze/SKILL.md",
+      "module": "speckit",
+      "source": "modules/speckit/skills/speckit-analyze/SKILL.md",
+      "mode": "synced",
+      "sha256": "0472a8aa3f2e2847508bfcb445c28a096e19ed5392fcfc5d70dc0e1c53bf8ead"
+    },
+    {
+      "path": ".claude/skills/speckit-checklist/SKILL.md",
+      "module": "speckit",
+      "source": "modules/speckit/skills/speckit-checklist/SKILL.md",
+      "mode": "synced",
+      "sha256": "b1bd4b4ef08428b25a14c3dcd8d5fd1e40f98ee22cbd83304cd945471e78894d"
+    },
+    {
+      "path": ".claude/skills/speckit-clarify/SKILL.md",
+      "module": "speckit",
+      "source": "modules/speckit/skills/speckit-clarify/SKILL.md",
+      "mode": "synced",
+      "sha256": "e0daba4512a5be54b93caefd3fedfd91f0e8956f71f89086dd503f5fd6629629"
+    },
+    {
+      "path": ".claude/skills/speckit-constitution/SKILL.md",
+      "module": "speckit",
+      "source": "modules/speckit/skills/speckit-constitution/SKILL.md",
+      "mode": "synced",
+      "sha256": "467969f365637acbf603e4569549fb276815f56847217e7175b9b73d84516efe"
+    },
+    {
+      "path": ".claude/skills/speckit-implement/SKILL.md",
+      "module": "speckit",
+      "source": "modules/speckit/skills/speckit-implement/SKILL.md",
+      "mode": "synced",
+      "sha256": "977504cdb205cd971ebd1ff4cd918889620188a84f9b5ebabc767ddce4ab9867"
+    },
+    {
+      "path": ".claude/skills/speckit-plan/SKILL.md",
+      "module": "speckit",
+      "source": "modules/speckit/skills/speckit-plan/SKILL.md",
+      "mode": "synced",
+      "sha256": "7d62e21cfde23470314b17f28dc40a8c85d59697201bd1ab2d76ea616ad476bb"
+    },
+    {
+      "path": ".claude/skills/speckit-specify/SKILL.md",
+      "module": "speckit",
+      "source": "modules/speckit/skills/speckit-specify/SKILL.md",
+      "mode": "synced",
+      "sha256": "d2bd64b5e82df683f256274db13517541c3983644602d94f068d8fe0b312afe2"
+    },
+    {
+      "path": ".claude/skills/speckit-tasks/SKILL.md",
+      "module": "speckit",
+      "source": "modules/speckit/skills/speckit-tasks/SKILL.md",
+      "mode": "synced",
+      "sha256": "e7ea55d1903ee00f32137142b77428e88a3f669d3f7aa5d3c289d3d8912b4125"
+    },
+    {
+      "path": ".claude/skills/speckit-taskstoissues/SKILL.md",
+      "module": "speckit",
+      "source": "modules/speckit/skills/speckit-taskstoissues/SKILL.md",
+      "mode": "synced",
+      "sha256": "f00d5492e442cd84d2dae6a24c046447b43d2c51caef3cb4ef6593cab1945bbe"
+    },
+    {
+      "path": ".claude/skills/speckit-upgrade/SKILL.md",
+      "module": "speckit",
+      "source": "modules/speckit/skills/speckit-upgrade/SKILL.md",
+      "mode": "synced",
+      "sha256": "a23212a7c52147342d3744dd26435adb28a73bd7e0021681b7acf821d5dbc65e"
+    },
+    {
+      "path": ".github/workflows/agent-layer.yml",
+      "module": "agent-core",
+      "source": "modules/agent-core/workflows/agent-layer.yml",
+      "mode": "synced",
+      "sha256": "06fcf681b2bfb31d69da8e8f7fbc4a46f5bdc4cc279a07a7ba3406e22cedd3e5"
+    },
+    {
+      "path": "CLAUDE.md",
+      "module": "agent-core",
+      "source": "modules/agent-core/templates/CLAUDE.md",
+      "mode": "seeded"
+    },
+    {
+      "path": "scripts/agent-layer/check.py",
+      "module": "agent-core",
+      "source": "modules/agent-core/check/agent_layer_check.py",
+      "mode": "synced",
+      "sha256": "647854fd35265b6c2a630d708e42122309904f651c43165cb345bb528dfed1c2"
+    },
+    {
+      "path": "scripts/dev/ralph/linear-eval-framing.md",
+      "module": "ralph",
+      "source": "modules/ralph/templates/ralph/linear-eval-framing.md",
+      "mode": "synced",
+      "sha256": "8bb64ebdbf89a8aaed8f58592982ba51a2140808245f7c52ddfa13682a674fe1"
+    },
+    {
+      "path": "scripts/dev/ralph/linear-ledger-template.md",
+      "module": "ralph",
+      "source": "modules/ralph/templates/ralph/linear-ledger-template.md",
+      "mode": "synced",
+      "sha256": "ac42280317db5dc038c737ebcd90ff357655cdd9def6e61ecbf0441e69bf72a3"
+    }
+  ]
+}
