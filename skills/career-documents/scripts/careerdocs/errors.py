@@ -37,3 +37,36 @@ class CheckFailed(CareerDocsError):
 
     code = "CHECK_FAILED"
     exit_code = 1
+
+
+# --- Provider-contract errors (shared by schema.py and the providers) ---
+
+
+class ProfileInvalid(CareerDocsError):
+    code = "PROFILE_INVALID"
+    exit_code = 2
+
+
+class SchemaTooNew(CareerDocsError):
+    code = "SCHEMA_TOO_NEW"
+    exit_code = 2
+
+
+class NotAuthoritative(CareerDocsError):
+    code = "NOT_AUTHORITATIVE"
+    exit_code = 2
+
+
+class ApprovalMissing(CareerDocsError):
+    code = "APPROVAL_MISSING"
+    exit_code = 2
+
+
+class BaseHashMismatch(CareerDocsError):
+    code = "BASE_HASH_MISMATCH"
+    exit_code = 2
+
+
+class ProviderUnreachable(CareerDocsError):
+    code = "PROVIDER_UNREACHABLE"
+    exit_code = 2
