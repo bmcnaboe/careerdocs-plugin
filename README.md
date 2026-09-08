@@ -75,7 +75,15 @@ Full steps and verification: [docs/setup-claude.md](docs/setup-claude.md) and
 
 ## Documentation
 
-Start at [docs/README.md](docs/README.md).
+Start at [docs/README.md](docs/README.md). Guides:
+
+- Setup: [docs/setup-claude.md](docs/setup-claude.md), [docs/setup-codex.md](docs/setup-codex.md)
+- [docs/configuration.md](docs/configuration.md) — the optional `career-documents.json`
+- [docs/profile-schema.md](docs/profile-schema.md) — the versioned `CareerProfile` model
+- [docs/provider-contract.md](docs/provider-contract.md) — the provider interface and the two providers
+- [docs/checks.md](docs/checks.md) — the five output checks
+- [docs/templates-and-voice.md](docs/templates-and-voice.md) — authoring templates and the voice profile
+- [docs/migration.md](docs/migration.md) — migrating an existing career folder
 
 ## License
 
