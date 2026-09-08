@@ -58,7 +58,8 @@
       "ref": "skill-python",
       "provenance": { "source_id": "src_AAAAAAAAAAAAAAAAAAAAAAAAAA", "method": "extraction", "recorded_at": "2024-01-01T00:00:00Z", "actor": "agent", "excerpt": "Python" },
       "name": "Python",
-      "level": "expert"
+      "level": "expert",
+      "positioning": ["builder"]
     },
     {
       "type": "skill",
@@ -72,14 +73,16 @@
       "ref": "skill-k8s",
       "provenance": { "source_id": "src_AAAAAAAAAAAAAAAAAAAAAAAAAA", "method": "extraction", "recorded_at": "2024-01-01T00:00:00Z", "actor": "agent", "excerpt": "Kubernetes" },
       "name": "Kubernetes",
-      "level": "working"
+      "level": "working",
+      "positioning": ["builder"]
     },
     {
       "type": "skill",
       "ref": "skill-leadership",
       "provenance": { "source_id": "src_AAAAAAAAAAAAAAAAAAAAAAAAAA", "method": "extraction", "recorded_at": "2024-01-01T00:00:00Z", "actor": "agent", "excerpt": "Team Leadership" },
       "name": "Team Leadership",
-      "level": "expert"
+      "level": "expert",
+      "positioning": ["executive"]
     },
     {
       "type": "education",
