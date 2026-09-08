@@ -55,6 +55,6 @@ autonomous runs.
 
 ## Tickets
 
-Work is tracked in the `agent-layer` Linear workspace, team `agent-layer` (`AGL-`),
+Work is tracked in the `oxford-heavy` Linear workspace, team `Product Development` (`OHI-`),
 project `careerdocs-plugin`. `.claude/linear-workspace.md` pins the workspace, states, and
 house rules the `linear-*` skills read; it is seeded, project-owned, and safe to edit.

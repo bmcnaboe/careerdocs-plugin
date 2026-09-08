@@ -10,14 +10,14 @@ means the session is carrying another repo's connector).
 
 ## Workspace
 
-- **Workspace slug:** `agent-layer`
-- **Workspace URL prefix:** `https://linear.app/agent-layer/`
+- **Workspace slug:** `oxford-heavy`
+- **Workspace URL prefix:** `https://linear.app/oxford-heavy/`
 
 ## Team
 
-- **Team name:** `agent-layer` — the workspace's only team.
-- **Team key / issue-id prefix:** `AGL` — bare integers normalize to this team
-  (`12` → `AGL-12`). Only `AGL-` ids are ours; confirm foreign prefixes with the user.
+- **Team name:** `Product Development` — the workspace's only team.
+- **Team key / issue-id prefix:** `OHI` — bare integers normalize to this team
+  (`12` → `OHI-12`). Only `OHI-` ids are ours; confirm foreign prefixes with the user.
 
 ## Default project
 
