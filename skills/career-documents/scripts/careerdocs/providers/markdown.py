@@ -156,7 +156,10 @@ class MarkdownProvider(Provider):
         return {"authoritative_ok": True, "search": False, "context": False}
 
     def export(self, target: dict) -> dict:
-        profile = {**self.read(), "derived": True}
+        from .. import visibility
+
+        profile = visibility.filter_visible(self.read(), for_export=True)
+        profile = {**profile, "derived": True}
         provider_name = target.get("provider", "markdown")
         if provider_name == "markdown":
             dest = MarkdownProvider.at(target["path"])

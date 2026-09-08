@@ -220,6 +220,7 @@ def register(subparsers, common: argparse.ArgumentParser) -> None:
     approve_parser.add_argument("diff_id")
     approve_parser.add_argument("--note")
     approve_parser.add_argument("--scope", default="all")
+    approve_parser.add_argument("--document", help="grant restricted entities into this document")
     approve_parser.set_defaults(func=cmd_approve)
 
     apply_parser = actions.add_parser("apply", parents=[common], help="apply an approved diff")
@@ -338,7 +339,9 @@ def _persist_questions(args, cfg: dict, diff_id: str, generated: list[dict]) -> 
 
 def cmd_approve(args) -> int:
     provider, _ = _provider(args)
-    approval = approve(provider, args.diff_id, scope=args.scope, note=args.note)
+    approval = approve(
+        provider, args.diff_id, scope=args.scope, note=args.note, document=args.document
+    )
     print(json.dumps(approval) if args.json else f"approved {args.diff_id}")
     return 0
 
