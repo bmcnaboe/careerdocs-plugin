@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/bmcnaboe/career-documents/schemas/requirement-map.schema.json#1.0.0",
+  "title": "RequirementEvidenceMap",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["requirement_id", "classification", "evidence"],
+    "additionalProperties": false,
+    "properties": {
+      "requirement_id": { "type": "string" },
+      "classification": { "enum": ["direct", "transferable", "gap"] },
+      "evidence": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["entity_id", "why"],
+          "additionalProperties": false,
+          "properties": {
+            "entity_id": { "type": "string" },
+            "why": { "type": "string" }
+          }
+        }
+      },
+      "note": { "type": "string" }
+    }
+  }
+}

@@ -76,12 +76,14 @@ def _register_feature_commands(subparsers, common: argparse.ArgumentParser) -> N
     from . import brief as brief_module
     from . import config as config_module
     from . import diff as diff_module
+    from . import mapping as mapping_module
     from . import state as state_module
 
     config_module.register(subparsers, common)
     diff_module.register(subparsers, common)
     state_module.register(subparsers, common)
     brief_module.register(subparsers, common)
+    mapping_module.register(subparsers, common)
 
 
 
