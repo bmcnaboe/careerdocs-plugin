@@ -16,6 +16,11 @@
       "name": "career-resume",
       "description": "Generate a tailored résumé for a specific job description from the applicant's authoritative profile. Use when the applicant has an onboarded profile and a target role, and wants a résumé mapped to that role's requirements. The flow builds a role brief from the job description, has the agent complete it, maps each requirement to direct/transferable/gap evidence, chooses a positioning (executive or builder), plans content within the template's page budget, drafts units in the applicant's voice, renders into the template, runs the five output checks, and reports cuts and gaps. It never invents qualifications: a gap requirement is named honestly and never claimed.",
       "path": "skills/career-resume"
+    },
+    {
+      "name": "career-cover-letter",
+      "description": "Generate a cover letter that complements a tailored résumé for the same role. Use after a résumé has been generated for a role (via career-resume), when the applicant wants a matching cover letter. The flow reuses the existing role brief and requirement map without re-asking anything, plans a short letter that leads with the highest-value evidence, drafts it in the applicant's voice, renders into the letter template, and runs the checks — including one that no résumé bullet is reproduced verbatim. It complements rather than repeats the résumé, traces every claim to a profile ID, never claims a gap requirement, and fits the letter's page budget.",
+      "path": "skills/career-cover-letter"
     }
   ]
 }
