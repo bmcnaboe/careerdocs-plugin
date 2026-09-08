@@ -187,9 +187,48 @@ def apply(provider, diff_id: str, *, cfg: dict | None = None, workspace=None) ->
     return {"applied": diff_id, "hash": new_hash, "exported": exported, "stale_outputs": stale}
 
 
+def _output_record_paths(workspace, cfg: dict) -> list[Path]:
+    base = Path(workspace)
+    paths: list[Path] = []
+    apps = base / cfg["outputs"]["applications_dir"]
+    if apps.is_dir():
+        paths += apps.glob("*/outputs/*.record.json")
+    baselines = base / cfg["outputs"]["baselines_dir"]
+    if baselines.is_dir():
+        paths += baselines.glob("*/*.record.json")
+    return sorted(paths)
+
+
 def mark_stale_outputs(workspace, cfg: dict | None, changed_ids: set[str]) -> list[str]:
-    """Placeholder for output-record staleness; expanded when output records exist."""
-    return []
+    """Mark any output record whose source ids include a changed entity as stale."""
+    if cfg is None or workspace is None or not changed_ids:
+        return []
+    stale: list[str] = []
+    for path in _output_record_paths(workspace, cfg):
+        record = json.loads(path.read_text(encoding="utf-8"))
+        if record.get("stale"):
+            continue
+        overlap = set(record.get("source_ids", [])) & changed_ids
+        if overlap:
+            record["stale"] = True
+            record["stale_reason"] = f"source entities changed: {sorted(overlap)}"
+            path.write_text(json.dumps(record, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+            stale.append(record.get("document", str(path)))
+    return stale
+
+
+def derived_freshness(provider, cfg: dict, workspace) -> dict:
+    if cfg["providers"]["authoritative"] != "basic_memory":
+        return {"applicable": False}
+    from .providers.markdown import MarkdownProvider
+    from .visibility import filter_visible
+
+    md_path = Path(workspace) / cfg["providers"]["markdown"]["path"]
+    if not (md_path / "profile.md").exists():
+        return {"applicable": True, "present": False, "fresh": False}
+    expected = {e["id"] for e in filter_visible(provider.read(), for_export=True)["entities"]}
+    actual = {e["id"] for e in MarkdownProvider.at(md_path).read()["entities"]}
+    return {"applicable": True, "present": True, "fresh": expected == actual, "path": str(md_path)}
 
 
 # --- CLI ---
@@ -230,6 +269,9 @@ def register(subparsers, common: argparse.ArgumentParser) -> None:
     export_parser = actions.add_parser("export", parents=[common], help="write a derived copy")
     export_parser.add_argument("--to", choices=["markdown", "basic_memory"], required=True)
     export_parser.set_defaults(func=cmd_export)
+
+    status_parser = actions.add_parser("status", parents=[common], help="report stale outputs and export freshness")
+    status_parser.set_defaults(func=cmd_status)
 
 
 def _provider(args):
@@ -355,6 +397,29 @@ def cmd_apply(args) -> int:
         print(f"applied {args.diff_id}")
         if result["exported"]:
             print("refreshed derived export: " + ", ".join(result["exported"]))
+    return 0
+
+
+def cmd_status(args) -> int:
+    provider, cfg = _provider(args)
+    stale = []
+    for path in _output_record_paths(args.workspace, cfg):
+        record = json.loads(path.read_text(encoding="utf-8"))
+        if record.get("stale"):
+            stale.append({"document": record.get("document", str(path)), "reason": record.get("stale_reason")})
+    report = {"stale_outputs": stale, "derived_export": derived_freshness(provider, cfg, args.workspace)}
+    if args.json:
+        print(json.dumps(report))
+    else:
+        if stale:
+            print(f"{len(stale)} stale output(s):")
+            for item in stale:
+                print(f"  - {item['document']} ({item['reason']})")
+        else:
+            print("no stale outputs")
+        derived = report["derived_export"]
+        if derived.get("applicable"):
+            print(f"derived export: {'fresh' if derived.get('fresh') else 'stale'}")
     return 0
 
 

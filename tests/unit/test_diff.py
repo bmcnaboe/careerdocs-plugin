@@ -185,3 +185,77 @@ def test_cli_export_refuses_authoritative(tmp_path):
     cli.main(["config", "init", "--workspace", str(tmp_path)])
     # markdown is authoritative by default; exporting to markdown is refused.
     assert cli.main(["profile", "export", "--to", "markdown", "--workspace", str(tmp_path)]) == 2
+
+
+def _write_output_record(tmp_path, source_ids):
+    outputs = tmp_path / "applications" / "role" / "outputs"
+    outputs.mkdir(parents=True)
+    record = {
+        "document": "applications/role/outputs/resume-x.docx", "kind": "resume",
+        "generated_at": NOW, "plugin_version": "0.1.0", "schema_version": "1.0.0",
+        "content_plan": "applications/role/plan.json", "template": {"name": "t"},
+        "positioning": "builder", "source_ids": source_ids,
+        "checks": {n: {"status": "pass", "details": ""} for n in
+                   ("factual", "links_dates", "extraction", "pagination", "layout")},
+        "stale": False, "stale_reason": None,
+    }
+    path = outputs / "resume-x.record.json"
+    path.write_text(json.dumps(record), encoding="utf-8")
+    return path
+
+
+def test_apply_marks_stale_outputs(tmp_path):
+    provider = provider_for(tmp_path)
+    contact, exp, ops = add_contact_and_experience()
+    d = diff.make_diff(provider, ops)
+    diff.approve(provider, d["diff_id"])
+    diff.apply(provider, d["diff_id"], cfg=default_config(), workspace=tmp_path)
+
+    record_path = _write_output_record(tmp_path, [exp["id"]])
+
+    # Update the experience; the record citing it becomes stale.
+    ops2 = [{"op": "update_field", "id": exp["id"], "field": "title", "to": "Principal Engineer"}]
+    d2 = diff.make_diff(provider, ops2)
+    diff.approve(provider, d2["diff_id"])
+    result = diff.apply(provider, d2["diff_id"], cfg=default_config(), workspace=tmp_path)
+
+    assert result["stale_outputs"]
+    updated = json.loads(record_path.read_text())
+    assert updated["stale"] is True
+    assert exp["id"] in updated["stale_reason"]
+
+
+def test_apply_leaves_unrelated_outputs_fresh(tmp_path):
+    provider = provider_for(tmp_path)
+    contact, exp, ops = add_contact_and_experience()
+    d = diff.make_diff(provider, ops)
+    diff.approve(provider, d["diff_id"])
+    diff.apply(provider, d["diff_id"], cfg=default_config(), workspace=tmp_path)
+
+    record_path = _write_output_record(tmp_path, [contact["id"]])
+    ops2 = [{"op": "update_field", "id": exp["id"], "field": "title", "to": "Principal"}]
+    d2 = diff.make_diff(provider, ops2)
+    diff.approve(provider, d2["diff_id"])
+    diff.apply(provider, d2["diff_id"], cfg=default_config(), workspace=tmp_path)
+
+    assert json.loads(record_path.read_text())["stale"] is False
+
+
+def test_cli_status_reports_stale(tmp_path, capsys):
+    cli.main(["config", "init", "--workspace", str(tmp_path)])
+    provider = provider_for(tmp_path)
+    contact, exp, ops = add_contact_and_experience()
+    d = diff.make_diff(provider, ops)
+    diff.approve(provider, d["diff_id"])
+    diff.apply(provider, d["diff_id"], cfg=default_config(), workspace=tmp_path)
+    _write_output_record(tmp_path, [exp["id"]])
+    ops2 = [{"op": "update_field", "id": exp["id"], "field": "title", "to": "Principal"}]
+    d2 = diff.make_diff(provider, ops2)
+    diff.approve(provider, d2["diff_id"])
+    diff.apply(provider, d2["diff_id"], cfg=default_config(), workspace=tmp_path)
+
+    capsys.readouterr()
+    assert cli.main(["profile", "status", "--workspace", str(tmp_path), "--json"]) == 0
+    report = json.loads(capsys.readouterr().out)
+    assert len(report["stale_outputs"]) == 1
+    assert report["derived_export"]["applicable"] is False
