@@ -32,4 +32,4 @@ jobs:
             | sudo tar -xz -C /usr/local/bin gitleaks
 
       - name: Run the full quality bar
-        run: ./scripts/gate.sh final
+        run: ./scripts/gate.sh final --strict
