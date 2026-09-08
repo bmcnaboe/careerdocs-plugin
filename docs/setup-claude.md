@@ -25,11 +25,11 @@ By hand, the same two commands:
 
 ```sh
 claude plugin marketplace add bmcnaboe/careerdocs-plugin
-claude plugin install careerdocs-plugin@careerdocs-plugin
+claude plugin install careerdocs@careerdocs-plugin
 ```
 
-The two arguments are `<plugin>@<marketplace>`; both are named `careerdocs-plugin`. The
-install lands at user scope, so it is available in every project; add `--scope project`
+The two arguments are `<plugin>@<marketplace>`: the plugin is `careerdocs`, and the
+marketplace is named after the repository, `careerdocs-plugin`. The install lands at user scope, so it is available in every project; add `--scope project`
 to share it with a repository's collaborators instead. A session that is already open
 picks it up after `/reload-plugins`; new sessions load it automatically.
 
@@ -48,11 +48,12 @@ needs an agent that can run the `careerdocs` CLI, so use Claude Code for that.
 ## Verify
 
 ```sh
-claude plugin details careerdocs-plugin
+claude plugin details careerdocs
 ```
 
-lists the installed skills — the core `careerdocs` skill plus the flow skills
-(`career-onboard`, `career-update`, `career-resume`, `career-cover-letter`). To confirm
+lists the installed skills — the core `careerdocs` skill plus the flow skills (`onboard`,
+`update`, `resume`, `cover-letter`), invoked as `/careerdocs:<skill>`, for example
+`/careerdocs:resume`. To confirm
 the CLI itself, ask Claude Code in the folder that holds your career documents:
 
 > run careerdocs doctor
@@ -63,9 +64,11 @@ status.
 ## Update and remove
 
 ```sh
-claude plugin update careerdocs-plugin@careerdocs-plugin
-claude plugin uninstall careerdocs-plugin@careerdocs-plugin
+claude plugin update careerdocs@careerdocs-plugin
+claude plugin uninstall careerdocs@careerdocs-plugin
 ```
 
 Re-running the one-liner also updates; `install.sh --uninstall` removes the plugin and
-the marketplace together.
+the marketplace together. An install made when the plugin was still named
+`careerdocs-plugin` is replaced by the one-liner; by hand, uninstall
+`careerdocs-plugin@careerdocs-plugin` first.

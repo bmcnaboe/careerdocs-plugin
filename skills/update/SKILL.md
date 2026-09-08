@@ -1,5 +1,5 @@
 ---
-name: career-update
+name: update
 description: Update the authoritative profile with a new qualification the applicant states. Use when the applicant reports a new achievement, role, skill, credential, or a correction, and it should become part of their one authoritative profile. The flow captures the statement with provenance (the applicant's own statement is the highest-precedence source), turns it into candidates, proposes a ProfileDiff, gets an explicit approval, applies it (giving the new fact a fresh stable id and applicant-verified state), refreshes the derived export, and reports which previously generated documents are now stale. Resumable — an interrupted update resumes from its pending diff without re-asking.
 license: MIT
 compatibility: "Python 3.11+; uv recommended. Requires the careerdocs core skill and an onboarded profile."
@@ -8,7 +8,7 @@ metadata:
   author: "careerdocs-plugin contributors"
 ---
 
-# career-update
+# update
 
 Add or correct a qualification the applicant states, keeping one authoritative profile.
 Read the core `careerdocs` skill first.

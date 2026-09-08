@@ -84,7 +84,7 @@ class Harness:
 
     def mark_installed(self) -> None:
         self.marketplaces.write_text(json.dumps([{"name": "careerdocs-plugin"}]), encoding="utf-8")
-        self.plugins.write_text(json.dumps([{"id": "careerdocs-plugin@careerdocs-plugin", "scope": "user"}]), encoding="utf-8")
+        self.plugins.write_text(json.dumps([{"id": "careerdocs@careerdocs-plugin", "scope": "user"}]), encoding="utf-8")
 
 
 def test_skill_list_matches_the_openai_manifest():
@@ -105,7 +105,7 @@ def test_dry_run_changes_nothing(tmp_path):
     result = h.run("--dry-run")
     assert result.returncode == 0, result.stderr
     assert "would run: claude plugin marketplace add bmcnaboe/careerdocs-plugin" in result.stdout
-    assert "would run: claude plugin install careerdocs-plugin@careerdocs-plugin --scope user" in result.stdout
+    assert "would run: claude plugin install careerdocs@careerdocs-plugin --scope user" in result.stdout
     assert "nothing was changed" in result.stdout
     assert not h.skills_dir().exists()
     assert all(call.endswith("--json") for call in h.calls())
@@ -116,7 +116,7 @@ def test_installs_into_both_agents(tmp_path):
     result = h.run()
     assert result.returncode == 0, result.stderr
     assert "plugin marketplace add bmcnaboe/careerdocs-plugin" in h.calls()
-    assert "plugin install careerdocs-plugin@careerdocs-plugin --scope user" in h.calls()
+    assert "plugin install careerdocs@careerdocs-plugin --scope user" in h.calls()
     for name in SKILL_NAMES:
         installed = h.skills_dir() / name / "SKILL.md"
         assert installed.is_file() and not installed.is_symlink()
@@ -131,20 +131,34 @@ def test_rerun_updates_instead_of_reinstalling(tmp_path):
     assert result.returncode == 0, result.stderr
     calls = h.calls()
     assert not any(call.startswith("plugin marketplace add") for call in calls)
-    assert "plugin update careerdocs-plugin@careerdocs-plugin" in calls
+    assert "plugin update careerdocs@careerdocs-plugin" in calls
     assert (h.skills_dir() / "careerdocs" / "SKILL.md").is_file()
+
+
+def test_rerun_replaces_an_install_made_under_the_old_plugin_name(tmp_path):
+    h = Harness(tmp_path)
+    h.marketplaces.write_text(json.dumps([{"name": "careerdocs-plugin"}]), encoding="utf-8")
+    h.plugins.write_text(json.dumps([{"id": "careerdocs-plugin@careerdocs-plugin", "scope": "user"}]), encoding="utf-8")
+    result = h.run()
+    assert result.returncode == 0, result.stderr
+    calls = h.calls()
+    removed = "plugin uninstall careerdocs-plugin@careerdocs-plugin --scope user"
+    installed = "plugin install careerdocs@careerdocs-plugin --scope user"
+    assert removed in calls and installed in calls
+    assert calls.index(removed) < calls.index(installed)
+    assert not any(call.startswith("plugin update") for call in calls)
 
 
 def test_uninstall_removes_what_it_installed(tmp_path):
     h = Harness(tmp_path)
     assert h.run().returncode == 0
-    foreign = h.skills_dir() / "career-onboard"
+    foreign = h.skills_dir() / "onboard"
     foreign_note = "someone else's skill"
     (h.skills_dir() / "unrelated").mkdir()
     h.mark_installed()
     result = h.run("--uninstall")
     assert result.returncode == 0, result.stderr
-    assert "plugin uninstall careerdocs-plugin@careerdocs-plugin --scope user" in h.calls()
+    assert "plugin uninstall careerdocs@careerdocs-plugin --scope user" in h.calls()
     assert "plugin marketplace remove careerdocs-plugin" in h.calls()
     assert not any((h.skills_dir() / name).exists() for name in SKILL_NAMES)
     assert (h.skills_dir() / "unrelated").is_dir()
@@ -153,9 +167,9 @@ def test_uninstall_removes_what_it_installed(tmp_path):
 
 def test_uninstall_leaves_a_foreign_skill_of_the_same_name(tmp_path):
     h = Harness(tmp_path)
-    foreign = h.skills_dir() / "career-onboard"
+    foreign = h.skills_dir() / "onboard"
     foreign.mkdir(parents=True)
-    (foreign / "SKILL.md").write_text("---\nname: career-onboard\n---\nnot ours\n", encoding="utf-8")
+    (foreign / "SKILL.md").write_text("---\nname: onboard\n---\nnot ours\n", encoding="utf-8")
     result = h.run("--uninstall")
     assert result.returncode == 0, result.stderr
     assert foreign.is_dir()

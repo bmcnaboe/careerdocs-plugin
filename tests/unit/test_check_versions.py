@@ -80,7 +80,7 @@ def test_marketplace_plugin_entries_checked(tmp_path):
 def test_all_agree(tmp_path):
     make_repo(
         tmp_path,
-        skills={"careerdocs": "0.1.0", "career-onboard": "0.1.0"},
+        skills={"careerdocs": "0.1.0", "onboard": "0.1.0"},
         manifests={
             ".claude-plugin/plugin.json": {"version": "0.1.0"},
             ".claude-plugin/marketplace.json": {"plugins": [{"version": "0.1.0"}]},

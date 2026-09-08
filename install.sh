@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# install.sh — install careerdocs-plugin into Claude Code and Codex without cloning.
+# install.sh — install the careerdocs plugin into Claude Code and Codex without cloning.
 #
 #   curl -fsSL https://raw.githubusercontent.com/bmcnaboe/careerdocs-plugin/main/install.sh | bash
 #   curl -fsSL https://raw.githubusercontent.com/bmcnaboe/careerdocs-plugin/main/install.sh | bash -s -- --dry-run
@@ -26,8 +26,10 @@ set -euo pipefail
 
 REPO="${CAREERDOCS_REPO:-bmcnaboe/careerdocs-plugin}"
 REF="${CAREERDOCS_REF:-main}"
-PLUGIN="careerdocs-plugin" # the plugin and its marketplace share this name
-SKILLS=(careerdocs career-onboard career-update career-resume career-cover-letter)
+MARKETPLACE="careerdocs-plugin"   # the marketplace is named after the repository
+PLUGIN="careerdocs"               # the plugin inside it; skills invoke as /careerdocs:<skill>
+LEGACY_PLUGIN="careerdocs-plugin" # the plugin's name before it was shortened; replaced on upgrade
+SKILLS=(careerdocs onboard update resume cover-letter)
 SKILLS_DIR="${HOME}/.agents/skills"
 
 only=""
@@ -40,7 +42,7 @@ usage() {
   cat <<'USAGE'
 Usage: install.sh [--only claude|codex] [--ref <git-ref>] [--dry-run] [--uninstall]
 
-Installs careerdocs-plugin into every agent it detects: Claude Code (marketplace +
+Installs the careerdocs plugin into every agent it detects: Claude Code (marketplace +
 plugin, user scope) and Codex (skills copied into ~/.agents/skills). Safe to re-run.
 
   --only claude|codex   one agent instead of every agent detected
@@ -110,24 +112,29 @@ preflight() {
   fi
 }
 
-claude_marketplace_present() { claude plugin marketplace list --json 2>/dev/null | grep -q "\"${PLUGIN}\""; }
-claude_plugin_present() { claude plugin list --json 2>/dev/null | grep -qE "\"${PLUGIN}(@${PLUGIN})?\""; }
+claude_marketplace_present() { claude plugin marketplace list --json 2>/dev/null | grep -q "\"${MARKETPLACE}\""; }
+claude_plugin_present() { claude plugin list --json 2>/dev/null | grep -q "\"${PLUGIN}@${MARKETPLACE}\""; }
+claude_legacy_present() { claude plugin list --json 2>/dev/null | grep -q "\"${LEGACY_PLUGIN}@${MARKETPLACE}\""; }
 
 install_claude() {
   say "Claude Code"
   local source="${REPO}"
   [ "$REF" = "main" ] || source="https://github.com/${REPO}.git#${REF}"
   if claude_marketplace_present; then
-    ok "marketplace ${PLUGIN} already added"
+    ok "marketplace ${MARKETPLACE} already added"
   else
     run claude plugin marketplace add "${source}"
     ok "added marketplace ${source}"
   fi
+  if claude_legacy_present; then
+    run claude plugin uninstall "${LEGACY_PLUGIN}@${MARKETPLACE}" --scope user
+    ok "removed the install made under the plugin's old name, ${LEGACY_PLUGIN}"
+  fi
   if claude_plugin_present; then
-    run claude plugin update "${PLUGIN}@${PLUGIN}"
+    run claude plugin update "${PLUGIN}@${MARKETPLACE}"
     ok "updated ${PLUGIN}"
   else
-    run claude plugin install "${PLUGIN}@${PLUGIN}" --scope user
+    run claude plugin install "${PLUGIN}@${MARKETPLACE}" --scope user
     ok "installed ${PLUGIN} at user scope"
   fi
   note "new Claude Code sessions load it; in a session that is already open, run /reload-plugins"
@@ -136,14 +143,17 @@ install_claude() {
 uninstall_claude() {
   say "Claude Code"
   if claude_plugin_present; then
-    run claude plugin uninstall "${PLUGIN}@${PLUGIN}" --scope user
+    run claude plugin uninstall "${PLUGIN}@${MARKETPLACE}" --scope user
     ok "uninstalled ${PLUGIN}"
+  elif claude_legacy_present; then
+    run claude plugin uninstall "${LEGACY_PLUGIN}@${MARKETPLACE}" --scope user
+    ok "uninstalled ${LEGACY_PLUGIN}"
   else
     note "plugin not installed"
   fi
   if claude_marketplace_present; then
-    run claude plugin marketplace remove "${PLUGIN}"
-    ok "removed marketplace ${PLUGIN}"
+    run claude plugin marketplace remove "${MARKETPLACE}"
+    ok "removed marketplace ${MARKETPLACE}"
   else
     note "marketplace not configured"
   fi

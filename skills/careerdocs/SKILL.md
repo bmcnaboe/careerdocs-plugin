@@ -2,6 +2,7 @@
 name: careerdocs
 description: Core conventions and the careerdocs CLI shared by the careerdocs flows (onboard, update, resume, cover letter). Consult this skill for how the four authorities (qualifications, voice, templates, target role) are modeled and located, how flow skills invoke the careerdocs CLI, the diff-then-approve rule for every profile change, visibility semantics, and where workflow state and generated outputs live. Load it before running any careerdocs command or when a flow skill references a convention it does not restate.
 license: MIT
+user-invocable: false
 compatibility: "Python 3.11+; uv recommended (uv run), python3 fallback. Offline except optional link checks. Optional LibreOffice (soffice) for PDF conversion."
 metadata:
   version: "0.1.0"
@@ -10,8 +11,8 @@ metadata:
 
 # careerdocs
 
-Shared conventions and the `careerdocs` CLI behind four flows: **career-onboard**,
-**career-update**, **career-resume**, **career-cover-letter**. The flow skills own the
+Shared conventions and the `careerdocs` CLI behind four flows: **onboard**, **update**,
+**resume**, **cover-letter**. The flow skills own the
 conversation; this skill owns the rules they all obey and the deterministic commands they
 all call. Read it before running any `careerdocs` command.
 
@@ -41,7 +42,7 @@ Entry point: `skills/careerdocs/scripts/careerdocs.py`. Flow skills call it by
 relative path:
 
 ```sh
-uv run <skill-root>/careerdocs-plugin/scripts/careerdocs.py <command> --workspace <dir> [--json]
+uv run <skill-root>/careerdocs/scripts/careerdocs.py <command> --workspace <dir> [--json]
 # python3 works too; the entry point declares its runtime deps inline (PEP 723).
 ```
 

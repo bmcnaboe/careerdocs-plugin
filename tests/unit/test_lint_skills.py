@@ -36,12 +36,12 @@ def make_skill(base: Path, name: str, *, frontmatter: str | None = None) -> Path
 
 
 def test_valid_skill_has_no_errors(tmp_path):
-    make_skill(tmp_path, "career-onboard")
+    make_skill(tmp_path, "onboard")
     assert lint_skills.lint_all(tmp_path) == []
 
 
 def test_name_must_match_directory(tmp_path):
-    make_skill(tmp_path, "career-onboard",
+    make_skill(tmp_path, "onboard",
                frontmatter=GOOD_FRONTMATTER.format(name="something-else"))
     errors = lint_skills.lint_all(tmp_path)
     assert any("does not match directory" in e for e in errors)
@@ -62,37 +62,37 @@ def test_name_length_bound(tmp_path):
 
 
 def test_missing_description(tmp_path):
-    fm = "---\nname: career-onboard\n---\n\nbody\n"
-    make_skill(tmp_path, "career-onboard", frontmatter=fm)
+    fm = "---\nname: onboard\n---\n\nbody\n"
+    make_skill(tmp_path, "onboard", frontmatter=fm)
     assert any("missing 'description'" in e for e in lint_skills.lint_all(tmp_path))
 
 
 def test_description_too_long(tmp_path):
     desc = "x" * 1025
-    fm = f"---\nname: career-onboard\ndescription: {desc}\n---\n\nbody\n"
-    make_skill(tmp_path, "career-onboard", frontmatter=fm)
+    fm = f"---\nname: onboard\ndescription: {desc}\n---\n\nbody\n"
+    make_skill(tmp_path, "onboard", frontmatter=fm)
     assert any("description exceeds" in e for e in lint_skills.lint_all(tmp_path))
 
 
 def test_body_too_long(tmp_path):
     body = "\n".join(f"line {i}" for i in range(501))
-    fm = f"---\nname: career-onboard\ndescription: ok\n---\n{body}\n"
-    make_skill(tmp_path, "career-onboard", frontmatter=fm)
+    fm = f"---\nname: onboard\ndescription: ok\n---\n{body}\n"
+    make_skill(tmp_path, "onboard", frontmatter=fm)
     assert any("body is" in e for e in lint_skills.lint_all(tmp_path))
 
 
 def test_missing_frontmatter(tmp_path):
-    make_skill(tmp_path, "career-onboard", frontmatter="# no frontmatter here\n")
+    make_skill(tmp_path, "onboard", frontmatter="# no frontmatter here\n")
     assert any("frontmatter fence" in e for e in lint_skills.lint_all(tmp_path))
 
 
 def test_missing_skill_md(tmp_path):
-    (tmp_path / "career-onboard").mkdir()
+    (tmp_path / "onboard").mkdir()
     assert any("missing SKILL.md" in e for e in lint_skills.lint_all(tmp_path))
 
 
 def test_openai_yaml_must_be_flat(tmp_path):
-    skill = make_skill(tmp_path, "career-onboard")
+    skill = make_skill(tmp_path, "onboard")
     agents = skill / "agents"
     agents.mkdir()
     (agents / "openai.yaml").write_text(
@@ -102,7 +102,7 @@ def test_openai_yaml_must_be_flat(tmp_path):
 
 
 def test_openai_yaml_flat_ok(tmp_path):
-    skill = make_skill(tmp_path, "career-onboard")
+    skill = make_skill(tmp_path, "onboard")
     agents = skill / "agents"
     agents.mkdir()
     (agents / "openai.yaml").write_text(
@@ -112,9 +112,9 @@ def test_openai_yaml_flat_ok(tmp_path):
 
 
 def test_parse_frontmatter_reads_metadata_map():
-    data, body = lint_skills.parse_frontmatter(GOOD_FRONTMATTER.format(name="career-onboard"))
+    data, body = lint_skills.parse_frontmatter(GOOD_FRONTMATTER.format(name="onboard"))
     assert data["metadata"]["version"] == "0.1.0"
-    assert data["name"] == "career-onboard"
+    assert data["name"] == "onboard"
     assert any("Body" in line for line in body)
 
 
@@ -128,20 +128,20 @@ def test_repo_skills_lint_clean():
 
 
 def test_unquoted_value_with_colon_space_is_rejected(tmp_path):
-    make_skill(tmp_path, "career-onboard", frontmatter=GOOD_FRONTMATTER.format(name="career-onboard").replace(
+    make_skill(tmp_path, "onboard", frontmatter=GOOD_FRONTMATTER.format(name="onboard").replace(
         "A valid description of the skill.", "Never invents facts: a gap is named honestly."))
     errors = lint_skills.lint_all(tmp_path)
     assert any("contains ': '" in e for e in errors)
 
 
 def test_quoted_value_with_colon_space_is_accepted(tmp_path):
-    make_skill(tmp_path, "career-onboard", frontmatter=GOOD_FRONTMATTER.format(name="career-onboard").replace(
+    make_skill(tmp_path, "onboard", frontmatter=GOOD_FRONTMATTER.format(name="onboard").replace(
         "A valid description of the skill.", '"Never invents facts: a gap is named honestly."'))
     assert lint_skills.lint_all(tmp_path) == []
 
 
 def test_nested_unquoted_value_with_hash_is_rejected(tmp_path):
-    make_skill(tmp_path, "career-onboard", frontmatter=GOOD_FRONTMATTER.format(name="career-onboard").replace(
+    make_skill(tmp_path, "onboard", frontmatter=GOOD_FRONTMATTER.format(name="onboard").replace(
         'author: "careerdocs-plugin contributors"', "author: contributors #core"))
     errors = lint_skills.lint_all(tmp_path)
     assert any("metadata.author" in e and "' #'" in e for e in errors)

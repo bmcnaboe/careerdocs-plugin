@@ -1,5 +1,5 @@
 ---
-name: career-onboard
+name: onboard
 description: Onboard an applicant's existing career materials into one authoritative profile. Use when the applicant wants to import resumes, LinkedIn/network exports, and notes and reconcile them into a single careerdocs profile rather than scattered copies. The flow inventories the sources, runs profile import, has the agent extract candidates into candidates.json against the schema, builds a ProfileDiff, asks only the material questions the CLI generates (conflicts, missing dates, undecided visibility), records approval only after an explicit applicant yes, applies the diff, and refreshes the derived export. Resumable — an interrupted run continues from its workflow state without re-asking answered questions.
 license: MIT
 compatibility: "Python 3.11+; uv recommended. Requires the careerdocs core skill and its careerdocs CLI."
@@ -8,7 +8,7 @@ metadata:
   author: "careerdocs-plugin contributors"
 ---
 
-# career-onboard
+# onboard
 
 Reconcile an applicant's existing career materials into **one** authoritative profile.
 Read the core `careerdocs` skill first for the conventions this flow obeys

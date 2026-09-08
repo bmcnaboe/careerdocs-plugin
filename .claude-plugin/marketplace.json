@@ -6,7 +6,7 @@
   },
   "plugins": [
     {
-      "name": "careerdocs-plugin",
+      "name": "careerdocs",
       "source": "./",
       "description": "Portable resume and cover-letter workflows with one authoritative profile and verified output.",
       "version": "0.1.0"

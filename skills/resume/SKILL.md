@@ -1,5 +1,5 @@
 ---
-name: career-resume
+name: resume
 description: Generate a tailored résumé for a specific job description from the applicant's authoritative profile. Use when the applicant has an onboarded profile and a target role, and wants a résumé mapped to that role's requirements. The flow builds a role brief from the job description, has the agent complete it, maps each requirement to direct/transferable/gap evidence, chooses a positioning (executive or builder), plans content within the template's page budget, drafts units in the applicant's voice, renders into the template, runs the five output checks, and reports cuts and gaps. It never invents qualifications — a gap requirement is named honestly and never claimed.
 license: MIT
 compatibility: "Python 3.11+; uv recommended. Requires the careerdocs core skill and an onboarded profile. Optional LibreOffice for PDF checks."
@@ -8,14 +8,14 @@ metadata:
   author: "careerdocs-plugin contributors"
 ---
 
-# career-resume
+# resume
 
 Turn a job description into a tailored résumé grounded entirely in the applicant's
 authoritative profile. Read the core `careerdocs` skill first.
 
 ## When to use
 
-The profile is onboarded (via `career-onboard`) and the applicant has a specific role in
+The profile is onboarded (via `onboard`) and the applicant has a specific role in
 mind. Produces a role brief, a requirement-to-evidence map, a content plan, a rendered
 résumé, and an output record — in that order, saved under the application folder.
 

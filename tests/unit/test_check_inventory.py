@@ -31,11 +31,11 @@ def make_repo(tmp_path, skills, *, plugin=True, market=True, openai=None):
     cp = tmp_path / ".claude-plugin"
     cp.mkdir()
     if plugin:
-        (cp / "plugin.json").write_text(json.dumps({"name": "careerdocs-plugin", "version": "0.1.0"}), encoding="utf-8")
+        (cp / "plugin.json").write_text(json.dumps({"name": "careerdocs", "version": "0.1.0"}), encoding="utf-8")
     if market:
         (cp / "marketplace.json").write_text(
             json.dumps({"name": "careerdocs-plugin", "plugins": [
-                {"name": "careerdocs-plugin", "source": "./", "version": "0.1.0"}]}),
+                {"name": "careerdocs", "source": "./", "version": "0.1.0"}]}),
             encoding="utf-8",
         )
     if openai is not None:
@@ -79,7 +79,7 @@ def test_openai_absent_is_skipped(tmp_path):
 def test_openai_matches(tmp_path):
     root = make_repo(
         tmp_path, {"careerdocs": "Core skill."},
-        openai={"name": "careerdocs-plugin", "version": "0.1.0", "skills": [
+        openai={"name": "careerdocs", "version": "0.1.0", "skills": [
             {"name": "careerdocs", "description": "Core skill.", "path": "skills/careerdocs"}]},
     )
     assert ci.check_openai(root, ci.discover_skills(root)) == []
@@ -88,7 +88,7 @@ def test_openai_matches(tmp_path):
 def test_openai_description_mismatch(tmp_path):
     root = make_repo(
         tmp_path, {"careerdocs": "Core skill."},
-        openai={"name": "careerdocs-plugin", "version": "0.1.0", "skills": [
+        openai={"name": "careerdocs", "version": "0.1.0", "skills": [
             {"name": "careerdocs", "description": "WRONG", "path": "skills/careerdocs"}]},
     )
     assert any("description differs" in e for e in ci.check_openai(root, ci.discover_skills(root)))
@@ -96,8 +96,8 @@ def test_openai_description_mismatch(tmp_path):
 
 def test_openai_missing_skill(tmp_path):
     root = make_repo(
-        tmp_path, {"careerdocs": "Core.", "career-onboard": "Onboard."},
-        openai={"name": "careerdocs-plugin", "version": "0.1.0", "skills": [
+        tmp_path, {"careerdocs": "Core.", "onboard": "Onboard."},
+        openai={"name": "careerdocs", "version": "0.1.0", "skills": [
             {"name": "careerdocs", "description": "Core.", "path": "skills/careerdocs"}]},
     )
     assert any("!= skills tree" in e for e in ci.check_openai(root, ci.discover_skills(root)))
