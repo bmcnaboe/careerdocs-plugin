@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/bmcnaboe/career-documents/schemas/content-plan.schema.json#1.0.0",
+  "title": "ContentPlan",
+  "type": "object",
+  "required": ["positioning", "template", "page_budget", "units", "cuts"],
+  "additionalProperties": false,
+  "properties": {
+    "positioning": { "enum": ["executive", "builder"] },
+    "kind": { "enum": ["resume", "cover_letter"] },
+    "template": { "type": "object" },
+    "voice": { "type": ["object", "string", "null"] },
+    "page_budget": { "type": "integer", "minimum": 1 },
+    "units": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["unit_id", "section_id", "kind", "text", "source_ids", "emphasis"],
+        "additionalProperties": false,
+        "properties": {
+          "unit_id": { "type": "string" },
+          "section_id": { "type": "string" },
+          "kind": { "enum": ["bullet", "sentence", "field"] },
+          "text": { "type": "string" },
+          "source_ids": { "type": "array", "items": { "type": "string" } },
+          "emphasis": { "enum": ["high", "medium", "low"] }
+        }
+      }
+    },
+    "cuts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["entity_id", "reason"],
+        "additionalProperties": false,
+        "properties": {
+          "entity_id": { "type": "string" },
+          "reason": { "type": "string" }
+        }
+      }
+    }
+  }
+}
