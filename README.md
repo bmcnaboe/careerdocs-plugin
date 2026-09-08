@@ -54,8 +54,24 @@ any claim that is not traceable to the profile.
 
 ## Install
 
-- **Claude Code / Cowork** — see [docs/setup-claude.md](docs/setup-claude.md).
-- **ChatGPT / Codex** — see [docs/setup-codex.md](docs/setup-codex.md).
+The repository is the Claude plugin, and the OpenAI package installs the same skills for
+Codex/ChatGPT.
+
+**Claude Code / Cowork** — add the marketplace and install the plugin:
+
+```sh
+claude plugin marketplace add ./career-documents      # or the GitHub repo URL
+claude plugin install career-documents@career-documents
+```
+
+**ChatGPT / Codex** — run the standard-library installer:
+
+```sh
+python3 packages/openai/install.py                    # links into ~/.agents/skills
+```
+
+Full steps and verification: [docs/setup-claude.md](docs/setup-claude.md) and
+[docs/setup-codex.md](docs/setup-codex.md).
 
 ## Documentation
 
