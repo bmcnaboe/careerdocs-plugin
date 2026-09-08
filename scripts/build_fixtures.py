@@ -14,11 +14,13 @@ Run: ``uv run --extra dev python scripts/build_fixtures.py``
 
 from __future__ import annotations
 
+import json
 from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCES = ROOT / "examples" / "applicant" / "sources"
+TEMPLATES = ROOT / "examples" / "applicant" / "templates"
 
 FIXED_TIME = datetime(2024, 1, 1, 0, 0, 0)
 
@@ -111,11 +113,74 @@ def build_resume_b_pdf(path: Path) -> None:
     pdf.save()
 
 
+RESUME_TEMPLATE_JSON = {
+    "name": "example-resume",
+    "kind": "resume",
+    "version": "1",
+    "page_budget": 2,
+    "units_per_page": 12,
+    "sections": [
+        {"id": "header", "title": "", "placeholder": "contact", "entity_types": ["contact"], "max_items": 1, "required": True},
+        {"id": "experience", "title": "Experience", "placeholder": "experience", "entity_types": ["experience", "achievement"], "max_items": 12, "required": True},
+        {"id": "skills", "title": "Skills", "placeholder": "skills", "entity_types": ["skill"], "max_items": 20, "required": False},
+        {"id": "education", "title": "Education", "placeholder": "education", "entity_types": ["education"], "max_items": 5, "required": False},
+    ],
+    "allowlist": ["Experience", "Skills", "Education"],
+    "style_notes": "Two-page budget; verb-first bullets; no buzzwords.",
+}
+
+COVER_LETTER_TEMPLATE_JSON = {
+    "name": "example-cover-letter",
+    "kind": "cover_letter",
+    "version": "1",
+    "page_budget": 1,
+    "units_per_page": 6,
+    "sections": [
+        {"id": "header", "title": "", "placeholder": "contact", "entity_types": ["contact"], "max_items": 1, "required": True},
+        {"id": "body", "title": "", "placeholder": "body", "kind": "sentence", "entity_types": ["experience", "achievement", "skill"], "max_items": 6, "required": True},
+    ],
+    "allowlist": [],
+    "style_notes": "One page; complements the resume; no verbatim resume bullets.",
+}
+
+
+def _build_docxtpl_template(directory: Path, manifest: dict) -> None:
+    from docx import Document
+
+    document = Document()
+    document.add_paragraph("{{ contact }}")
+    document.add_paragraph("{%p for section in sections %}")
+    document.add_paragraph("{{ section.title }}")
+    document.add_paragraph("{%p for unit in section.units %}")
+    document.add_paragraph("{{ unit.text }}")
+    document.add_paragraph("{%p endfor %}")
+    document.add_paragraph("{%p endfor %}")
+    props = document.core_properties
+    props.created = FIXED_TIME
+    props.modified = FIXED_TIME
+
+    directory.mkdir(parents=True, exist_ok=True)
+    document.save(str(directory / "template.docx"))
+    (directory / "template.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+
+
+def build_resume_template(directory: Path) -> None:
+    directory.mkdir(parents=True, exist_ok=True)
+    _build_docxtpl_template(directory, RESUME_TEMPLATE_JSON)
+
+
+def build_cover_letter_template(directory: Path) -> None:
+    directory.mkdir(parents=True, exist_ok=True)
+    _build_docxtpl_template(directory, COVER_LETTER_TEMPLATE_JSON)
+
+
 def main() -> None:
     build_resume_a_docx(SOURCES / "resume-a.docx")
     build_resume_b_pdf(SOURCES / "resume-b.pdf")
+    build_resume_template(TEMPLATES / "resume")
     print(f"built {SOURCES / 'resume-a.docx'}")
     print(f"built {SOURCES / 'resume-b.pdf'}")
+    print(f"built {TEMPLATES / 'resume' / 'template.docx'}")
 
 
 if __name__ == "__main__":

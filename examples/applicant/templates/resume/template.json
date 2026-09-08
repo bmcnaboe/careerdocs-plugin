@@ -1,0 +1,56 @@
+{
+  "name": "example-resume",
+  "kind": "resume",
+  "version": "1",
+  "page_budget": 2,
+  "units_per_page": 12,
+  "sections": [
+    {
+      "id": "header",
+      "title": "",
+      "placeholder": "contact",
+      "entity_types": [
+        "contact"
+      ],
+      "max_items": 1,
+      "required": true
+    },
+    {
+      "id": "experience",
+      "title": "Experience",
+      "placeholder": "experience",
+      "entity_types": [
+        "experience",
+        "achievement"
+      ],
+      "max_items": 12,
+      "required": true
+    },
+    {
+      "id": "skills",
+      "title": "Skills",
+      "placeholder": "skills",
+      "entity_types": [
+        "skill"
+      ],
+      "max_items": 20,
+      "required": false
+    },
+    {
+      "id": "education",
+      "title": "Education",
+      "placeholder": "education",
+      "entity_types": [
+        "education"
+      ],
+      "max_items": 5,
+      "required": false
+    }
+  ],
+  "allowlist": [
+    "Experience",
+    "Skills",
+    "Education"
+  ],
+  "style_notes": "Two-page budget; verb-first bullets; no buzzwords."
+}
