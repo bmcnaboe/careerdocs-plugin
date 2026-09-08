@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/bmcnaboe/career-documents/schemas/role-brief.schema.json#1.0.0",
+  "title": "RoleBrief",
+  "type": "object",
+  "required": ["requirements", "recommended_positioning"],
+  "additionalProperties": false,
+  "properties": {
+    "organization": { "type": "string" },
+    "role": { "type": "string" },
+    "seniority": { "type": "string" },
+    "location": { "type": "string" },
+    "source": { "type": ["object", "null"] },
+    "requirements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "text", "kind", "keywords"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^req-[0-9]+$" },
+          "text": { "type": "string", "minLength": 1 },
+          "kind": { "enum": ["must", "nice"] },
+          "keywords": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "keywords": { "type": "array", "items": { "type": "string" } },
+    "recommended_positioning": { "enum": ["executive", "builder"] },
+    "notes": { "type": "string" }
+  }
+}
