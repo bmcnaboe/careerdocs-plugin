@@ -35,6 +35,30 @@ def _write_frontmatter_file(path: Path, frontmatter: dict, body: str = "") -> No
     path.write_text(text, encoding="utf-8")
 
 
+def _parse_flat_frontmatter(block: str) -> dict:
+    """Parse a flat ``key: value`` YAML frontmatter block (scalars only).
+
+    A live Basic Memory service may normalize a note's JSON frontmatter into flat YAML and
+    add its own keys (``permalink``); this reads that back. Nested structures are not
+    expected in the index note, which carries only scalar fields.
+    """
+    data: dict = {}
+    for line in block.splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#") or ":" not in stripped:
+            continue
+        key, _, value = stripped.partition(":")
+        key, value = key.strip(), value.strip()
+        if len(value) >= 2 and value[0] in "\"'" and value[-1] == value[0]:
+            value = value[1:-1]
+        elif value in ("true", "false"):
+            value = value == "true"
+        elif value in ("null", "~", ""):
+            value = None
+        data[key] = value
+    return data
+
+
 def _read_frontmatter_file(path: Path) -> tuple[dict, str]:
     lines = path.read_text(encoding="utf-8").splitlines()
     if not lines or lines[0].strip() != "---":
@@ -42,7 +66,11 @@ def _read_frontmatter_file(path: Path) -> tuple[dict, str]:
     end = next((i for i in range(1, len(lines)) if lines[i].strip() == "---"), None)
     if end is None:
         raise ProfileInvalid(f"{path} has an unterminated frontmatter fence")
-    frontmatter = json.loads("\n".join(lines[1:end]))
+    block = "\n".join(lines[1:end])
+    try:
+        frontmatter = json.loads(block)
+    except json.JSONDecodeError:
+        frontmatter = _parse_flat_frontmatter(block)
     body = "\n".join(lines[end + 1:])
     return frontmatter, body
 
@@ -120,7 +148,9 @@ class MarkdownProvider(Provider):
     def read(self) -> dict:
         if not self.index_file.exists():
             return self._empty_profile()
-        index, _ = _read_frontmatter_file(self.index_file)
+        index_raw, _ = _read_frontmatter_file(self.index_file)
+        # Keep only the known index fields; a provider (e.g. Basic Memory) may add its own.
+        index = {field: index_raw[field] for field in INDEX_FIELDS if field in index_raw}
         stored_version = index.get("schema_version", "0.0.0")
         if self._too_new(stored_version):
             raise SchemaTooNew(

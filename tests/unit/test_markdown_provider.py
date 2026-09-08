@@ -97,6 +97,13 @@ def test_hash_stable_regardless_of_entity_order(tmp_path):
     assert hash_profile(reordered) == h1
 
 
+def test_hash_ignores_updated_at():
+    # updated_at is a mutation timestamp, not content: two reads seconds apart must hash equal.
+    profile = sample_profile()
+    later = {**profile, "updated_at": "2099-12-31T23:59:59Z"}
+    assert hash_profile(later) == hash_profile(profile)
+
+
 def test_write_removes_retired_entity_files(tmp_path):
     provider = make_provider(tmp_path)
     profile = sample_profile()

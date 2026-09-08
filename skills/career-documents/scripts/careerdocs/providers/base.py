@@ -36,9 +36,14 @@ INDEX_FIELDS = (
 
 
 def canonical_profile(profile: dict) -> str:
-    """A stable JSON string over the sorted entities plus the index (file-order free)."""
+    """A stable JSON string over the sorted entities plus the index (file-order free).
+
+    ``updated_at`` is excluded: it is a mutation timestamp, not content identity, and an
+    empty profile regenerates it on every read — including it would make the base-hash of a
+    freshly bootstrapped profile differ between the diff and the apply.
+    """
     entities = sorted(profile.get("entities", []), key=lambda e: e["id"])
-    index = {k: v for k, v in profile.items() if k != "entities"}
+    index = {k: v for k, v in profile.items() if k not in ("entities", "updated_at")}
     index["sources"] = sorted(index.get("sources", []), key=lambda s: s["source_id"])
     return json.dumps(
         {"index": index, "entities": entities},
