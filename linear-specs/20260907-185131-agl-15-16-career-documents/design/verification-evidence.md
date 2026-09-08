@@ -8,10 +8,10 @@ Status values: `pending`, `pass`, `fail`, `skipped (reason)`.
 
 | Scenario | Method              | Evidence                                              | Status  |
 | -------- | ------------------- | ----------------------------------------------------- | ------- |
-| US1-1    | manual-acceptance   | quickstart §Manual acceptance, item 1 (Claude)        | pending |
-| US1-2    | manual-acceptance   | quickstart §Manual acceptance, item 1 (Codex)         | pending |
-| US1-3    | contract            | `scripts/check_inventory.py`; `tests/integration/test_packages.py` | pending |
-| US1-4    | contract            | `scripts/pii_guard.py` in the final gate              | pending |
+| US1-1    | manual-acceptance   | quickstart §Manual acceptance item 1 (Claude); `docs/setup-claude.md` | skipped (manual acceptance) |
+| US1-2    | manual-acceptance   | quickstart §Manual acceptance item 1 (Codex); `docs/setup-codex.md`   | skipped (manual acceptance) |
+| US1-3    | contract            | `scripts/check_inventory.py` (full gate: consistent); `tests/integration/test_packages.py` | pending |
+| US1-4    | contract            | `scripts/pii_guard.py` (final gate: zero findings across the tracked tree) | pass    |
 | US2-1    | integration         | `tests/integration/test_onboard.py::test_conflict_one_question` | pending |
 | US2-2    | integration         | `tests/integration/test_onboard.py::test_apply_single_entry` | pending |
 | US2-3    | integration         | `tests/integration/test_onboard.py::test_resume_no_repeat` | pending |
