@@ -1,7 +1,7 @@
 {
   "version": 1,
   "layer_repo": "https://github.com/bmcnaboe/agent-layer",
-  "layer_commit": "10e27b2f69963a20e16c62fb1aaf7e767c6f2807",
+  "layer_commit": "d76d011fa52b3eedee71e5c15b34f9bab8f045ef",
   "modules": [
     "agent-core",
     "linear",
