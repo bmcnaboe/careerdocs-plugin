@@ -17,11 +17,11 @@ Status values: `pending`, `pass`, `fail`, `skipped (reason)`.
 | US2-3    | integration         | `tests/integration/test_onboard.py::test_resume_no_repeat`; unit: `test_state.py`, `test_questions.py::test_no_question_repeats_after_resume` | pass    |
 | US2-4    | integration         | `tests/integration/test_onboard.py::test_private_excluded`; unit: `test_visibility.py::test_export_excludes_private_and_is_derived` | pass    |
 | US2-5    | integration         | `tests/integration/test_basic_memory_provider.py`; unit: `test_basic_memory_provider.py` (same ids, derived markdown export) | pass    |
-| US3-1    | integration         | `tests/integration/test_resume.py::test_pipeline_artifacts` | pending |
-| US3-2    | integration         | `tests/integration/test_resume.py::test_gap_never_claimed` | pending |
-| US3-3    | unit + integration  | `tests/unit/test_plan.py::test_positioning_inverts`; `test_resume.py` | pending |
-| US3-4    | integration         | `tests/integration/test_resume.py::test_five_checks`  | pending |
-| US3-5    | unit                | `tests/unit/test_plan.py::test_budget_cuts_reported`  | pending |
+| US3-1    | integration         | `tests/integration/test_resume.py::test_pipeline_artifacts`; unit: `test_brief.py`, `test_mapping.py`, `test_plan.py`, `test_render.py` | pending |
+| US3-2    | integration         | `tests/integration/test_resume.py::test_gap_never_claimed`; unit: `test_mapping.py::test_fda_requirement_is_a_gap`, `test_checks_factual.py` | pending |
+| US3-3    | unit + integration  | `tests/unit/test_plan.py::test_positioning_inverts` (pass); `tests/integration/test_resume.py::test_positioning_inverts` | pending |
+| US3-4    | integration         | `tests/integration/test_resume.py::test_five_checks`; unit: `test_record.py`, `test_checks_layout.py` | pending |
+| US3-5    | unit                | `tests/unit/test_plan.py::test_budget_cuts_reported` | pass    |
 | US4-1    | integration         | `tests/integration/test_cover_letter.py::test_reuses_brief_and_map` | pending |
 | US4-2    | integration         | `tests/integration/test_cover_letter.py::test_checks_and_budget` | pending |
 | US4-3    | integration         | `tests/integration/test_cover_letter.py::test_no_verbatim_bullets` | pending |
