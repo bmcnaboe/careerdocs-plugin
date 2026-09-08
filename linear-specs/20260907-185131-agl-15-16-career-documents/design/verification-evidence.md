@@ -25,6 +25,6 @@ Status values: `pending`, `pass`, `fail`, `skipped (reason)`.
 | US4-1    | integration         | `tests/integration/test_cover_letter.py::test_reuses_brief_and_map`; unit: `test_plan.py::test_cover_letter_orders_by_requirement_value` | pass    |
 | US4-2    | integration         | `tests/integration/test_cover_letter.py::test_checks_and_budget`; unit: `test_plan.py::test_cover_letter_page_budget_cuts`, `test_checks_factual.py` | pass    |
 | US4-3    | integration         | `tests/integration/test_cover_letter.py::test_no_verbatim_bullets`; unit: `test_checks_factual.py::test_verbatim_bullet_check_flags_reuse` | pass    |
-| US5-1    | integration         | `tests/integration/test_update.py::test_new_fact_provenance`; unit: `test_merge.py`, `test_diff.py` | pending |
-| US5-2    | integration         | `tests/integration/test_update.py::test_exports_agree_and_stale`; unit: `test_diff.py::test_apply_marks_stale_outputs` | pending |
-| US5-3    | integration         | `tests/integration/test_update.py::test_resume_pending_diff`; unit: `test_state.py`, `test_questions.py::test_no_question_repeats_after_resume` | pending |
+| US5-1    | integration         | `tests/integration/test_update.py::test_new_fact_provenance`; unit: `test_merge.py`, `test_diff.py` | pass    |
+| US5-2    | integration         | `tests/integration/test_update.py::test_exports_agree_and_stale`; unit: `test_diff.py::test_apply_marks_stale_outputs` | pass    |
+| US5-3    | integration         | `tests/integration/test_update.py::test_resume_pending_diff`; unit: `test_state.py`, `test_questions.py::test_no_question_repeats_after_resume` | pass    |
