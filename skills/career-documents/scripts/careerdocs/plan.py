@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from collections import defaultdict
 from pathlib import Path
 
 from . import config as config_module
@@ -62,13 +63,30 @@ def _kind_for(entity: dict, section: dict) -> str:
     return "bullet" if entity["type"] == "achievement" else "field"
 
 
-def generate_plan(mapping: list[dict], profile: dict, template: dict, positioning: str, *, voice=None) -> dict:
+def value_scores(mapping: list[dict], brief: dict | None) -> dict[str, int]:
+    """Score each cited entity by requirement value (must>nice, direct>transferable)."""
+    kind_by_req = {r["id"]: r.get("kind", "must") for r in brief["requirements"]} if brief else {}
+    scores: dict[str, int] = defaultdict(int)
+    for entry in mapping:
+        if entry["classification"] == "gap":
+            continue
+        base = 2 if entry["classification"] == "direct" else 1
+        weight = 2 if kind_by_req.get(entry["requirement_id"], "must") == "must" else 1
+        for ev in entry["evidence"]:
+            scores[ev["entity_id"]] = max(scores[ev["entity_id"]], base * weight)
+    return scores
+
+
+def generate_plan(mapping: list[dict], profile: dict, template: dict, positioning: str,
+                  *, voice=None, brief=None) -> dict:
     cited = {
         ev["entity_id"]
         for entry in mapping
         if entry["classification"] != "gap"
         for ev in entry["evidence"]
     }
+    is_letter = template.get("kind") == "cover_letter"
+    values = value_scores(mapping, brief) if is_letter else {}
     units: list[dict] = []
     cuts: list[dict] = []
     unit_no = 0
@@ -79,7 +97,11 @@ def generate_plan(mapping: list[dict], profile: dict, template: dict, positionin
             e for e in profile["entities"]
             if e["type"] in types and _visible(e) and (e["id"] in cited or e["type"] == "contact")
         ]
-        pool.sort(key=lambda e: _EMPHASIS_WEIGHT[emphasis_for(e, positioning)])
+        if is_letter:
+            # A cover letter leads with the highest-value evidence, then emphasis.
+            pool.sort(key=lambda e: (-values.get(e["id"], 0), _EMPHASIS_WEIGHT[emphasis_for(e, positioning)]))
+        else:
+            pool.sort(key=lambda e: _EMPHASIS_WEIGHT[emphasis_for(e, positioning)])
         max_items = section.get("max_items")
         kept = pool[:max_items] if max_items is not None else pool
         dropped = pool[max_items:] if max_items is not None else []
@@ -171,7 +193,10 @@ def cmd_plan(args) -> int:
     mapping = json.loads((app_dir / "map.json").read_text(encoding="utf-8"))
     profile = load_provider(args.workspace, cfg).read()
     template = load_template(args.workspace, cfg, args.kind)
-    plan = generate_plan(mapping, profile, template, positioning, voice={"path": cfg["voice"]["path"]})
+    brief_path = app_dir / "brief.json"
+    brief = json.loads(brief_path.read_text(encoding="utf-8")) if brief_path.is_file() else None
+    plan = generate_plan(mapping, profile, template, positioning,
+                         voice={"path": cfg["voice"]["path"]}, brief=brief)
 
     errors = validate_plan(plan, template)
     if errors:

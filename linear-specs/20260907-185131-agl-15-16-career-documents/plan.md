@@ -139,7 +139,7 @@ emit `<ralph>GUTTER</ralph>` with the root cause.
 
 ### Tranche D — Cover letter, updates, polish (AGL-15)
 
-- [ ] T043 [AGL-15] Extend `skills/career-documents/scripts/careerdocs/plan.py` with `--kind cover_letter` (paragraph units, top requirements by value, gap policy, exclusion of verbatim résumé bullets, letter page budget) with additions to `tests/unit/test_plan.py`
+- [x] T043 [AGL-15] Extend `skills/career-documents/scripts/careerdocs/plan.py` with `--kind cover_letter` (paragraph units, top requirements by value, gap policy, exclusion of verbatim résumé bullets, letter page budget) with additions to `tests/unit/test_plan.py`
 - [ ] T044 [AGL-15] Add the example letter template `examples/applicant/templates/cover-letter/template.docx` + `template.json` to `scripts/build_fixtures.py`, support `render --kind cover_letter`, and add the verbatim-bullet check to `skills/career-documents/scripts/careerdocs/checks/factual.py` with additions to `tests/unit/test_render.py` and `tests/unit/test_checks_factual.py`
 - [ ] T045 [AGL-15] [risky] Create `skills/career-cover-letter/SKILL.md`, `skills/career-cover-letter/agents/openai.yaml`, and `skills/career-cover-letter/references/playbook.md` (reuse brief and map without re-asking; draft in voice; complement, do not repeat; handle gaps honestly), and add the skill to both package manifests
 - [ ] T046 [AGL-15] Update `linear-specs/20260907-185131-agl-15-16-career-documents/design/verification-evidence.md` with the US4 outcome map, automated guard evidence, and generated artifact links

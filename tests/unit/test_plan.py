@@ -84,6 +84,48 @@ def test_page_budget_global_cap():
     assert len(result["cuts"]) == 3
 
 
+COVER_TEMPLATE = {
+    "name": "letter", "kind": "cover_letter", "version": "1", "page_budget": 1, "units_per_page": 6,
+    "sections": [
+        {"id": "header", "placeholder": "contact", "entity_types": ["contact"], "max_items": 1},
+        {"id": "body", "kind": "sentence", "entity_types": ["experience", "achievement", "skill"], "max_items": 6},
+    ],
+}
+
+
+def test_cover_letter_units_are_sentences():
+    exp = entity("experience", organization="Acme", title="Eng", start_date="2020-01-01")
+    result = plan.generate_plan(map_all_direct([exp]), profile_with([exp]), COVER_TEMPLATE, "builder")
+    body = [u for u in result["units"] if u["section_id"] == "body"]
+    assert body and all(u["kind"] == "sentence" for u in body)
+    assert result["kind"] == "cover_letter"
+
+
+def test_cover_letter_orders_by_requirement_value():
+    high = entity("experience", organization="High", title="Eng", start_date="2020-01-01")
+    low = entity("experience", organization="Low", title="Eng", start_date="2019-01-01")
+    mapping = [
+        {"requirement_id": "req-1", "classification": "direct", "evidence": [{"entity_id": high["id"], "why": "x"}], "note": ""},
+        {"requirement_id": "req-2", "classification": "transferable", "evidence": [{"entity_id": low["id"], "why": "x"}], "note": ""},
+    ]
+    brief = {"requirements": [{"id": "req-1", "kind": "must"}, {"id": "req-2", "kind": "nice"}], "recommended_positioning": "builder"}
+    result = plan.generate_plan(mapping, profile_with([high, low]), COVER_TEMPLATE, "builder", brief=brief)
+    body = [u for u in result["units"] if u["section_id"] == "body"]
+    assert body[0]["source_ids"][0] == high["id"]
+
+
+def test_cover_letter_page_budget_cuts():
+    entities = [entity("achievement", statement=f"Did thing {i}", parent_id="x") for i in range(10)]
+    # achievements need a parent to render; use a fake parent id but they are still cited.
+    mapping = map_all_direct(entities)
+    template = {**COVER_TEMPLATE, "sections": [
+        {"id": "body", "kind": "sentence", "entity_types": ["achievement"], "max_items": 20}]}
+    result = plan.generate_plan(mapping, profile_with(entities), template, "builder")
+    # page_budget 1 * units_per_page 6 = cap 6.
+    assert len(result["units"]) == 6
+    assert len(result["cuts"]) == 4
+
+
 def test_gap_requirement_not_cited():
     exp = entity("experience", organization="Acme", title="Eng", start_date="2020-01-01")
     unused = entity("skill", name="Nuclear")
