@@ -117,14 +117,23 @@ def register(subparsers, common: argparse.ArgumentParser) -> None:
     parser = subparsers.add_parser("render", parents=[common], help="render a content plan into the template")
     parser.add_argument("--kind", choices=["resume", "cover_letter"], default="resume")
     parser.add_argument("--role-slug")
+    parser.add_argument("--positioning", choices=["executive", "builder"], help="baseline positioning")
+    parser.add_argument("--baseline", action="store_true", help="render a role-less baseline")
     parser.add_argument("--pdf", action="store_true", help="also produce a PDF (needs soffice)")
     parser.set_defaults(func=cmd_render)
 
 
 def cmd_render(args) -> int:
     cfg = config_module.resolve_config(args.workspace)
-    slug = plan_module._resolve_slug(args, cfg)
-    app_dir = Path(args.workspace) / cfg["outputs"]["applications_dir"] / slug
+    if args.baseline:
+        positioning = args.positioning or cfg["workflow"]["positioning_default"]
+        app_dir = Path(args.workspace) / cfg["outputs"]["baselines_dir"] / positioning
+        brief_path = map_path = None
+    else:
+        slug = plan_module._resolve_slug(args, cfg)
+        app_dir = Path(args.workspace) / cfg["outputs"]["applications_dir"] / slug
+        brief_path = app_dir / "brief.json"
+        map_path = app_dir / "map.json"
 
     plan_path = app_dir / "plan.json"
     plan = json.loads(plan_path.read_text(encoding="utf-8"))
@@ -135,7 +144,8 @@ def cmd_render(args) -> int:
     if not template_docx.is_file():
         raise CareerDocsError(f"template not found at {template_docx}", code="USAGE")
 
-    out_dir = app_dir / "outputs"
+    # Baselines land directly under baselines/<positioning>/; role outputs under outputs/.
+    out_dir = app_dir if args.baseline else app_dir / "outputs"
     out_docx = _unique_path(out_dir, f"{args.kind}-{stamp()}", ".docx")
     render_document(plan, template, template_docx, out_docx)
 
@@ -145,13 +155,11 @@ def cmd_render(args) -> int:
         pdf_path = convert_to_pdf(out_docx)
         pdf_available = pdf_path is not None
 
-    brief_path = app_dir / "brief.json"
-    map_path = app_dir / "map.json"
     record = build_record(
         plan, document=out_docx, kind=args.kind, positioning=plan["positioning"],
         plan_path=plan_path,
-        brief_path=brief_path if brief_path.is_file() else None,
-        map_path=map_path if map_path.is_file() else None,
+        brief_path=brief_path if (brief_path and brief_path.is_file()) else None,
+        map_path=map_path if (map_path and map_path.is_file()) else None,
         pdf_path=pdf_path, pdf_available=pdf_available,
     )
     invalid = schema.validate_against("output-record", record)

@@ -123,6 +123,39 @@ def test_render_cover_letter(tmp_path):
     assert "Globex Corporation" in text or "Kubernetes" in text or "platform" in text
 
 
+def test_cli_baseline_plan_render_check(tmp_path, capsys):
+    from careerdocs import cli
+
+    ws = str(tmp_path)
+    cli.main(["config", "init", "--workspace", ws])
+    dest = tmp_path / "templates" / "resume"
+    dest.mkdir(parents=True)
+    shutil.copy(TEMPLATE_DOCX, dest / "template.docx")
+    shutil.copy(TEMPLATE_DIR / "template.json", dest / "template.json")
+    # Build a profile in the workspace.
+    provider = load_provider(tmp_path, default_config())
+    ops = merge.build_operations(provider.read(), CANDIDATES)
+    d = diff.make_diff(provider, ops)
+    diff.approve(provider, d["diff_id"])
+    diff.apply(provider, d["diff_id"], cfg=default_config(), workspace=tmp_path)
+
+    assert cli.main(["plan", "--baseline", "--positioning", "builder", "--workspace", ws]) == 0
+    assert (tmp_path / "baselines" / "builder" / "plan.json").exists()
+
+    capsys.readouterr()
+    assert cli.main(["render", "--baseline", "--positioning", "builder", "--workspace", ws, "--json"]) == 0
+    out = json.loads(capsys.readouterr().out)
+    doc = Path(out["document"])
+    assert doc.parent == tmp_path / "baselines" / "builder"
+    record = json.loads(Path(out["record"]).read_text())
+    assert record["role_brief"] is None  # baseline has no role
+
+    capsys.readouterr()
+    assert cli.main(["check", str(doc), "--workspace", ws, "--json"]) == 0
+    result = json.loads(capsys.readouterr().out)
+    assert result["checks"]["factual"]["status"] == "pass"
+
+
 def test_cli_render_pdf_branch(tmp_path):
     from careerdocs import cli
 

@@ -78,13 +78,17 @@ def value_scores(mapping: list[dict], brief: dict | None) -> dict[str, int]:
 
 
 def generate_plan(mapping: list[dict], profile: dict, template: dict, positioning: str,
-                  *, voice=None, brief=None) -> dict:
-    cited = {
-        ev["entity_id"]
-        for entry in mapping
-        if entry["classification"] != "gap"
-        for ev in entry["evidence"]
-    }
+                  *, voice=None, brief=None, baseline: bool = False) -> dict:
+    if baseline:
+        # A baseline has no target role: every visible entity is eligible evidence.
+        cited = {e["id"] for e in profile["entities"] if _visible(e)}
+    else:
+        cited = {
+            ev["entity_id"]
+            for entry in mapping
+            if entry["classification"] != "gap"
+            for ev in entry["evidence"]
+        }
     is_letter = template.get("kind") == "cover_letter"
     values = value_scores(mapping, brief) if is_letter else {}
     units: list[dict] = []
@@ -160,6 +164,7 @@ def register(subparsers, common: argparse.ArgumentParser) -> None:
     parser.add_argument("--positioning", choices=["executive", "builder"])
     parser.add_argument("--kind", choices=["resume", "cover_letter"], default="resume")
     parser.add_argument("--role-slug")
+    parser.add_argument("--baseline", action="store_true", help="role-less baseline from all visible evidence")
     parser.set_defaults(func=cmd_plan)
 
 
@@ -187,16 +192,22 @@ def _resolve_slug(args, cfg: dict) -> str:
 def cmd_plan(args) -> int:
     cfg = config_module.resolve_config(args.workspace)
     positioning = args.positioning or cfg["workflow"]["positioning_default"]
-    slug = _resolve_slug(args, cfg)
-    app_dir = Path(args.workspace) / cfg["outputs"]["applications_dir"] / slug
-
-    mapping = json.loads((app_dir / "map.json").read_text(encoding="utf-8"))
     profile = load_provider(args.workspace, cfg).read()
     template = load_template(args.workspace, cfg, args.kind)
-    brief_path = app_dir / "brief.json"
-    brief = json.loads(brief_path.read_text(encoding="utf-8")) if brief_path.is_file() else None
-    plan = generate_plan(mapping, profile, template, positioning,
-                         voice={"path": cfg["voice"]["path"]}, brief=brief)
+
+    if args.baseline:
+        plan = generate_plan([], profile, template, positioning,
+                             voice={"path": cfg["voice"]["path"]}, baseline=True)
+        out_dir = Path(args.workspace) / cfg["outputs"]["baselines_dir"] / positioning
+    else:
+        slug = _resolve_slug(args, cfg)
+        app_dir = Path(args.workspace) / cfg["outputs"]["applications_dir"] / slug
+        mapping = json.loads((app_dir / "map.json").read_text(encoding="utf-8"))
+        brief_path = app_dir / "brief.json"
+        brief = json.loads(brief_path.read_text(encoding="utf-8")) if brief_path.is_file() else None
+        plan = generate_plan(mapping, profile, template, positioning,
+                             voice={"path": cfg["voice"]["path"]}, brief=brief)
+        out_dir = app_dir
 
     errors = validate_plan(plan, template)
     if errors:
@@ -204,7 +215,8 @@ def cmd_plan(args) -> int:
             print(message)
         raise CareerDocsError("content plan is invalid", exit_code=1)
 
-    out_path = app_dir / "plan.json"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_path = out_dir / "plan.json"
     out_path.write_text(json.dumps(plan, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     if args.json:
         print(json.dumps({"plan": str(out_path), "units": len(plan["units"]), "cuts": len(plan["cuts"]), "positioning": positioning}))

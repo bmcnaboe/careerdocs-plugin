@@ -126,6 +126,24 @@ def test_cover_letter_page_budget_cuts():
     assert len(result["cuts"]) == 4
 
 
+def test_baseline_selects_all_visible():
+    contact = entity("contact", name="A")
+    exp = entity("experience", organization="Acme", title="Eng", start_date="2020-01-01")
+    private_skill = entity("skill", name="Secret", visibility="private")
+    public_skill = entity("skill", name="Python")
+    entities = [contact, exp, private_skill, public_skill]
+    template = {"name": "t", "version": "1", "page_budget": 2, "sections": [
+        {"id": "header", "entity_types": ["contact"]},
+        {"id": "experience", "entity_types": ["experience"]},
+        {"id": "skills", "entity_types": ["skill"]},
+    ]}
+    # No map at all: baseline includes every visible entity, excludes private.
+    result = plan.generate_plan([], profile_with(entities), template, "builder", baseline=True)
+    ids = {sid for u in result["units"] for sid in u["source_ids"]}
+    assert exp["id"] in ids and public_skill["id"] in ids and contact["id"] in ids
+    assert private_skill["id"] not in ids
+
+
 def test_gap_requirement_not_cited():
     exp = entity("experience", organization="Acme", title="Eng", start_date="2020-01-01")
     unused = entity("skill", name="Nuclear")
