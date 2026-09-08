@@ -1,5 +1,5 @@
 ---
-description: "Task list template for feature implementation (career-documents override)"
+description: "Task list template for feature implementation (careerdocs-plugin override)"
 ---
 
 # Tasks: [FEATURE NAME]
@@ -57,7 +57,7 @@ description: "Task list template for feature implementation (career-documents ov
   modifies one of these surfaces:
     1. A skill's SKILL.md frontmatter or its routing to other skills/scripts
        under `skills/` — every platform package consumes it.
-    2. A schema under `skills/career-documents/assets/schemas/` or a provider
+    2. A schema under `skills/careerdocs/assets/schemas/` or a provider
        contract module — every provider, fixture, and check depends on them.
     3. Package manifests or installers (`.claude-plugin/`, `.agents/`,
        `packages/`), which decide what each platform loads.
@@ -109,7 +109,7 @@ description: "Task list template for feature implementation (career-documents ov
 ## Path Conventions
 
 - Provider-neutral source: `skills/<skill-name>/` (SKILL.md, scripts/, references/, assets/)
-- Schemas: `skills/career-documents/assets/schemas/`; repository tooling: `scripts/`; tests: `tests/unit/`, `tests/integration/`, `tests/fixtures/`
+- Schemas: `skills/careerdocs/assets/schemas/`; repository tooling: `scripts/`; tests: `tests/unit/`, `tests/integration/`, `tests/fixtures/`
 - Platform packages: `.claude-plugin/` (Claude Code/Cowork), `.agents/skills/` and `packages/openai/` (ChatGPT/Codex)
 - Sanitized examples: `examples/`; documentation: `docs/`
 

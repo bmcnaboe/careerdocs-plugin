@@ -1,0 +1,3 @@
+name: careerdocs
+description: Core conventions and the careerdocs CLI shared by the careerdocs flows.
+allow_implicit_invocation: false

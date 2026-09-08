@@ -13,7 +13,7 @@ def _load():
 
 def test_pyproject_parses():
     data = _load()
-    assert data["project"]["name"] == "career-documents"
+    assert data["project"]["name"] == "careerdocs-plugin"
 
 
 def test_pyproject_carries_version():

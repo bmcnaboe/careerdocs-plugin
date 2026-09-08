@@ -1,10 +1,10 @@
 {
-  "name": "career-documents",
+  "name": "careerdocs-plugin",
   "version": "0.1.0",
   "description": "Portable, provider-neutral resume and cover-letter workflows: onboard qualifications into one authoritative profile, then generate tailored resumes and cover letters that are verified before they ship.",
   "author": { "name": "Oxford Heavy" },
-  "homepage": "https://github.com/bmcnaboe/career-documents",
-  "repository": "https://github.com/bmcnaboe/career-documents",
+  "homepage": "https://github.com/bmcnaboe/careerdocs-plugin",
+  "repository": "https://github.com/bmcnaboe/careerdocs-plugin",
   "license": "MIT",
   "keywords": ["resume", "cover-letter", "career", "job-application", "skills"]
 }

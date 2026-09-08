@@ -1,7 +1,7 @@
 # Migrating an existing career folder
 
 A generic playbook for moving a folder that mixes résumés, exports, notes, and generated
-documents into a `career-documents` workspace. Run every command with
+documents into a `careerdocs` workspace. Run every command with
 `--workspace <dir>`. Nothing about any specific applicant belongs in this repository — this
 is the shape of the process, not anyone's data.
 
@@ -20,9 +20,10 @@ duplicates or previous outputs; a scratch draft is temporary; non-career items u
 
 ## 2. Configure
 
-Write `career-documents.json`. Choose the authoritative provider (`markdown` by default, or
-`basic_memory` with a structured-Markdown export as the derived copy), and point it at the
-templates, voice, outputs, and workflow-state locations. Then:
+Write `careerdocs.json`. Keep `markdown` as the authoritative provider — the profile then
+lives in `profile/` inside the workspace, versioned with everything else — and point it at
+the templates, voice, outputs, and workflow-state locations. (Basic Memory as the
+authority forces a derived Markdown mirror, and no flow uses its search.) Then:
 
 ```sh
 careerdocs config validate
@@ -72,11 +73,11 @@ with a reason offline) before the previous current-state artifacts are archived.
 ## 6. Organize
 
 ```sh
-careerdocs organize --inventory .career-documents/inventory.json --apply
+careerdocs organize --inventory .careerdocs/inventory.json --apply
 ```
 
 Moves each file under its reviewed destination (`sources/`, `templates/`, `voice/`,
 `baselines/`, `applications/`, `archive/`), never deleting — duplicates, temporary files,
 and unrelated items are relocated under `archive/`. Every move is recorded in
-`.career-documents/moves.jsonl`; `careerdocs organize --rollback` replays it. Write a
+`.careerdocs/moves.jsonl`; `careerdocs organize --rollback` replays it. Write a
 workspace `README.md` describing the resulting structure.

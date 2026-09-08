@@ -1,6 +1,6 @@
-# Configuration — `career-documents.json`
+# Configuration — `careerdocs.json`
 
-The optional `career-documents.json` at the root of a workspace only *locates* the four
+The optional `careerdocs.json` at the root of a workspace only *locates* the four
 authorities and workflow policy. It stores no qualifications and no credentials. Every key
 has a default, so the file is optional; `careerdocs config init` writes a default one, and
 `careerdocs config validate` checks it and refuses forbidden content.
@@ -23,7 +23,7 @@ Validated against `assets/schemas/config.schema.json`.
 | `voice.path` | `voice/voice.md` | The applicant's voice profile. |
 | `outputs.applications_dir` | `applications` | Per-role application folders. |
 | `outputs.baselines_dir` | `baselines` | Generated baseline documents. |
-| `workflow.state_dir` | `.career-documents/state` | Resumable workflow state. |
+| `workflow.state_dir` | `.careerdocs/state` | Resumable workflow state. |
 | `workflow.positioning_default` | `builder` | Default positioning (`executive` or `builder`). |
 | `workflow.page_budget.resume` | `2` | Résumé page budget. |
 | `workflow.page_budget.cover_letter` | `1` | Cover-letter page budget. |

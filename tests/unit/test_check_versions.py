@@ -9,7 +9,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 import check_versions as cv  # noqa: E402
 
-PYPROJECT = '[project]\nname = "career-documents"\nversion = "0.1.0"\n'
+PYPROJECT = '[project]\nname = "careerdocs-plugin"\nversion = "0.1.0"\n'
 
 SKILL = """\
 ---
@@ -44,15 +44,15 @@ def test_version_of_record(tmp_path):
 
 
 def test_matching_skill_passes(tmp_path):
-    make_repo(tmp_path, skills={"career-documents": "0.1.0"})
+    make_repo(tmp_path, skills={"careerdocs": "0.1.0"})
     _, errors, _ = cv.run_check(tmp_path)
     assert errors == []
 
 
 def test_mismatched_skill_fails(tmp_path):
-    make_repo(tmp_path, skills={"career-documents": "0.2.0"})
+    make_repo(tmp_path, skills={"careerdocs": "0.2.0"})
     _, errors, _ = cv.run_check(tmp_path)
-    assert any("career-documents" in e and "0.2.0" in e for e in errors)
+    assert any("careerdocs" in e and "0.2.0" in e for e in errors)
 
 
 def test_absent_manifests_reported(tmp_path):
@@ -80,7 +80,7 @@ def test_marketplace_plugin_entries_checked(tmp_path):
 def test_all_agree(tmp_path):
     make_repo(
         tmp_path,
-        skills={"career-documents": "0.1.0", "career-onboard": "0.1.0"},
+        skills={"careerdocs": "0.1.0", "career-onboard": "0.1.0"},
         manifests={
             ".claude-plugin/plugin.json": {"version": "0.1.0"},
             ".claude-plugin/marketplace.json": {"plugins": [{"version": "0.1.0"}]},

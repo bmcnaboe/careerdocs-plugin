@@ -1,6 +1,6 @@
 # Documentation index
 
-Guides and reference for the `career-documents` plugin. Start with setup for your
+Guides and reference for `careerdocs-plugin`. Start with setup for your
 platform, then the concept and reference pages as you need them.
 
 ## Setup
@@ -10,7 +10,7 @@ platform, then the concept and reference pages as you need them.
 
 ## Concepts and reference
 
-- [configuration.md](configuration.md) — the optional `career-documents.json` and every
+- [configuration.md](configuration.md) — the optional `careerdocs.json` and every
   key it locates.
 - [profile-schema.md](profile-schema.md) — the versioned `CareerProfile` model: entities,
   IDs, provenance, verification, dates, visibility, and conflict rules.
@@ -20,4 +20,4 @@ platform, then the concept and reference pages as you need them.
 - [templates-and-voice.md](templates-and-voice.md) — authoring a DOCX template and its
   manifest, and capturing an applicant's voice.
 - [migration.md](migration.md) — the generic playbook for migrating an existing career
-  folder into a `career-documents` workspace.
+  folder into a `careerdocs` workspace.

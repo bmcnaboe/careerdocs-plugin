@@ -64,7 +64,7 @@ Every entity carries `id`, `type`, `visibility` (`public` / `restricted` / `priv
 - Exactly one `contact`.
 - An unresolved conflict blocks its field from every rendered document.
 
-## career-documents.json (`config.schema.json`)
+## careerdocs.json (`config.schema.json`)
 
 Locates the four authorities; stores no qualifications or credentials.
 

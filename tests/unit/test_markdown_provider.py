@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-SCRIPTS = ROOT / "skills" / "career-documents" / "scripts"
+SCRIPTS = ROOT / "skills" / "careerdocs" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
 from careerdocs import ids, schema, util  # noqa: E402

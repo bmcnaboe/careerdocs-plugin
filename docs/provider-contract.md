@@ -42,6 +42,9 @@ The diff → approve → apply orchestration lives in the CLI over these primiti
 - Writes are plain file writes; Basic Memory's watcher indexes them. The MCP tools are for
   retrieval only and are never the sole write path.
 - `export(markdown)` produces the structured-Markdown layout with `derived: true`.
+- No flow calls `search` or `context`; they exist for retrieval from other sessions.
+  Making Basic Memory authoritative implies a derived Markdown mirror at
+  `providers.markdown.path`, refreshed on every `apply`.
 
 ## Errors
 

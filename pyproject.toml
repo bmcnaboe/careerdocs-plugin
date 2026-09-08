@@ -1,5 +1,5 @@
 [project]
-name = "career-documents"
+name = "careerdocs-plugin"
 version = "0.1.0"
 description = "Portable, provider-neutral resume and cover-letter plugin for AI coding agents"
 license = { text = "MIT" }

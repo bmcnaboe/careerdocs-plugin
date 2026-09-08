@@ -49,7 +49,7 @@ def common_parent() -> argparse.ArgumentParser:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="careerdocs",
-        description="Deterministic CLI behind the career-documents flows.",
+        description="Deterministic CLI behind the careerdocs flows.",
     )
     common = common_parent()
     subparsers = parser.add_subparsers(dest="command", metavar="<command>")
@@ -128,7 +128,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     from .providers import load_provider
 
     workspace = Path(args.workspace)
-    config_present = (workspace / "career-documents.json").is_file()
+    config_present = (workspace / "careerdocs.json").is_file()
     try:
         cfg = config_module.resolve_config(workspace)
         config_valid, config_error = True, None

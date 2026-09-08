@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-SCRIPTS = ROOT / "skills" / "career-documents" / "scripts"
+SCRIPTS = ROOT / "skills" / "careerdocs" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
 from careerdocs import cli, inventory  # noqa: E402
@@ -68,7 +68,7 @@ def test_every_file_has_a_destination(tmp_path):
 def test_writes_json_and_md(tmp_path):
     make_tree(tmp_path)
     entries = inventory.build_inventory(tmp_path)
-    out = tmp_path / ".career-documents"
+    out = tmp_path / ".careerdocs"
     json_path, md_path = inventory.write_inventory(tmp_path, entries, out)
     assert json_path.exists() and md_path.exists()
     data = json.loads(json_path.read_text())
@@ -87,6 +87,6 @@ def test_cli_inventory(tmp_path, capsys):
 def test_inventory_skips_its_own_output(tmp_path):
     make_tree(tmp_path)
     # Running twice must not classify the previous inventory.json.
-    inventory.write_inventory(tmp_path, inventory.build_inventory(tmp_path), tmp_path / ".career-documents")
+    inventory.write_inventory(tmp_path, inventory.build_inventory(tmp_path), tmp_path / ".careerdocs")
     entries = inventory.build_inventory(tmp_path)
-    assert not any(".career-documents" in e["path"] for e in entries)
+    assert not any(".careerdocs" in e["path"] for e in entries)

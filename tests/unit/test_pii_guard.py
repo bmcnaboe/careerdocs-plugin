@@ -68,9 +68,9 @@ def test_reports_line_numbers():
 
 
 def test_exclusion_prefixes():
-    assert pii_guard.is_excluded("examples/applicant/career-documents.json")
+    assert pii_guard.is_excluded("examples/applicant/careerdocs.json")
     assert pii_guard.is_excluded("tests/fixtures/candidates.json")
-    assert not pii_guard.is_excluded("skills/career-documents/SKILL.md")
+    assert not pii_guard.is_excluded("skills/careerdocs/SKILL.md")
 
 
 def test_scan_file_skips_binary(tmp_path):

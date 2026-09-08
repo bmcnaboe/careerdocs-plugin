@@ -1,7 +1,7 @@
 # Onboard playbook
 
 The onboarding flow, step by step. `careerdocs` is the CLI at
-`skills/career-documents/scripts/careerdocs.py`; run every command with
+`skills/careerdocs/scripts/careerdocs.py`; run every command with
 `--workspace <dir>`.
 
 ## 1. Inventory the sources

@@ -1,15 +1,15 @@
 {
-  "name": "career-documents",
+  "name": "careerdocs-plugin",
   "version": "0.1.0",
   "skills": [
     {
-      "name": "career-documents",
-      "description": "Core conventions and the careerdocs CLI shared by the career-documents flows (onboard, update, resume, cover letter). Consult this skill for how the four authorities (qualifications, voice, templates, target role) are modeled and located, how flow skills invoke the careerdocs CLI, the diff-then-approve rule for every profile change, visibility semantics, and where workflow state and generated outputs live. Load it before running any careerdocs command or when a flow skill references a convention it does not restate.",
-      "path": "skills/career-documents"
+      "name": "careerdocs",
+      "description": "Core conventions and the careerdocs CLI shared by the careerdocs flows (onboard, update, resume, cover letter). Consult this skill for how the four authorities (qualifications, voice, templates, target role) are modeled and located, how flow skills invoke the careerdocs CLI, the diff-then-approve rule for every profile change, visibility semantics, and where workflow state and generated outputs live. Load it before running any careerdocs command or when a flow skill references a convention it does not restate.",
+      "path": "skills/careerdocs"
     },
     {
       "name": "career-onboard",
-      "description": "Onboard an applicant's existing career materials into one authoritative profile. Use when the applicant wants to import resumes, LinkedIn/network exports, and notes and reconcile them into a single career-documents profile rather than scattered copies. The flow inventories the sources, runs profile import, has the agent extract candidates into candidates.json against the schema, builds a ProfileDiff, asks only the material questions the CLI generates (conflicts, missing dates, undecided visibility), records approval only after an explicit applicant yes, applies the diff, and refreshes the derived export. Resumable — an interrupted run continues from its workflow state without re-asking answered questions.",
+      "description": "Onboard an applicant's existing career materials into one authoritative profile. Use when the applicant wants to import resumes, LinkedIn/network exports, and notes and reconcile them into a single careerdocs profile rather than scattered copies. The flow inventories the sources, runs profile import, has the agent extract candidates into candidates.json against the schema, builds a ProfileDiff, asks only the material questions the CLI generates (conflicts, missing dates, undecided visibility), records approval only after an explicit applicant yes, applies the diff, and refreshes the derived export. Resumable — an interrupted run continues from its workflow state without re-asking answered questions.",
       "path": "skills/career-onboard"
     },
     {

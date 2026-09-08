@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-SCRIPTS = ROOT / "skills" / "career-documents" / "scripts"
+SCRIPTS = ROOT / "skills" / "careerdocs" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
 from careerdocs import cli, inventory, organize  # noqa: E402
@@ -84,8 +84,8 @@ def test_rollback_dry_run_is_clean(tmp_path):
 
 def test_cli_organize_apply_and_rollback(tmp_path, capsys):
     make_tree(tmp_path)
-    inv_path = tmp_path / ".career-documents" / "inventory.json"
-    inventory.write_inventory(tmp_path, inventory.build_inventory(tmp_path), tmp_path / ".career-documents")
+    inv_path = tmp_path / ".careerdocs" / "inventory.json"
+    inventory.write_inventory(tmp_path, inventory.build_inventory(tmp_path), tmp_path / ".careerdocs")
 
     assert cli.main(["organize", "--inventory", str(inv_path), "--apply", "--json"]) == 0
     assert (tmp_path / "sources" / "jordan_resume.docx").exists()

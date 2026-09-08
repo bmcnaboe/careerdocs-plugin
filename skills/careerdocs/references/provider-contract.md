@@ -35,7 +35,9 @@ Location `vault_path` + `folder` (default `career/`) in the named project. Each 
 note: frontmatter `title`, `type`, `permalink` (`<folder>/<type>/<id>`), `tags`, and every
 field; body `## Statement`, `## Observations`, `## Relations`. Writes are plain file writes
 the watcher indexes; the MCP tools are for retrieval only. `export(markdown)` yields the
-Markdown layout with `derived: true`.
+Markdown layout with `derived: true`. No flow calls `search` or `context`; they exist for
+retrieval from other sessions. Authoritative Basic Memory implies a derived Markdown
+mirror at `providers.markdown.path`, refreshed on every `apply`.
 
 ## Errors
 

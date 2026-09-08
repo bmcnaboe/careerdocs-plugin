@@ -1,4 +1,4 @@
-# .ralph/command-policy — Ralph command policy (career-documents)
+# .ralph/command-policy — Ralph command policy (careerdocs-plugin)
 #
 # Sections are scanned in order: [gates] → [rewrite] → [deny] → [wrap] →
 # [protect]. Every Bash command is canonicalized first (env-prefix + pipes /

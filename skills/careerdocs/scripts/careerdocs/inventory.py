@@ -34,7 +34,7 @@ DESTINATION = {
     "unrelated": "archive/unrelated/",
 }
 
-_SKIP_DIRS = {".career-documents", ".git", ".obsidian"}
+_SKIP_DIRS = {".careerdocs", ".git", ".obsidian"}
 _CAREER_KEYWORDS = ("resume", "cv", "cover", "letter", "portfolio", "bio")
 
 
@@ -160,13 +160,13 @@ def write_inventory(root: Path, entries: list[dict], out_dir: Path) -> tuple[Pat
 def register(subparsers, common: argparse.ArgumentParser) -> None:
     parser = subparsers.add_parser("inventory", parents=[common], help="classify a workspace directory")
     parser.add_argument("dir", help="directory to inventory")
-    parser.add_argument("--out", help="output directory (default: <dir>/.career-documents)")
+    parser.add_argument("--out", help="output directory (default: <dir>/.careerdocs)")
     parser.set_defaults(func=cmd_inventory)
 
 
 def cmd_inventory(args) -> int:
     root = Path(args.dir)
-    out_dir = Path(args.out) if args.out else root / ".career-documents"
+    out_dir = Path(args.out) if args.out else root / ".careerdocs"
     entries = build_inventory(root)
     json_path, md_path = write_inventory(root, entries, out_dir)
     summary = counts(entries)

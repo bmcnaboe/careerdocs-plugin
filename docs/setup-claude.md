@@ -16,11 +16,11 @@ consumed in place, so installing is adding the marketplace and installing the pl
 Add the marketplace, then install the plugin. From a local clone:
 
 ```sh
-claude plugin marketplace add ./career-documents      # or the GitHub repo URL
-claude plugin install career-documents@career-documents
+claude plugin marketplace add ./careerdocs-plugin      # or the GitHub repo URL
+claude plugin install careerdocs-plugin@careerdocs-plugin
 ```
 
-The two arguments are `<plugin>@<marketplace>`; both are named `career-documents`.
+The two arguments are `<plugin>@<marketplace>`; both are named `careerdocs-plugin`.
 
 ## Cowork
 
@@ -31,16 +31,16 @@ applicant data ships with the plugin — you point it at your own workspace at r
 ## Verify
 
 ```sh
-claude plugin details career-documents
+claude plugin details careerdocs-plugin
 ```
 
-lists the installed skills — the core `career-documents` skill plus the flow skills
+lists the installed skills — the core `careerdocs` skill plus the flow skills
 (`career-onboard`, `career-update`, `career-resume`, `career-cover-letter`). To confirm
 the CLI itself:
 
 ```sh
-uv run <plugin-root>/skills/career-documents/scripts/careerdocs.py version
-uv run <plugin-root>/skills/career-documents/scripts/careerdocs.py doctor --workspace <your-workspace>
+uv run <plugin-root>/skills/careerdocs/scripts/careerdocs.py version
+uv run <plugin-root>/skills/careerdocs/scripts/careerdocs.py doctor --workspace <your-workspace>
 ```
 
 `doctor` reports your configuration, providers, template, voice, converter, and

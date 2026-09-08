@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/bmcnaboe/career-documents/schemas/config.schema.json#1.0.0",
-  "title": "career-documents.json",
+  "$id": "https://github.com/bmcnaboe/careerdocs-plugin/schemas/config.schema.json#1.0.0",
+  "title": "careerdocs.json",
   "type": "object",
   "additionalProperties": false,
   "required": ["version"],
@@ -21,7 +21,7 @@
     "workflow": {
       "type": "object", "additionalProperties": false,
       "properties": {
-        "state_dir": { "type": "string", "default": ".career-documents/state" },
+        "state_dir": { "type": "string", "default": ".careerdocs/state" },
         "positioning_default": { "enum": ["executive", "builder"], "default": "builder" },
         "page_budget": { "type": "object", "additionalProperties": false, "properties": { "resume": { "type": "integer", "minimum": 1, "default": 2 }, "cover_letter": { "type": "integer", "minimum": 1, "default": 1 } } },
         "approval_mode": { "const": "explicit", "default": "explicit" }

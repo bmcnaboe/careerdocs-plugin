@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-SCRIPTS = ROOT / "skills" / "career-documents" / "scripts"
+SCRIPTS = ROOT / "skills" / "careerdocs" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
 from careerdocs import config  # noqa: E402
@@ -15,7 +15,7 @@ CANDIDATES = ROOT / "tests" / "fixtures" / "candidates.json"
 
 
 def test_example_config_is_valid():
-    data = json.loads((APPLICANT / "career-documents.json").read_text())
+    data = json.loads((APPLICANT / "careerdocs.json").read_text())
     config.check_forbidden(data)
     config.validate_schema(data)
 

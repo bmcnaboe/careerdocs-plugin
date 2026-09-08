@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-SCRIPTS = ROOT / "skills" / "career-documents" / "scripts"
+SCRIPTS = ROOT / "skills" / "careerdocs" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
 from careerdocs import cli  # noqa: E402
@@ -78,7 +78,7 @@ def test_reuses_brief_and_map(tmp_path):
     assert (app / "brief.json").read_text() == brief_before
     assert (app / "map.json").read_text() == map_before
     # No new workflow questions were created for the letter.
-    state_dir = tmp_path / ".career-documents" / "state" / "cover_letter"
+    state_dir = tmp_path / ".careerdocs" / "state" / "cover_letter"
     assert not state_dir.exists()
 
 

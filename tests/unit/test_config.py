@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-SCRIPTS = ROOT / "skills" / "career-documents" / "scripts"
+SCRIPTS = ROOT / "skills" / "careerdocs" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
 from careerdocs import cli, config  # noqa: E402
@@ -25,7 +25,7 @@ def test_resolve_missing_returns_defaults(tmp_path):
 
 
 def test_resolve_deep_merges_overrides(tmp_path):
-    (tmp_path / "career-documents.json").write_text(
+    (tmp_path / "careerdocs.json").write_text(
         json.dumps({"version": "1", "workflow": {"positioning_default": "executive"}}),
         encoding="utf-8",
     )
@@ -57,16 +57,16 @@ def test_check_forbidden_raises():
 
 def test_config_init_writes_default(tmp_path, capsys):
     assert cli.main(["config", "init", "--workspace", str(tmp_path)]) == 0
-    written = json.loads((tmp_path / "career-documents.json").read_text())
+    written = json.loads((tmp_path / "careerdocs.json").read_text())
     assert written["version"] == "1"
     config.validate_schema(written)
 
 
 def test_config_init_is_idempotent(tmp_path):
     cli.main(["config", "init", "--workspace", str(tmp_path)])
-    before = (tmp_path / "career-documents.json").read_text()
+    before = (tmp_path / "careerdocs.json").read_text()
     assert cli.main(["config", "init", "--workspace", str(tmp_path)]) == 0
-    assert (tmp_path / "career-documents.json").read_text() == before
+    assert (tmp_path / "careerdocs.json").read_text() == before
 
 
 def test_config_validate_missing_is_ok(tmp_path, capsys):
@@ -80,14 +80,14 @@ def test_config_validate_good(tmp_path):
 
 
 def test_config_validate_forbidden_exits_2(tmp_path):
-    (tmp_path / "career-documents.json").write_text(
+    (tmp_path / "careerdocs.json").write_text(
         json.dumps({"version": "1", "api_key": "leak"}), encoding="utf-8"
     )
     assert cli.main(["config", "validate", "--workspace", str(tmp_path)]) == 2
 
 
 def test_config_validate_schema_violation_exits_2(tmp_path):
-    (tmp_path / "career-documents.json").write_text(
+    (tmp_path / "careerdocs.json").write_text(
         json.dumps({"version": "1", "providers": {"authoritative": "nope"}}),
         encoding="utf-8",
     )

@@ -21,7 +21,7 @@ means the session is carrying another repo's connector).
 
 ## Default project
 
-- **Default project (new tickets):** `job-applier` — the career-documents plugin and
+- **Default project (new tickets):** `careerdocs-plugin` — the careerdocs plugin and
   its first real deployment. Re-pin when the initiative wraps.
 
 ## Workflow states

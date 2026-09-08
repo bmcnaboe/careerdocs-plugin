@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Install the career-documents skills for ChatGPT / Codex.
+"""Install the careerdocs-plugin skills for ChatGPT / Codex.
 
 Standard library only. Each skill in ``manifest.json`` is linked (default) or copied into
 ``$HOME/.agents/skills/<name>`` — the location Codex discovers skills from. Use ``--copy``
@@ -98,7 +98,7 @@ ChatGPT upload (manual):
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Install career-documents skills for ChatGPT/Codex.")
+    parser = argparse.ArgumentParser(description="Install careerdocs-plugin skills for ChatGPT/Codex.")
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--link", dest="mode", action="store_const", const="link", help="symlink (default)")
     mode.add_argument("--copy", dest="mode", action="store_const", const="copy", help="copy instead of symlink")

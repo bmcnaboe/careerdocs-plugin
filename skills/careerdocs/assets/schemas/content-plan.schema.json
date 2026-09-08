@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/bmcnaboe/career-documents/schemas/content-plan.schema.json#1.0.0",
+  "$id": "https://github.com/bmcnaboe/careerdocs-plugin/schemas/content-plan.schema.json#1.0.0",
   "title": "ContentPlan",
   "type": "object",
   "required": ["positioning", "template", "page_budget", "units", "cuts"],

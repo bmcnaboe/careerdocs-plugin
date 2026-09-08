@@ -12,7 +12,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-SCRIPTS = ROOT / "skills" / "career-documents" / "scripts"
+SCRIPTS = ROOT / "skills" / "careerdocs" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
 from careerdocs import cli  # noqa: E402
@@ -45,7 +45,7 @@ def write_bm_config(workspace):
             "basic_memory": {"vault_path": str(workspace / "vault"), "project": "test", "folder": "career"},
         },
     }
-    (workspace / "career-documents.json").write_text(json.dumps(config), encoding="utf-8")
+    (workspace / "careerdocs.json").write_text(json.dumps(config), encoding="utf-8")
 
 
 def test_basic_memory_onboarding_ids_and_derived_export(tmp_path):

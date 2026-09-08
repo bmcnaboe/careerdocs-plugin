@@ -23,7 +23,7 @@ Amendment history:
   - 1.0.0 (2026-09-07): initial ratification.
 -->
 
-# career-documents Constitution
+# careerdocs-plugin Constitution
 
 ## Core Principles
 
@@ -46,7 +46,7 @@ Qualifications, voice, document templates, and target role are four distinct
 authorities. Each has its own schema, its own storage location, and its own owner. A
 generated document is composed from all four; no authority may absorb another (voice
 rules do not live in the profile, role requirements do not live in templates). The
-optional `career-documents.json` only locates providers, templates, outputs, and
+optional `careerdocs.json` only locates providers, templates, outputs, and
 workflow policy; it MUST NOT store qualifications or credentials.
 
 Rationale: separation is what lets one profile serve many roles, voices, and layouts

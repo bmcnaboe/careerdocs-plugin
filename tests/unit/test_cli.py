@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-SCRIPTS = ROOT / "skills" / "career-documents" / "scripts"
+SCRIPTS = ROOT / "skills" / "careerdocs" / "scripts"
 ENTRY = SCRIPTS / "careerdocs.py"
 sys.path.insert(0, str(SCRIPTS))
 
@@ -66,7 +66,7 @@ def test_doctor_detects_templates_and_voice(tmp_path, capsys):
 
 
 def test_doctor_reports_invalid_config(tmp_path, capsys):
-    (tmp_path / "career-documents.json").write_text('{"version": "1", "api_key": "x"}', encoding="utf-8")
+    (tmp_path / "careerdocs.json").write_text('{"version": "1", "api_key": "x"}', encoding="utf-8")
     assert cli.main(["doctor", "--workspace", str(tmp_path), "--json"]) == 0
     report = json.loads(capsys.readouterr().out)
     assert report["config_valid"] is False

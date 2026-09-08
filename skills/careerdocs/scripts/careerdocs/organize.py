@@ -2,10 +2,10 @@
 
 ``organize --inventory <file>`` reads an ``inventory.json`` and moves each file under its
 proposed destination (``sources/``, ``templates/``, ``voice/``, ``baselines/``,
-``applications/``, ``archive/``, ``.career-documents/``), preserving each file's original
+``applications/``, ``archive/``, ``.careerdocs/``), preserving each file's original
 sub-path under the destination so the move is unique and recoverable. It **never deletes**:
 duplicates, temporary files, and unrelated items are relocated under ``archive/``. Every
-move is appended to ``.career-documents/moves.jsonl``; ``--rollback`` replays it in reverse.
+move is appended to ``.careerdocs/moves.jsonl``; ``--rollback`` replays it in reverse.
 ``--dry-run`` previews without changing anything.
 """
 
@@ -18,7 +18,7 @@ from pathlib import Path
 from . import util
 from .errors import CareerDocsError
 
-MOVES_LOG = Path(".career-documents") / "moves.jsonl"
+MOVES_LOG = Path(".careerdocs") / "moves.jsonl"
 
 
 def plan_moves(inventory: dict) -> list[tuple[str, str]]:

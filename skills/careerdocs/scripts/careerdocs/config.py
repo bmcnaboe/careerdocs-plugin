@@ -1,4 +1,4 @@
-"""Workspace configuration (``career-documents.json``).
+"""Workspace configuration (``careerdocs.json``).
 
 The config only *locates* the four authorities; it never stores qualifications or
 credentials. This module provides the defaults for every key, a deep-merged resolved
@@ -18,7 +18,7 @@ import jsonschema
 from . import paths
 from .errors import ConfigError
 
-CONFIG_FILENAME = "career-documents.json"
+CONFIG_FILENAME = "careerdocs.json"
 
 # Every key with its default. basic_memory is intentionally omitted: it has required
 # sub-keys, so it is only present when the applicant opts into that provider.
@@ -32,7 +32,7 @@ DEFAULT_CONFIG: dict = {
     "voice": {"path": "voice/voice.md"},
     "outputs": {"applications_dir": "applications", "baselines_dir": "baselines"},
     "workflow": {
-        "state_dir": ".career-documents/state",
+        "state_dir": ".careerdocs/state",
         "positioning_default": "builder",
         "page_budget": {"resume": 2, "cover_letter": 1},
         "approval_mode": "explicit",
@@ -134,7 +134,7 @@ def validate_schema(data: dict) -> None:
 
 def register(subparsers, common: argparse.ArgumentParser) -> None:
     config_parser = subparsers.add_parser(
-        "config", help="manage the workspace career-documents.json"
+        "config", help="manage the workspace careerdocs.json"
     )
     actions = config_parser.add_subparsers(dest="config_command", metavar="<action>")
     actions.required = True

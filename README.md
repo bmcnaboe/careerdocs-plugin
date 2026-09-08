@@ -1,4 +1,4 @@
-# career-documents
+# careerdocs-plugin
 
 A portable, open-source resume and cover-letter plugin for AI coding agents. One
 provider-neutral workflow source, packaged thinly for ChatGPT/Codex and Claude
@@ -6,7 +6,7 @@ Code/Cowork. It works on its own; agent-layer may install it.
 
 ## What it is
 
-`career-documents` turns an applicant's scattered career materials into a single
+`careerdocs-plugin` turns an applicant's scattered career materials into a single
 authoritative profile, then generates tailored resumes and cover letters from it —
 mapping a job description to the applicant's real evidence, drafting in their approved
 voice and template, and verifying every output before it is called done. Every
@@ -30,13 +30,13 @@ five Agent Skills that call it.
 
 Kept separate, never folded into one opaque profile:
 
-- **Qualifications** — the `CareerProfile`, held by a provider (structured Markdown by
-  default, Basic Memory optional as authoritative).
+- **Qualifications** — the `CareerProfile`, held by a provider — structured Markdown under
+  `profile/` in the workspace by default; a Basic Memory provider also exists.
 - **Voice** — how the applicant writes, in a `voice.md`.
 - **Document templates** — a DOCX template plus a sidecar `template.json` manifest.
 - **Target role** — the role brief for one application.
 
-An optional `career-documents.json` only *locates* these; it stores no qualifications
+An optional `careerdocs.json` only *locates* these; it stores no qualifications
 and no credentials.
 
 ## No applicant data, ever
@@ -60,8 +60,8 @@ Codex/ChatGPT.
 **Claude Code / Cowork** — add the marketplace and install the plugin:
 
 ```sh
-claude plugin marketplace add ./career-documents      # or the GitHub repo URL
-claude plugin install career-documents@career-documents
+claude plugin marketplace add ./careerdocs-plugin      # or the GitHub repo URL
+claude plugin install careerdocs-plugin@careerdocs-plugin
 ```
 
 **ChatGPT / Codex** — run the standard-library installer:
@@ -78,7 +78,7 @@ Full steps and verification: [docs/setup-claude.md](docs/setup-claude.md) and
 Start at [docs/README.md](docs/README.md). Guides:
 
 - Setup: [docs/setup-claude.md](docs/setup-claude.md), [docs/setup-codex.md](docs/setup-codex.md)
-- [docs/configuration.md](docs/configuration.md) — the optional `career-documents.json`
+- [docs/configuration.md](docs/configuration.md) — the optional `careerdocs.json`
 - [docs/profile-schema.md](docs/profile-schema.md) — the versioned `CareerProfile` model
 - [docs/provider-contract.md](docs/provider-contract.md) — the provider interface and the two providers
 - [docs/checks.md](docs/checks.md) — the five output checks

@@ -12,7 +12,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-SCRIPTS = ROOT / "skills" / "career-documents" / "scripts"
+SCRIPTS = ROOT / "skills" / "careerdocs" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
 from careerdocs import cli  # noqa: E402
@@ -68,7 +68,7 @@ def bm_config(tmp_path):
 
 def setup(tmp_path):
     ws = str(tmp_path)
-    (tmp_path / "career-documents.json").write_text(json.dumps(bm_config(tmp_path)), encoding="utf-8")
+    (tmp_path / "careerdocs.json").write_text(json.dumps(bm_config(tmp_path)), encoding="utf-8")
     dest = tmp_path / "templates" / "resume"
     dest.mkdir(parents=True)
     shutil.copy(TEMPLATES / "resume" / "template.docx", dest / "template.docx")

@@ -8,7 +8,7 @@
   "voice": { "path": "voice/voice.md" },
   "outputs": { "applications_dir": "applications", "baselines_dir": "baselines" },
   "workflow": {
-    "state_dir": ".career-documents/state",
+    "state_dir": ".careerdocs/state",
     "positioning_default": "builder",
     "page_budget": { "resume": 2, "cover_letter": 1 },
     "approval_mode": "explicit"

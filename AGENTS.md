@@ -5,7 +5,7 @@ this file, so Claude Code and Codex read the same conventions.
 
 ## What this is
 
-career-documents is a portable, open-source resume and cover-letter plugin for AI
+careerdocs-plugin is a portable, open-source resume and cover-letter plugin for AI
 coding agents: one provider-neutral workflow source, packaged thinly for
 ChatGPT/Codex and Claude Code/Cowork. It works without agent-layer; agent-layer may
 install it.

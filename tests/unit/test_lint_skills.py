@@ -18,7 +18,7 @@ license: MIT
 compatibility: "Python 3.11+, uv recommended"
 metadata:
   version: "0.1.0"
-  author: "career-documents contributors"
+  author: "careerdocs-plugin contributors"
 ---
 
 # Body

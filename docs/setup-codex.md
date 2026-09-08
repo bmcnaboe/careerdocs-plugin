@@ -37,7 +37,7 @@ lists the installed skills. Each installed `SKILL.md` is byte-identical to its s
 Confirm the CLI:
 
 ```sh
-uv run ~/.agents/skills/career-documents/scripts/careerdocs.py version
+uv run ~/.agents/skills/careerdocs/scripts/careerdocs.py version
 ```
 
 ## Upload to ChatGPT
