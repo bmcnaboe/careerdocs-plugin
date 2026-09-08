@@ -48,6 +48,8 @@ def _read_frontmatter_file(path: Path) -> tuple[dict, str]:
 
 
 class MarkdownProvider(Provider):
+    PROVIDER_NAME = "markdown"
+
     def __init__(self, workspace, config: dict):
         base = Path(workspace) / config["providers"]["markdown"]["path"]
         self._set_base(base)
@@ -71,7 +73,7 @@ class MarkdownProvider(Provider):
         return {
             "schema_version": schema.profile_schema_version(),
             "applicant_ref": "applicant",
-            "authoritative_provider": "markdown",
+            "authoritative_provider": self.PROVIDER_NAME,
             "derived": False,
             "updated_at": util.now(),
             "entities": [],
@@ -88,6 +90,23 @@ class MarkdownProvider(Provider):
         except ValueError:
             return False
 
+    def _read_entity(self, path: Path) -> dict:
+        frontmatter, body = _read_frontmatter_file(path)
+        body_field = BODY_FIELD.get(frontmatter.get("type"))
+        if body_field and body.strip():
+            frontmatter[body_field] = body.strip()
+        return frontmatter
+
+    def _write_entity(self, entity: dict) -> None:
+        path = self.base_dir / entity["type"] / f"{entity['id']}.md"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        frontmatter = dict(entity)
+        body = ""
+        body_field = BODY_FIELD.get(entity["type"])
+        if body_field and body_field in frontmatter:
+            body = str(frontmatter.pop(body_field) or "")
+        _write_frontmatter_file(path, frontmatter, body=body)
+
     def _read_entities(self) -> list[dict]:
         entities: list[dict] = []
         for type_name in ENTITY_TYPES:
@@ -95,11 +114,7 @@ class MarkdownProvider(Provider):
             if not type_dir.is_dir():
                 continue
             for entity_file in sorted(type_dir.glob("*.md")):
-                frontmatter, body = _read_frontmatter_file(entity_file)
-                body_field = BODY_FIELD.get(frontmatter.get("type"))
-                if body_field and body.strip():
-                    frontmatter[body_field] = body.strip()
-                entities.append(frontmatter)
+                entities.append(self._read_entity(entity_file))
         return entities
 
     def read(self) -> dict:
@@ -119,6 +134,7 @@ class MarkdownProvider(Provider):
     def write(self, profile: dict) -> str:
         schema.assert_valid_profile(profile)
         self.base_dir.mkdir(parents=True, exist_ok=True)
+        self._by_id = {e["id"]: e for e in profile["entities"]}
 
         index = {field: profile[field] for field in INDEX_FIELDS}
         _write_frontmatter_file(self.index_file, index, body="# Career profile")
@@ -130,15 +146,8 @@ class MarkdownProvider(Provider):
                 for entity_file in type_dir.glob("*.md"):
                     if f"{type_name}/{entity_file.name}" not in desired:
                         entity_file.unlink()
-        for rel, entity in desired.items():
-            path = self.base_dir / rel
-            path.parent.mkdir(parents=True, exist_ok=True)
-            frontmatter = dict(entity)
-            body = ""
-            body_field = BODY_FIELD.get(entity["type"])
-            if body_field and body_field in frontmatter:
-                body = str(frontmatter.pop(body_field) or "")
-            _write_frontmatter_file(path, frontmatter, body=body)
+        for entity in profile["entities"]:
+            self._write_entity(entity)
 
         self._write_sources(profile.get("sources", []))
         return hash_profile(profile)
