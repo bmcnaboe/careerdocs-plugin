@@ -35,13 +35,42 @@ def test_doctor_json_reports_status(tmp_path, capsys):
     assert report["config_present"] is False
     assert "soffice" in report["converter"]
     assert "jsonschema" in report["dependencies"]
+    # With no config, defaults apply: markdown provider reachable with an empty profile.
+    assert report["provider"]["authoritative"] == "markdown"
+    assert report["provider"]["reachable"] is True
+    assert report["provider"]["entities"] == 0
+    assert report["templates"] == {"resume": False, "cover_letter": False}
+    assert report["voice"]["present"] is False
 
 
 def test_doctor_sees_config(tmp_path, capsys):
-    (tmp_path / "career-documents.json").write_text("{}", encoding="utf-8")
+    cli.main(["config", "init", "--workspace", str(tmp_path)])
+    capsys.readouterr()
     assert cli.main(["doctor", "--workspace", str(tmp_path), "--json"]) == 0
     report = json.loads(capsys.readouterr().out)
     assert report["config_present"] is True
+    assert report["config_valid"] is True
+
+
+def test_doctor_detects_templates_and_voice(tmp_path, capsys):
+    cli.main(["config", "init", "--workspace", str(tmp_path)])
+    (tmp_path / "templates" / "resume").mkdir(parents=True)
+    (tmp_path / "templates" / "resume" / "template.docx").write_bytes(b"stub")
+    (tmp_path / "voice").mkdir()
+    (tmp_path / "voice" / "voice.md").write_text("---\n{}\n---\n", encoding="utf-8")
+    capsys.readouterr()
+    assert cli.main(["doctor", "--workspace", str(tmp_path), "--json"]) == 0
+    report = json.loads(capsys.readouterr().out)
+    assert report["templates"]["resume"] is True
+    assert report["voice"]["present"] is True
+
+
+def test_doctor_reports_invalid_config(tmp_path, capsys):
+    (tmp_path / "career-documents.json").write_text('{"version": "1", "api_key": "x"}', encoding="utf-8")
+    assert cli.main(["doctor", "--workspace", str(tmp_path), "--json"]) == 0
+    report = json.loads(capsys.readouterr().out)
+    assert report["config_valid"] is False
+    assert report["config_error"]
 
 
 def test_unknown_command_is_usage_error():

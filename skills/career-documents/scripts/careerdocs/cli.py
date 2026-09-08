@@ -119,10 +119,52 @@ def cmd_version(args: argparse.Namespace) -> int:
 
 
 def cmd_doctor(args: argparse.Namespace) -> int:
+    from . import config as config_module
+    from .errors import CareerDocsError
+    from .providers import load_provider
+
     workspace = Path(args.workspace)
+    config_present = (workspace / "career-documents.json").is_file()
+    try:
+        cfg = config_module.resolve_config(workspace)
+        config_valid, config_error = True, None
+    except CareerDocsError as exc:
+        cfg = config_module.default_config()
+        config_valid, config_error = False, str(exc)
+
+    try:
+        provider = load_provider(workspace, cfg)
+        profile = provider.read()
+        provider_status = {
+            "authoritative": cfg["providers"]["authoritative"],
+            "reachable": True,
+            "entities": len(profile["entities"]),
+        }
+    except CareerDocsError as exc:
+        provider_status = {
+            "authoritative": cfg["providers"]["authoritative"],
+            "reachable": False,
+            "error": str(exc),
+        }
+
+    templates_dir = workspace / cfg["templates"]["dir"]
+    templates = {
+        "resume": (templates_dir / cfg["templates"]["resume"] / "template.docx").is_file(),
+        "cover_letter": (templates_dir / cfg["templates"]["cover_letter"] / "template.docx").is_file(),
+    }
+    voice = {
+        "path": cfg["voice"]["path"],
+        "present": (workspace / cfg["voice"]["path"]).is_file(),
+    }
+
     report = {
         "workspace": str(workspace.resolve()),
-        "config_present": (workspace / "career-documents.json").is_file(),
+        "config_present": config_present,
+        "config_valid": config_valid,
+        "config_error": config_error,
+        "provider": provider_status,
+        "templates": templates,
+        "voice": voice,
         "converter": {"soffice": shutil.which("soffice") is not None},
         "dependencies": dependency_status(),
         "python": platform.python_version(),
@@ -131,9 +173,15 @@ def cmd_doctor(args: argparse.Namespace) -> int:
         print(json.dumps(report, indent=2))
     else:
         print(f"workspace: {report['workspace']}")
-        print(f"config present: {report['config_present']}")
-        found = "found" if report["converter"]["soffice"] else "not found"
-        print(f"PDF converter (soffice): {found}")
+        print(f"config: {'present' if config_present else 'absent (defaults)'}"
+              f"{'' if config_valid else ' — INVALID: ' + str(config_error)}")
+        prov = report["provider"]
+        print(f"provider ({prov['authoritative']}): "
+              + (f"reachable, {prov['entities']} entities" if prov["reachable"] else f"UNREACHABLE: {prov['error']}"))
+        print(f"template (resume): {'present' if templates['resume'] else 'missing'}")
+        print(f"template (cover letter): {'present' if templates['cover_letter'] else 'missing'}")
+        print(f"voice ({voice['path']}): {'present' if voice['present'] else 'missing'}")
+        print(f"PDF converter (soffice): {'found' if report['converter']['soffice'] else 'not found'}")
         for name, present in report["dependencies"].items():
             print(f"dependency {name}: {'ok' if present else 'missing'}")
         print(f"python: {report['python']}")
