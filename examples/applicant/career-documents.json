@@ -1,0 +1,16 @@
+{
+  "version": "1",
+  "providers": {
+    "authoritative": "markdown",
+    "markdown": { "path": "profile" }
+  },
+  "templates": { "dir": "templates", "resume": "resume", "cover_letter": "cover-letter" },
+  "voice": { "path": "voice/voice.md" },
+  "outputs": { "applications_dir": "applications", "baselines_dir": "baselines" },
+  "workflow": {
+    "state_dir": ".career-documents/state",
+    "positioning_default": "builder",
+    "page_budget": { "resume": 2, "cover_letter": 1 },
+    "approval_mode": "explicit"
+  }
+}

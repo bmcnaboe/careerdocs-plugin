@@ -1,0 +1,94 @@
+{
+  "sources": [
+    { "source_id": "src_AAAAAAAAAAAAAAAAAAAAAAAAAA", "kind": "resume_docx", "location": "sources/resume-a.docx", "captured_at": "2024-01-01T00:00:00Z" },
+    { "source_id": "src_BBBBBBBBBBBBBBBBBBBBBBBBBB", "kind": "resume_pdf", "location": "sources/resume-b.pdf", "captured_at": "2024-01-01T00:00:00Z" }
+  ],
+  "candidates": [
+    {
+      "type": "contact",
+      "ref": "contact",
+      "provenance": { "source_id": "src_AAAAAAAAAAAAAAAAAAAAAAAAAA", "method": "extraction", "recorded_at": "2024-01-01T00:00:00Z", "actor": "agent", "excerpt": "Jordan Rivera" },
+      "name": "Jordan Rivera",
+      "headline": "Engineering Leader",
+      "location": "Metropolis, USA",
+      "email": "jordan.rivera@example.com",
+      "phone": "(555) 555-0142"
+    },
+    {
+      "type": "experience",
+      "ref": "globex",
+      "provenance": { "source_id": "src_AAAAAAAAAAAAAAAAAAAAAAAAAA", "method": "extraction", "recorded_at": "2024-01-01T00:00:00Z", "actor": "agent", "excerpt": "Engineering Manager, Globex Corporation. March 2018 – June 2021" },
+      "organization": "Globex Corporation",
+      "title": "Engineering Manager",
+      "start_date": "2018-03",
+      "end_date": "2021-06"
+    },
+    {
+      "type": "experience",
+      "ref": "globex",
+      "provenance": { "source_id": "src_BBBBBBBBBBBBBBBBBBBBBBBBBB", "method": "extraction", "recorded_at": "2024-01-01T00:00:01Z", "actor": "agent", "excerpt": "Engineering Manager, Globex Corporation. March 2018 – August 2021" },
+      "organization": "Globex Corporation",
+      "title": "Engineering Manager",
+      "start_date": "2018-03",
+      "end_date": "2021-08"
+    },
+    {
+      "type": "experience",
+      "ref": "initech",
+      "provenance": { "source_id": "src_AAAAAAAAAAAAAAAAAAAAAAAAAA", "method": "extraction", "recorded_at": "2024-01-01T00:00:00Z", "actor": "agent", "excerpt": "Senior Software Engineer, Initech. January 2015 – February 2018" },
+      "organization": "Initech",
+      "title": "Senior Software Engineer",
+      "start_date": "2015-01",
+      "end_date": "2018-02"
+    },
+    {
+      "type": "achievement",
+      "parent_ref": "globex",
+      "provenance": { "source_id": "src_AAAAAAAAAAAAAAAAAAAAAAAAAA", "method": "extraction", "recorded_at": "2024-01-01T00:00:00Z", "actor": "agent", "excerpt": "Grew the platform engineering team from 4 to 15 engineers." },
+      "statement": "Grew the platform engineering team from 4 to 15 engineers."
+    },
+    {
+      "type": "achievement",
+      "parent_ref": "globex",
+      "provenance": { "source_id": "src_AAAAAAAAAAAAAAAAAAAAAAAAAA", "method": "extraction", "recorded_at": "2024-01-01T00:00:00Z", "actor": "agent", "excerpt": "Cut cloud infrastructure costs by 35% through workload consolidation." },
+      "statement": "Cut cloud infrastructure costs by 35% through workload consolidation."
+    },
+    {
+      "type": "skill",
+      "ref": "skill-python",
+      "provenance": { "source_id": "src_AAAAAAAAAAAAAAAAAAAAAAAAAA", "method": "extraction", "recorded_at": "2024-01-01T00:00:00Z", "actor": "agent", "excerpt": "Python" },
+      "name": "Python",
+      "level": "expert"
+    },
+    {
+      "type": "skill",
+      "ref": "skill-go",
+      "provenance": { "source_id": "src_AAAAAAAAAAAAAAAAAAAAAAAAAA", "method": "extraction", "recorded_at": "2024-01-01T00:00:00Z", "actor": "agent", "excerpt": "Go" },
+      "name": "Go",
+      "level": "working"
+    },
+    {
+      "type": "skill",
+      "ref": "skill-k8s",
+      "provenance": { "source_id": "src_AAAAAAAAAAAAAAAAAAAAAAAAAA", "method": "extraction", "recorded_at": "2024-01-01T00:00:00Z", "actor": "agent", "excerpt": "Kubernetes" },
+      "name": "Kubernetes",
+      "level": "working"
+    },
+    {
+      "type": "skill",
+      "ref": "skill-leadership",
+      "provenance": { "source_id": "src_AAAAAAAAAAAAAAAAAAAAAAAAAA", "method": "extraction", "recorded_at": "2024-01-01T00:00:00Z", "actor": "agent", "excerpt": "Team Leadership" },
+      "name": "Team Leadership",
+      "level": "expert"
+    },
+    {
+      "type": "education",
+      "ref": "edu-state",
+      "provenance": { "source_id": "src_AAAAAAAAAAAAAAAAAAAAAAAAAA", "method": "extraction", "recorded_at": "2024-01-01T00:00:00Z", "actor": "agent", "excerpt": "B.S. Computer Science, State University (2011 – 2015)" },
+      "institution": "State University",
+      "degree": "B.S. Computer Science",
+      "start_date": "2011-09",
+      "end_date": "2015-05"
+    }
+  ]
+}
