@@ -91,7 +91,14 @@ def test_all_agree(tmp_path):
     assert errors == [] and absent == []
 
 
+def test_require_manifests_fails_when_absent(tmp_path):
+    make_repo(tmp_path)
+    _, errors, _ = cv.run_check(tmp_path, require_manifests=True)
+    assert any("required manifest absent" in e for e in errors)
+
+
 def test_repo_versions_agree():
-    # Whatever exists in the real repo must already agree; absent manifests are fine.
-    _, errors, _ = cv.run_check(ROOT)
+    # The real repo agrees and now carries every required manifest.
+    _, errors, absent = cv.run_check(ROOT, require_manifests=True)
     assert errors == []
+    assert absent == []

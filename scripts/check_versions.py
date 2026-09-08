@@ -66,7 +66,7 @@ def manifest_version_entries(label: str, path: Path) -> list[tuple[str, object]]
     return entries
 
 
-def run_check(root: Path) -> tuple[str, list[str], list[str]]:
+def run_check(root: Path, *, require_manifests: bool = False) -> tuple[str, list[str], list[str]]:
     vor = version_of_record(root)
     errors: list[str] = []
     absent: list[str] = []
@@ -81,6 +81,8 @@ def run_check(root: Path) -> tuple[str, list[str], list[str]]:
         path = root / rel
         if not path.exists():
             absent.append(label)
+            if require_manifests:
+                errors.append(f"required manifest absent: {label}")
             continue
         for desc, version in manifest_version_entries(label, path):
             if version != vor:
@@ -91,10 +93,15 @@ def run_check(root: Path) -> tuple[str, list[str], list[str]]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Check version agreement across the repo.")
     parser.add_argument("--root", default=str(Path(__file__).resolve().parents[1]))
+    parser.add_argument(
+        "--allow-absent-manifests",
+        action="store_true",
+        help="do not fail when a package manifest is missing",
+    )
     args = parser.parse_args(argv)
     root = Path(args.root)
 
-    vor, errors, absent = run_check(root)
+    vor, errors, absent = run_check(root, require_manifests=not args.allow_absent_manifests)
     print(f"version of record: {vor}")
     if absent:
         print("absent manifests: " + ", ".join(absent))
