@@ -291,7 +291,12 @@ def cmd_import(args) -> int:
 def cmd_diff(args) -> int:
     provider, _ = _provider(args)
     payload = json.loads(Path(args.input).read_text(encoding="utf-8"))
-    operations = payload["operations"] if isinstance(payload, dict) else payload
+    if isinstance(payload, dict) and "candidates" in payload:
+        from . import merge
+
+        operations = merge.build_operations(provider.read(), payload)
+    else:
+        operations = payload["operations"] if isinstance(payload, dict) else payload
     diff = make_diff(provider, operations)
     if args.json:
         print(json.dumps({"diff_id": diff["diff_id"], "base_hash": diff["base_hash"]}))
