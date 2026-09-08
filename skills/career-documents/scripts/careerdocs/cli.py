@@ -78,6 +78,7 @@ def _register_feature_commands(subparsers, common: argparse.ArgumentParser) -> N
     from . import diff as diff_module
     from . import inventory as inventory_module
     from . import mapping as mapping_module
+    from . import organize as organize_module
     from . import plan as plan_module
     from . import record as record_module
     from . import render as render_module
@@ -92,6 +93,7 @@ def _register_feature_commands(subparsers, common: argparse.ArgumentParser) -> N
     render_module.register(subparsers, common)
     record_module.register(subparsers, common)
     inventory_module.register(subparsers, common)
+    organize_module.register(subparsers, common)
 
 
 

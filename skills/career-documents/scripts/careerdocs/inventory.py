@@ -26,7 +26,7 @@ CATEGORIES = (
 DESTINATION = {
     "authoritative_data": "sources/",
     "source_evidence": "sources/",
-    "template_voice": "templates/",
+    "template_voice": "voice/",
     "generated_output": "baselines/",
     "historical_record": "archive/",
     "duplicate": "archive/duplicates/",
