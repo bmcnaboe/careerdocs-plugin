@@ -78,6 +78,7 @@ def _register_feature_commands(subparsers, common: argparse.ArgumentParser) -> N
     from . import diff as diff_module
     from . import mapping as mapping_module
     from . import plan as plan_module
+    from . import record as record_module
     from . import render as render_module
     from . import state as state_module
 
@@ -88,6 +89,7 @@ def _register_feature_commands(subparsers, common: argparse.ArgumentParser) -> N
     mapping_module.register(subparsers, common)
     plan_module.register(subparsers, common)
     render_module.register(subparsers, common)
+    record_module.register(subparsers, common)
 
 
 

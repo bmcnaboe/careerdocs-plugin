@@ -154,6 +154,9 @@ def cmd_render(args) -> int:
         map_path=map_path if map_path.is_file() else None,
         pdf_path=pdf_path, pdf_available=pdf_available,
     )
+    invalid = schema.validate_against("output-record", record)
+    if invalid:
+        raise CareerDocsError("output record is invalid: " + "; ".join(invalid))
     record_path = out_docx.with_suffix(".record.json")
     record_path.write_text(json.dumps(record, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 

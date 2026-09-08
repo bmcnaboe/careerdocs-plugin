@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/bmcnaboe/career-documents/schemas/output-record.schema.json#1.0.0",
+  "title": "OutputRecord",
+  "type": "object",
+  "required": [
+    "document", "kind", "generated_at", "plugin_version", "schema_version",
+    "content_plan", "template", "positioning", "source_ids", "checks", "stale"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "document": { "type": "string" },
+    "kind": { "enum": ["resume", "cover_letter"] },
+    "generated_at": { "type": "string" },
+    "plugin_version": { "type": "string" },
+    "schema_version": { "type": "string" },
+    "role_brief": { "type": ["string", "null"] },
+    "map": { "type": ["string", "null"] },
+    "content_plan": { "type": ["string", "null"] },
+    "template": { "type": "object" },
+    "voice": { "type": ["object", "string", "null"] },
+    "positioning": { "enum": ["executive", "builder"] },
+    "source_ids": { "type": "array", "items": { "type": "string" } },
+    "checks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["factual", "links_dates", "extraction", "pagination", "layout"],
+      "patternProperties": {
+        "^(factual|links_dates|extraction|pagination|layout)$": {
+          "type": "object",
+          "required": ["status", "details"],
+          "additionalProperties": false,
+          "properties": {
+            "status": { "enum": ["pass", "fail", "skipped", "pending"] },
+            "details": { "type": "string" }
+          }
+        }
+      }
+    },
+    "stale": { "type": "boolean" },
+    "stale_reason": { "type": ["string", "null"] },
+    "pdf": { "type": "string" }
+  }
+}
