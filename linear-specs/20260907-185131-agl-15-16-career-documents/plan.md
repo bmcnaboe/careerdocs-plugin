@@ -167,7 +167,7 @@ emit `<ralph>GUTTER</ralph>` with the root cause.
 - [x] T065 [AGL-16] Generate baselines: `plan` and `render --pdf` for executive and builder into `baselines/<positioning>/`, then `check` each; all five checks pass (link check may be skipped offline; pagination and layout must run, see the converter rule); output records written
 - [x] T066 [AGL-16] Organize the workspace: `organize --apply` with the reviewed inventory; archive the previous current-state artifacts only if every T065 check passed; write the workspace `README.md` describing the structure; confirm `moves.jsonl` covers every relocation and `organize --rollback --dry-run` is clean
 - [x] T067 [AGL-16] Add `docs/migration.md` to the repository (generic playbook: inventory → configure → onboard → capture voice and template → baselines → organize; no applicant specifics) and confirm the applicant-data guard is green
-- [ ] T068 [AGL-16] [risky] Close tranche E: full gate green; comment on AGL-16 summarizing the workspace structure, the note count in Basic Memory, the baseline check results, and any open conflicts or skipped checks; move AGL-16 to In Review
+- [x] T068 [AGL-16] [risky] Close tranche E: full gate green; comment on AGL-16 summarizing the workspace structure, the note count in Basic Memory, the baseline check results, and any open conflicts or skipped checks; move AGL-16 to In Review
 
 ## Tickets
 
