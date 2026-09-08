@@ -23,22 +23,26 @@ cp -R examples/applicant /tmp/cd-demo && cd /tmp/cd-demo
 CD=../path/to/skills/career-documents/scripts/careerdocs.py
 uv run $CD doctor
 uv run $CD profile import sources/*
-# The agent turns the emitted candidates into candidates.json (the tests ship one)
-uv run $CD profile diff candidates.json          # prints the diff and one conflict question
-uv run $CD state answer onboard applicant q-001 "2024-06"
+# The agent turns the emitted text blocks into candidates.json (the tests ship one).
+# --flow/--subject persist the generated questions to workflow state; --json prints
+# the diff id and the questions to answer.
+uv run $CD profile diff candidates.json --flow onboard --subject applicant --json
+# Answer each generated question by its id (from the diff output), e.g. the end-date conflict:
+uv run $CD state answer onboard applicant --question "conflict:<experience-id>:end_date" --answer "2021-06"
+# Re-diff with the resolution, then approve and apply the reviewed diff:
 uv run $CD profile approve <diff_id>
 uv run $CD profile apply <diff_id>
-uv run $CD brief applications/example-role/job-description.md
-uv run $CD map --role example-role
-uv run $CD plan --role example-role --positioning builder
-uv run $CD render --role example-role --kind resume --pdf
+uv run $CD brief applications/example-role/job-description.md --role-slug example-role
+uv run $CD map --role-slug example-role
+uv run $CD plan --role-slug example-role --positioning builder --kind resume
+uv run $CD render --role-slug example-role --kind resume --pdf
 uv run $CD check applications/example-role/outputs/resume-*.docx
 ```
 
 Expected: one conflict question, an applied profile with every entity carrying an ID and
-provenance, a role brief with one `gap` requirement, a résumé whose output record shows
-five passing checks (link check `skipped` when offline), and page images under
-`outputs/layout/`.
+provenance, a role brief with one `gap` requirement (the FDA-cleared medical-device line),
+a résumé whose output record shows five passing checks (the PDF checks `skipped` when
+LibreOffice is absent), and page images under `applications/example-role/outputs/layout/`.
 
 ## Manual acceptance guidance (residual risk only)
 

@@ -151,7 +151,7 @@ emit `<ralph>GUTTER</ralph>` with the root cause.
 - [x] T052 [AGL-15] Write `docs/configuration.md`, `docs/profile-schema.md`, and `docs/provider-contract.md` from the contracts and the shipped schemas
 - [x] T053 [AGL-15] Write `docs/checks.md` and `docs/templates-and-voice.md`, and complete `README.md` (flows, platforms, privacy model, links to every document)
 - [x] T054 [AGL-15] Complete `skills/career-documents/references/provider-contract.md`, `references/checks.md`, `references/configuration.md`, and the `doctor` command (converter detection, dependency status, provider reachability, template and voice presence) with additions to `tests/unit/test_cli.py`
-- [ ] T055 [AGL-15] Run `python3 scripts/verification_evidence_check.py --require-complete`, resolve every traceability gap in `linear-specs/20260907-185131-agl-15-16-career-documents/design/verification-evidence.md`, and finalize the manual-acceptance guidance in `linear-specs/20260907-185131-agl-15-16-career-documents/design/quickstart.md`
+- [x] T055 [AGL-15] Run `python3 scripts/verification_evidence_check.py --require-complete`, resolve every traceability gap in `linear-specs/20260907-185131-agl-15-16-career-documents/design/verification-evidence.md`, and finalize the manual-acceptance guidance in `linear-specs/20260907-185131-agl-15-16-career-documents/design/quickstart.md`
 - [ ] T056 [AGL-15] [risky] Switch `.github/workflows/ci.yml` to `./scripts/gate.sh final --strict` and remove every remaining `SKIP` by adding the missing component, never by loosening the gate
 - [ ] T057 [AGL-15] [risky] Close tranche D: `./scripts/gate.sh final --strict` green; comment on AGL-15 summarizing what landed and how to verify it, and move AGL-15 to In Review
 
