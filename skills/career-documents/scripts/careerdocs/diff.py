@@ -203,6 +203,13 @@ def register(subparsers, common: argparse.ArgumentParser) -> None:
     validate = actions.add_parser("validate", parents=[common], help="validate the profile")
     validate.set_defaults(func=cmd_validate)
 
+    import_parser = actions.add_parser(
+        "import", parents=[common], help="register sources and emit candidate skeletons"
+    )
+    import_parser.add_argument("sources", nargs="+")
+    import_parser.add_argument("--out", help="also write the emitted JSON to this file")
+    import_parser.set_defaults(func=cmd_import)
+
     diff_parser = actions.add_parser("diff", parents=[common], help="build a ProfileDiff")
     diff_parser.add_argument("input", help="JSON file of diff operations")
     diff_parser.set_defaults(func=cmd_diff)
@@ -235,6 +242,49 @@ def cmd_validate(args) -> int:
         print(json.dumps({"valid": False, "error": str(exc)}) if args.json else f"invalid: {exc}")
         return 1
     print(json.dumps({"valid": True}) if args.json else "profile is valid")
+    return 0
+
+
+def cmd_import(args) -> int:
+    from . import importers
+
+    provider, _ = _provider(args)
+    registered: list[dict] = []
+    results: list[dict] = []
+    workspace_root = Path(args.workspace).resolve()
+    for source in args.sources:
+        path = Path(source)
+        sha = hashlib.sha256(path.read_bytes()).hexdigest()
+        kind = importers.detect_kind(path)
+        if kind is None:
+            raise CareerDocsError(f"unsupported source type {path.suffix!r}", code="USAGE")
+        try:
+            location = str(path.resolve().relative_to(workspace_root))
+        except ValueError:
+            location = str(path)
+        source_record = {
+            "source_id": ids.new_source_id(),
+            "kind": kind,
+            "location": location,
+            "sha256": sha,
+            "captured_at": util.now(),
+        }
+        provider.append_source(source_record)
+        registered.append(source_record)
+        extracted = importers.import_source(path, source_record["source_id"])
+        results.append({"source_id": source_record["source_id"], "kind": kind, "location": location, **extracted})
+
+    payload = {"sources": registered, "imports": results}
+    if args.out:
+        Path(args.out).write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False))
+    else:
+        for result in results:
+            print(
+                f"{result['kind']}: {result['location']} — "
+                f"{len(result['text_blocks'])} text block(s), {len(result['candidates'])} candidate(s)"
+            )
     return 0
 
 
