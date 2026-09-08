@@ -94,3 +94,23 @@ def test_links_dates_valid_link_offline_skips_liveness():
     result = links_dates.check("See https://example.com/profile for details")
     assert result["status"] == "pass"
     assert "liveness skipped" in result["details"]
+
+
+# --- verbatim bullet check ---
+
+
+def test_verbatim_bullet_check_flags_reuse():
+    bullets = ["Cut cloud infrastructure costs by 35% through workload consolidation."]
+    letter = "Some intro.\nCut cloud infrastructure costs by 35% through workload consolidation."
+    assert factual.verbatim_bullet_check(letter, bullets)["status"] == "fail"
+
+
+def test_verbatim_bullet_check_passes_when_complementary():
+    bullets = ["Cut cloud infrastructure costs by 35% through workload consolidation."]
+    letter = "I would bring the same cost discipline to your platform organization."
+    assert factual.verbatim_bullet_check(letter, bullets)["status"] == "pass"
+
+
+def test_verbatim_bullet_check_ignores_short_fragments():
+    bullets = ["Python"]  # too short to count as a reused bullet
+    assert factual.verbatim_bullet_check("I write Python daily.", bullets)["status"] == "pass"

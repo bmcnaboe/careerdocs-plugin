@@ -1,0 +1,34 @@
+{
+  "name": "example-cover-letter",
+  "kind": "cover_letter",
+  "version": "1",
+  "page_budget": 1,
+  "units_per_page": 6,
+  "sections": [
+    {
+      "id": "header",
+      "title": "",
+      "placeholder": "contact",
+      "entity_types": [
+        "contact"
+      ],
+      "max_items": 1,
+      "required": true
+    },
+    {
+      "id": "body",
+      "title": "",
+      "placeholder": "body",
+      "kind": "sentence",
+      "entity_types": [
+        "experience",
+        "achievement",
+        "skill"
+      ],
+      "max_items": 6,
+      "required": true
+    }
+  ],
+  "allowlist": [],
+  "style_notes": "One page; complements the resume; no verbatim resume bullets."
+}

@@ -55,3 +55,22 @@ def check(document_text: str, plan: dict, profile: dict, allowlist=()) -> dict:
     if findings:
         return {"status": "fail", "details": "; ".join(findings)}
     return {"status": "pass", "details": "every unit and number traces to a cited entity"}
+
+
+_VERBATIM_MIN_LEN = 15
+
+
+def verbatim_bullet_check(document_text: str, resume_bullets) -> dict:
+    """Flag any résumé bullet reproduced verbatim in the (cover-letter) document.
+
+    A cover letter must complement the résumé, not repeat it; a bullet appearing verbatim
+    (as a line or embedded in a sentence) fails the check.
+    """
+    findings: list[str] = []
+    for bullet in resume_bullets:
+        text = bullet.strip()
+        if len(text) >= _VERBATIM_MIN_LEN and text in document_text:
+            findings.append(f"verbatim résumé bullet reused: {text!r}")
+    if findings:
+        return {"status": "fail", "details": "; ".join(findings)}
+    return {"status": "pass", "details": "no résumé bullet reproduced verbatim"}

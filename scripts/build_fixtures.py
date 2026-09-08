@@ -216,10 +216,12 @@ def main() -> None:
     build_resume_a_docx(SOURCES / "resume-a.docx")
     build_resume_b_pdf(SOURCES / "resume-b.pdf")
     build_resume_template(TEMPLATES / "resume")
+    build_cover_letter_template(TEMPLATES / "cover-letter")
     build_example_resume_pdf(RENDERED / "example-resume.pdf")
     print(f"built {SOURCES / 'resume-a.docx'}")
     print(f"built {SOURCES / 'resume-b.pdf'}")
     print(f"built {TEMPLATES / 'resume' / 'template.docx'}")
+    print(f"built {TEMPLATES / 'cover-letter' / 'template.docx'}")
     print(f"built {RENDERED / 'example-resume.pdf'}")
 
 

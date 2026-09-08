@@ -102,6 +102,27 @@ def test_cli_render_writes_docx_and_record(tmp_path, capsys):
     assert record["kind"] == "resume" and record["source_ids"]
 
 
+COVER_DIR = ROOT / "examples" / "applicant" / "templates" / "cover-letter"
+COVER_JSON = json.loads((COVER_DIR / "template.json").read_text())
+
+
+def test_render_cover_letter(tmp_path):
+    provider = load_provider(tmp_path, default_config())
+    ops = merge.build_operations(provider.read(), CANDIDATES)
+    d = diff.make_diff(provider, ops)
+    diff.approve(provider, d["diff_id"])
+    diff.apply(provider, d["diff_id"], cfg=default_config(), workspace=tmp_path)
+    b = brief.generate_brief(JD)
+    m = mapping.generate_map(b, provider.read())
+    p = plan.generate_plan(m, provider.read(), COVER_JSON, "builder", brief=b)
+    out = tmp_path / "letter.docx"
+    render.render_document(p, COVER_JSON, COVER_DIR / "template.docx", out)
+    text = read_docx_text(out)
+    assert "Jordan Rivera" in text  # contact header
+    # The body carries evidence content.
+    assert "Globex Corporation" in text or "Kubernetes" in text or "platform" in text
+
+
 def test_cli_render_pdf_branch(tmp_path):
     from careerdocs import cli
 
