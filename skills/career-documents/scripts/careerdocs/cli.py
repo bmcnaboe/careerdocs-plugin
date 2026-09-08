@@ -75,9 +75,11 @@ def _register_feature_commands(subparsers, common: argparse.ArgumentParser) -> N
     """Wire in each feature module's subcommands; extended as modules are added."""
     from . import config as config_module
     from . import diff as diff_module
+    from . import state as state_module
 
     config_module.register(subparsers, common)
     diff_module.register(subparsers, common)
+    state_module.register(subparsers, common)
 
 
 
