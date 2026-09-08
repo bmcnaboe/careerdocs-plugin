@@ -13,6 +13,11 @@
       "path": "skills/career-onboard"
     },
     {
+      "name": "career-update",
+      "description": "Update the authoritative profile with a new qualification the applicant states. Use when the applicant reports a new achievement, role, skill, credential, or a correction, and it should become part of their one authoritative profile. The flow captures the statement with provenance (the applicant's own statement is the highest-precedence source), turns it into candidates, proposes a ProfileDiff, gets an explicit approval, applies it (giving the new fact a fresh stable id and applicant-verified state), refreshes the derived export, and reports which previously generated documents are now stale. Resumable — an interrupted update resumes from its pending diff without re-asking.",
+      "path": "skills/career-update"
+    },
+    {
       "name": "career-resume",
       "description": "Generate a tailored résumé for a specific job description from the applicant's authoritative profile. Use when the applicant has an onboarded profile and a target role, and wants a résumé mapped to that role's requirements. The flow builds a role brief from the job description, has the agent complete it, maps each requirement to direct/transferable/gap evidence, chooses a positioning (executive or builder), plans content within the template's page budget, drafts units in the applicant's voice, renders into the template, runs the five output checks, and reports cuts and gaps. It never invents qualifications: a gap requirement is named honestly and never claimed.",
       "path": "skills/career-resume"
