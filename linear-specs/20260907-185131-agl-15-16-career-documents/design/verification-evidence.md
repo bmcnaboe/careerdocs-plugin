@@ -22,9 +22,9 @@ Status values: `pending`, `pass`, `fail`, `skipped (reason)`.
 | US3-3    | unit + integration  | `tests/unit/test_plan.py::test_positioning_inverts`; `tests/integration/test_resume.py::test_positioning_inverts` | pass    |
 | US3-4    | integration         | `tests/integration/test_resume.py::test_five_checks`; unit: `test_record.py`, `test_checks_layout.py` | pass    |
 | US3-5    | unit                | `tests/unit/test_plan.py::test_budget_cuts_reported` | pass    |
-| US4-1    | integration         | `tests/integration/test_cover_letter.py::test_reuses_brief_and_map` | pending |
-| US4-2    | integration         | `tests/integration/test_cover_letter.py::test_checks_and_budget` | pending |
-| US4-3    | integration         | `tests/integration/test_cover_letter.py::test_no_verbatim_bullets` | pending |
+| US4-1    | integration         | `tests/integration/test_cover_letter.py::test_reuses_brief_and_map`; unit: `test_plan.py::test_cover_letter_orders_by_requirement_value` | pending |
+| US4-2    | integration         | `tests/integration/test_cover_letter.py::test_checks_and_budget`; unit: `test_plan.py::test_cover_letter_page_budget_cuts`, `test_checks_factual.py` | pending |
+| US4-3    | integration         | `tests/integration/test_cover_letter.py::test_no_verbatim_bullets`; unit: `test_checks_factual.py::test_verbatim_bullet_check_flags_reuse` | pending |
 | US5-1    | integration         | `tests/integration/test_update.py::test_new_fact_provenance` | pending |
 | US5-2    | integration         | `tests/integration/test_update.py::test_exports_agree_and_stale` | pending |
 | US5-3    | integration         | `tests/integration/test_update.py::test_resume_pending_diff` | pending |
