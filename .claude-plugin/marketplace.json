@@ -1,0 +1,15 @@
+{
+  "name": "career-documents",
+  "owner": { "name": "Oxford Heavy" },
+  "metadata": {
+    "description": "The career-documents plugin: portable resume and cover-letter workflows."
+  },
+  "plugins": [
+    {
+      "name": "career-documents",
+      "source": "./",
+      "description": "Portable resume and cover-letter workflows with one authoritative profile and verified output.",
+      "version": "0.1.0"
+    }
+  ]
+}

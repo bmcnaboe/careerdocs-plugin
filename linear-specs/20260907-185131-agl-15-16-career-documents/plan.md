@@ -109,7 +109,7 @@ emit `<ralph>GUTTER</ralph>` with the root cause.
 
 ### Tranche B — Packages and onboarding (AGL-15)
 
-- [ ] T019 [AGL-15] [risky] Create `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` (single plugin, `source: "./"`) and implement `scripts/check_inventory.py` (skills tree versus the Claude manifest; runs `claude plugin validate .` when the CLI is on PATH) with `tests/unit/test_check_inventory.py`
+- [x] T019 [AGL-15] [risky] Create `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` (single plugin, `source: "./"`) and implement `scripts/check_inventory.py` (skills tree versus the Claude manifest; runs `claude plugin validate .` when the CLI is on PATH) with `tests/unit/test_check_inventory.py`
 - [ ] T020 [AGL-15] [risky] Create `packages/openai/manifest.json` and `packages/openai/install.py` (standard library; `--link` default, `--copy`, `--home`, `--dry-run`, `--uninstall`; targets `$HOME/.agents/skills/`; prints the ChatGPT skill-upload steps; exits non-zero when the manifest disagrees with `skills/`) with `tests/unit/test_install.py`; extend `scripts/check_inventory.py` to compare the OpenAI manifest and `scripts/check_versions.py` to require both manifests
 - [ ] T021 [AGL-15] Write `docs/setup-claude.md` (marketplace add, plugin install, Cowork note, verification via `claude plugin details`) and `docs/setup-codex.md` (installer usage, ChatGPT upload, verification via `ls ~/.agents/skills`), and the README install section
 - [ ] T022 [AGL-15] Update `linear-specs/20260907-185131-agl-15-16-career-documents/design/verification-evidence.md` with the US1 outcome map, automated guard evidence, and generated artifact links
