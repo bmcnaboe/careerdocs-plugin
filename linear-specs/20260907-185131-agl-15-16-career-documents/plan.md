@@ -121,7 +121,7 @@ emit `<ralph>GUTTER</ralph>` with the root cause.
 - [x] T028 [AGL-15] [risky] Create `skills/career-onboard/SKILL.md`, `skills/career-onboard/agents/openai.yaml`, and `skills/career-onboard/references/playbook.md` (inventory sources → `profile import` → extract candidates into `candidates.json` against the schema → `profile diff` → ask only the generated questions → `profile approve` after an explicit yes → `profile apply` → `profile export`), and add the skill to both package manifests
 - [x] T029 [AGL-15] Update `linear-specs/20260907-185131-agl-15-16-career-documents/design/verification-evidence.md` with the US2 outcome map, automated guard evidence, and generated artifact links
 - [x] T030 [AGL-15] [risky] Verify US2: `tests/integration/test_onboard.py` runs import → diff → one question → answer → approve → apply → export on the example sources and asserts one role entry with both provenance entries and `applicant_verified`, resumes an interrupted run without repeating the question, and confirms a private fact is absent from the export; `tests/integration/test_basic_memory_provider.py` repeats the sequence with `authoritative: basic_memory` in a temporary vault and asserts the same IDs in the notes and a `derived: true` Markdown export. Tests exercise the real CLI and files, not mocked providers.
-- [ ] T031 [AGL-15] [risky] Close tranche B: full gate green; progress comment on AGL-15
+- [x] T031 [AGL-15] [risky] Close tranche B: full gate green; progress comment on AGL-15
 
 ### Tranche C — Tailored résumé (AGL-15)
 
