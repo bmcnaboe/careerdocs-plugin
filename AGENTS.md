@@ -56,5 +56,5 @@ autonomous runs.
 ## Tickets
 
 Work is tracked in the `agent-layer` Linear workspace, team `agent-layer` (`AGL-`),
-project `job-applier`. `.claude/linear-workspace.md` pins the workspace, states, and
+project `careerdocs-plugin`. `.claude/linear-workspace.md` pins the workspace, states, and
 house rules the `linear-*` skills read; it is seeded, project-owned, and safe to edit.
