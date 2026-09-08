@@ -21,6 +21,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SOURCES = ROOT / "examples" / "applicant" / "sources"
 TEMPLATES = ROOT / "examples" / "applicant" / "templates"
+RENDERED = ROOT / "tests" / "fixtures" / "rendered"
 
 FIXED_TIME = datetime(2024, 1, 1, 0, 0, 0)
 
@@ -174,13 +175,52 @@ def build_cover_letter_template(directory: Path) -> None:
     _build_docxtpl_template(directory, COVER_LETTER_TEMPLATE_JSON)
 
 
+_RESUME_LINES = [
+    ("Jordan Rivera", 18, 26),
+    ("Engineering Leader — Metropolis, USA", 11, 16),
+    ("jordan.rivera@example.com · (555) 555-0142", 11, 24),
+    ("Experience", 14, 20),
+    ("Engineering Manager, Globex Corporation (2018-03–2021-06)", 11, 16),
+    ("Grew the platform engineering team from 4 to 15 engineers.", 11, 16),
+    ("Cut cloud infrastructure costs by 35% through workload consolidation.", 11, 24),
+    ("Senior Software Engineer, Initech (2015-01–2018-02)", 11, 24),
+    ("Skills", 14, 20),
+    ("Python, Go, Kubernetes, Team Leadership", 11, 24),
+    ("Education", 14, 20),
+    ("B.S. Computer Science, State University", 11, 16),
+]
+
+
+def build_example_resume_pdf(path: Path) -> None:
+    """A representative rendered resume PDF for the layout checks, with 1-inch margins."""
+    from reportlab import rl_config
+
+    rl_config.invariant = 1
+    from reportlab.lib.pagesizes import letter
+    from reportlab.pdfgen import canvas
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    pdf = canvas.Canvas(str(path), pagesize=letter, invariant=1)
+    _width, height = letter
+    y = height - 72  # 1-inch top margin
+    for text, size, gap in _RESUME_LINES:
+        pdf.setFont("Helvetica-Bold" if size >= 14 else "Helvetica", size)
+        pdf.drawString(72, y, text)  # 1-inch left margin
+        y -= gap
+    pdf.setTitle("Jordan Rivera — Resume")
+    pdf.showPage()
+    pdf.save()
+
+
 def main() -> None:
     build_resume_a_docx(SOURCES / "resume-a.docx")
     build_resume_b_pdf(SOURCES / "resume-b.pdf")
     build_resume_template(TEMPLATES / "resume")
+    build_example_resume_pdf(RENDERED / "example-resume.pdf")
     print(f"built {SOURCES / 'resume-a.docx'}")
     print(f"built {SOURCES / 'resume-b.pdf'}")
     print(f"built {TEMPLATES / 'resume' / 'template.docx'}")
+    print(f"built {RENDERED / 'example-resume.pdf'}")
 
 
 if __name__ == "__main__":
