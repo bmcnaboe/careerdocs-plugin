@@ -211,7 +211,9 @@ def register(subparsers, common: argparse.ArgumentParser) -> None:
     import_parser.set_defaults(func=cmd_import)
 
     diff_parser = actions.add_parser("diff", parents=[common], help="build a ProfileDiff")
-    diff_parser.add_argument("input", help="JSON file of diff operations")
+    diff_parser.add_argument("input", help="JSON file of diff operations or extracted candidates")
+    diff_parser.add_argument("--flow", choices=["onboard", "update", "resume", "cover_letter"])
+    diff_parser.add_argument("--subject", help="workflow subject to persist questions under")
     diff_parser.set_defaults(func=cmd_diff)
 
     approve_parser = actions.add_parser("approve", parents=[common], help="record approval of a diff")
@@ -289,21 +291,49 @@ def cmd_import(args) -> int:
 
 
 def cmd_diff(args) -> int:
-    provider, _ = _provider(args)
+    provider, cfg = _provider(args)
     payload = json.loads(Path(args.input).read_text(encoding="utf-8"))
-    if isinstance(payload, dict) and "candidates" in payload:
+    from_candidates = isinstance(payload, dict) and "candidates" in payload
+    if from_candidates:
         from . import merge
 
         operations = merge.build_operations(provider.read(), payload)
     else:
         operations = payload["operations"] if isinstance(payload, dict) else payload
     diff = make_diff(provider, operations)
+
+    generated: list[dict] = []
+    if from_candidates:
+        from . import questions as questions_module
+
+        proposed = [op["entity"] for op in operations if op["op"] == "add_entity"]
+        generated = questions_module.generate_questions(proposed)
+        if args.flow and args.subject:
+            _persist_questions(args, cfg, diff["diff_id"], generated)
+
     if args.json:
-        print(json.dumps({"diff_id": diff["diff_id"], "base_hash": diff["base_hash"]}))
+        print(json.dumps({
+            "diff_id": diff["diff_id"],
+            "base_hash": diff["base_hash"],
+            "questions": generated,
+        }))
     else:
         print(diff["summary_md"])
         print(f"diff id: {diff['diff_id']}")
+        for question in generated:
+            print(f"  ? {question['id']}: {question['text']}")
     return 0
+
+
+def _persist_questions(args, cfg: dict, diff_id: str, generated: list[dict]) -> None:
+    from . import state as state_module
+
+    path, workflow = state_module.get_or_create(args.workspace, cfg, args.flow, args.subject)
+    for question in generated:
+        state_module.add_question(workflow, question["id"], question["text"])
+    state_module.set_pending_diff(workflow, diff_id)
+    state_module.set_step(workflow, "awaiting_answers" if generated else "awaiting_approval")
+    state_module.save_state(path, workflow)
 
 
 def cmd_approve(args) -> int:
