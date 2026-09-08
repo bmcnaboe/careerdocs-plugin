@@ -1,7 +1,7 @@
 {
   "version": 1,
   "layer_repo": "https://github.com/bmcnaboe/agent-layer",
-  "layer_commit": "5e1cf4d69e74560c563eeed8363ba24e21343efe",
+  "layer_commit": "10e27b2f69963a20e16c62fb1aaf7e767c6f2807",
   "modules": [
     "agent-core",
     "linear",
@@ -92,14 +92,14 @@
       "module": "linear",
       "source": "modules/linear/skills/linear-log/SKILL.md",
       "mode": "synced",
-      "sha256": "552a13db9c0c426af44baa5a99d23cda0b2309aceff62df5ed9b1f0dbd37f93e"
+      "sha256": "c8f213c1db7c84d5b8a127921f849dd3da2d1f3bfd584a96225f8eeee1c3a931"
     },
     {
       "path": ".claude/skills/linear-plan/SKILL.md",
       "module": "linear",
       "source": "modules/linear/skills/linear-plan/SKILL.md",
       "mode": "synced",
-      "sha256": "3b323638277416d86289608dfa14f4e86735bd1a3640d6235e0d3417c1039973"
+      "sha256": "afb19ac6240164898c7b2ee2c784daf03eb2e2cb8cecf3acf50248c96612b149"
     },
     {
       "path": ".claude/skills/linear-verify-loop/SKILL.md",
