@@ -138,10 +138,10 @@ COVER_LETTER_TEMPLATE_JSON = {
     "units_per_page": 6,
     "sections": [
         {"id": "header", "title": "", "placeholder": "contact", "entity_types": ["contact"], "max_items": 1, "required": True},
-        {"id": "body", "title": "", "placeholder": "body", "kind": "sentence", "entity_types": ["experience", "achievement", "skill"], "max_items": 6, "required": True},
+        {"id": "body", "title": "", "placeholder": "body", "kind": "sentence", "entity_types": ["experience", "skill"], "max_items": 6, "required": True},
     ],
     "allowlist": [],
-    "style_notes": "One page; complements the resume; no verbatim resume bullets.",
+    "style_notes": "One page; complements the resume; draft prose in voice, never paste resume bullets.",
 }
 
 
