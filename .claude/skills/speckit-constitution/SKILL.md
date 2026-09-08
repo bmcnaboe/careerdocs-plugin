@@ -4,6 +4,7 @@ description: "Create or update the project constitution from interactive or prov
 argument-hint: "Principles or values for the project constitution"
 compatibility: "Requires spec-kit project structure with .specify/ directory"
 metadata:
+  internal: true
   author: "github-spec-kit"
   source: "templates/commands/constitution.md"
 user-invocable: true

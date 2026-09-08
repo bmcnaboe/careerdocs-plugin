@@ -1,6 +1,8 @@
 ---
 name: pending-changes-review
 description: Review pending git changes for effectiveness, project adherence, architecture, and best practices. Use when the user asks to review changes, assess a diff, or evaluate pending work before commit or PR.
+metadata:
+  internal: true
 ---
 
 # Pending Changes Review

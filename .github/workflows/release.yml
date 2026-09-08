@@ -1,0 +1,41 @@
+name: release
+
+# On a version tag: run the quality gate, build one zip per skill for the web apps
+# (ChatGPT and claude.ai take one skill per upload, skill folder at the zip root),
+# and publish them as GitHub Release assets.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - name: quality gate
+        run: ./scripts/gate.sh full --strict
+      - name: shellcheck
+        run: shellcheck install.sh scripts/*.sh
+      - name: build skill archives
+        run: |
+          mkdir -p dist
+          for dir in skills/*/; do
+            name="$(basename "$dir")"
+            (cd skills && zip -qr "../dist/${name}.zip" "$name" -x '*/__pycache__/*' -x '*.pyc')
+          done
+          ls -l dist
+      - name: publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" dist/*.zip \
+            --title "${GITHUB_REF_NAME}" \
+            --notes "Per-skill archives for ChatGPT and claude.ai uploads. Terminal install: see README."

@@ -10,6 +10,8 @@ a small standard-library parser for the flat YAML frontmatter (one level of nest
 * ``description`` is present and 1–1024 characters.
 * ``compatibility``, when present, is at most 500 characters.
 * ``metadata``, when present, is a map of string values.
+* an unquoted value contains neither ``: `` nor `` #`` — strict YAML parsers, such as
+  the ones cross-agent skill installers use, refuse a plain scalar with either.
 * the skill body (after the frontmatter) is at most 500 lines.
 * ``agents/openai.yaml``, when present, is a flat ``key: value`` file.
 
@@ -36,6 +38,17 @@ def _unquote(value: str) -> str:
     if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
         return value[1:-1]
     return value
+
+
+def _scalar(key: str, value: str) -> str:
+    """Unquote ``value``; refuse a plain scalar that strict YAML parsers would reject."""
+    if not (len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'"):
+        for hazard in (": ", " #"):
+            if hazard in value:
+                raise FrontmatterError(
+                    f"unquoted value of {key!r} contains {hazard!r}; quote it or rephrase"
+                )
+    return _unquote(value)
 
 
 def parse_frontmatter(text: str) -> tuple[dict, list[str]]:
@@ -69,7 +82,7 @@ def parse_frontmatter(text: str) -> tuple[dict, list[str]]:
         key = key.strip()
         val = val.strip()
         if val:
-            data[key] = _unquote(val)
+            data[key] = _scalar(key, val)
             i += 1
             continue
         # A key with no inline value: collect any indented lines as a nested map.
@@ -85,7 +98,7 @@ def parse_frontmatter(text: str) -> tuple[dict, list[str]]:
             nk, nsep, nv = nraw.strip().partition(":")
             if not nsep:
                 raise FrontmatterError(f"nested line without ':' -> {nraw!r}")
-            nested[nk.strip()] = _unquote(nv.strip())
+            nested[nk.strip()] = _scalar(f"{key}.{nk.strip()}", nv.strip())
             j += 1
         data[key] = nested if nested else ""
         i = j

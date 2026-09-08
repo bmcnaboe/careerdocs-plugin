@@ -4,6 +4,7 @@ description: "Generate an actionable, dependency-ordered tasks.md for the featur
 argument-hint: "Optional task generation constraints"
 compatibility: "Requires spec-kit project structure with .specify/ directory"
 metadata:
+  internal: true
   author: "github-spec-kit"
   source: "templates/commands/tasks.md"
 user-invocable: true

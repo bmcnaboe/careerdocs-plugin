@@ -54,7 +54,7 @@ full_tier() {
 }
 final_tier() {
   full_tier
-  if have shellcheck; then run "shellcheck" shellcheck scripts/*.sh; else skip "shellcheck (not installed)"; fi
+  if have shellcheck; then run "shellcheck" shellcheck install.sh scripts/*.sh; else skip "shellcheck (not installed)"; fi
   if have gitleaks; then run "gitleaks" gitleaks detect --no-banner --redact --source .; else skip "gitleaks (not installed)"; fi
   py_check scripts/pii_guard.py "applicant-data guard"
   run "agent-layer conformance" python3 scripts/agent-layer/check.py

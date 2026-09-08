@@ -4,6 +4,7 @@ description: "Execute the implementation plan by processing and executing all ta
 argument-hint: "Optional implementation guidance or task filter"
 compatibility: "Requires spec-kit project structure with .specify/ directory"
 metadata:
+  internal: true
   author: "github-spec-kit"
   source: "templates/commands/implement.md"
 user-invocable: true

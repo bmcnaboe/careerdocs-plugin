@@ -125,3 +125,23 @@ def test_missing_skills_dir_is_clean(tmp_path):
 def test_repo_skills_lint_clean():
     # Whatever skills exist in the repo must already pass.
     assert lint_skills.lint_all(ROOT / "skills") == []
+
+
+def test_unquoted_value_with_colon_space_is_rejected(tmp_path):
+    make_skill(tmp_path, "career-onboard", frontmatter=GOOD_FRONTMATTER.format(name="career-onboard").replace(
+        "A valid description of the skill.", "Never invents facts: a gap is named honestly."))
+    errors = lint_skills.lint_all(tmp_path)
+    assert any("contains ': '" in e for e in errors)
+
+
+def test_quoted_value_with_colon_space_is_accepted(tmp_path):
+    make_skill(tmp_path, "career-onboard", frontmatter=GOOD_FRONTMATTER.format(name="career-onboard").replace(
+        "A valid description of the skill.", '"Never invents facts: a gap is named honestly."'))
+    assert lint_skills.lint_all(tmp_path) == []
+
+
+def test_nested_unquoted_value_with_hash_is_rejected(tmp_path):
+    make_skill(tmp_path, "career-onboard", frontmatter=GOOD_FRONTMATTER.format(name="career-onboard").replace(
+        'author: "careerdocs-plugin contributors"', "author: contributors #core"))
+    errors = lint_skills.lint_all(tmp_path)
+    assert any("metadata.author" in e and "' #'" in e for e in errors)

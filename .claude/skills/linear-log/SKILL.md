@@ -2,6 +2,8 @@
 name: linear-log
 description: Author a Linear ticket — create a new one or edit an existing one's fields — via the connected Linear MCP server. This is about the ticket *record* (title, description, priority, labels, assignee, project, state, estimate, due date, parent), not doing the engineering work it describes. Trigger whenever the user wants to file, open, create, log, or capture a new issue/bug/task in Linear, OR to edit, update, rename, re-prioritize, re-label, reassign, or move an existing ticket named by a LETTERS-NUMBER id (ABC-5, PROD-203) or a bare integer ("update 120's description"), shorthand for the default team pinned in `.claude/linear-workspace.md`. An id means modify that ticket; no id means create one. So "file a bug: the export button does nothing", "open a ticket to add CSV export", "log this conversation as a Linear issue", "update ABC-5's description", "bump ABC-5 to high priority", "rename PROD-203", and "reassign ABC-5 to me" all qualify. A well-formed ticket captures structured **acceptance criteria** (and, for a bug, steps to reproduce — optionally reproduced with evidence attached) so it feeds cleanly into linear-fix and linear-accept; a ticket referencing a visual design (Claude Design, Figma, a mockup) gets the design vendored in as attachments at creation time, not just linked. Defaults: the pinned project; new tickets land in Backlog. Runs on /linear-log. Don't trigger when the user wants to actually implement or fix the underlying work, or to move status as part of doing that work — that's linear-fix.
 argument-hint: "[ticket-id]"
+metadata:
+  internal: true
 ---
 
 # Linear Log

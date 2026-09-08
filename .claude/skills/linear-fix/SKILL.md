@@ -2,6 +2,8 @@
 name: linear-fix
 description: Trigger this whenever a message contains a tracker issue ID — the shape is LETTERS-NUMBER (ABC-5, PROD-203, LIN-412, ABC-19), or a bare integer used as a ticket reference ("fix 120", "/linear-fix 120"), which is shorthand for the default team (120 → ABC-120, where the real prefix is pinned in `.claude/linear-workspace.md`) — paired with any wish to act on that issue. The action can be small or large — look at it, pull it up, summarize, triage, pick it up, grab it, start, work, fix, tackle, sort out, knock out, walk me through it, spec it out, or open a worktree for it. The ID plus that intent is the whole signal — assume Linear; the user need not say "Linear" or name any tool, branch, or status. So "let's fix the login bug, it's ABC-5", "pick up PROD-203", "grab ABC-5 and spin up a worktree", "spec out ABC-19 first", and "take a look at LIN-412, let's knock it out" all qualify. The skill fetches the issue, prints a standard summary, and starts the work — current branch, new worktree, or full spec — keeping the issue's status and comments in sync. Runs on /linear-fix; the ticket ID and an optional approach (in-place, worktree, speckit) can both be passed inline (e.g. "/linear-fix ABC-5 worktree", "/linear-fix ticket=ABC-5 approach=speckit") — the approach defaults to in-place (the current branch) when omitted, with worktree and speckit taken by name. Don't trigger for filing a brand-new issue, bumping status with no work, plain git/branch commands, or non-issue codes like ERR-503.
 argument-hint: "[ticket-id] [in-place|worktree|speckit]"
+metadata:
+  internal: true
 ---
 
 # Linear Fix

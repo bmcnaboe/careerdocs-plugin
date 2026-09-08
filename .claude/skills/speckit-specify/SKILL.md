@@ -4,6 +4,7 @@ description: "Create or update the feature specification from a natural language
 argument-hint: "Describe the feature you want to specify"
 compatibility: "Requires spec-kit project structure with .specify/ directory"
 metadata:
+  internal: true
   author: "github-spec-kit"
   source: "templates/commands/specify.md"
 user-invocable: true

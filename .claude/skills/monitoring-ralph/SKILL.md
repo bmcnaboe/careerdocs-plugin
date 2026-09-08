@@ -3,6 +3,8 @@ name: monitoring-ralph
 description: Monitor a running Ralph autonomous loop (ralph-wiggum-plugin). Checks loop status, watches for stuck states, and reports completion metrics. Invoke manually with an optional worktree fragment (a run slug like `sse-fixes`, or any substring of the worktree path) to identify the target worktree.
 disable-model-invocation: true
 argument-hint: "[worktree-fragment]"
+metadata:
+  internal: true
 ---
 
 # Ralph Loop Monitor

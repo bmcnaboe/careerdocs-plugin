@@ -4,6 +4,7 @@ description: "Generate a custom checklist for the current feature based on user 
 argument-hint: "Domain or focus area for the checklist"
 compatibility: "Requires spec-kit project structure with .specify/ directory"
 metadata:
+  internal: true
   author: "github-spec-kit"
   source: "templates/commands/checklist.md"
 user-invocable: true

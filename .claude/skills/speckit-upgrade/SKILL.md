@@ -5,6 +5,8 @@ argument-hint: "Optional version tag such as v0.8.5, or latest"
 compatibility: "Requires uv, specify-cli install access, pnpm, and a Spec Kit project with .specify/ directory"
 user-invocable: true
 disable-model-invocation: false
+metadata:
+  internal: true
 ---
 
 # Spec Kit Upgrade

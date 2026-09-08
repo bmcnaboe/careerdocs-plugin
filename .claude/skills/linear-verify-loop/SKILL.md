@@ -1,6 +1,8 @@
 ---
 name: linear-verify-loop
 description: Orchestrates the post-run acceptance phase for a batched Linear-ticket Ralph run. Use when invoked by the linear eval framing prompt (ralph-evaluate.sh renders scripts/dev/ralph/linear-eval-framing.md, which points here). Reads the ticket ledger (.ralph/acceptance-report.md seeded from linear-ledger-template.md) and the linear-specs run plan, picks one mode per loop — VERIFY (acceptance-test a group of tickets via the linear-accept skill), REWORK (fix tickets sent back to the needs-work state, max 2 rework cycles per ticket), or GATE-FIX (repair a red final-tier gate) — and delegates the actual work to a sub-agent via the Task tool. Stays lean across loops; enforces the per-ticket rework cap; runs until every target ticket is at the pinned passed state or terminally FAILED/UNSURE. Not user-invoked in interactive sessions — linear-accept and linear-fix are the interactive counterparts.
+metadata:
+  internal: true
 ---
 
 # Linear verify loop

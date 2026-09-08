@@ -1,7 +1,7 @@
 {
   "version": 1,
   "layer_repo": "https://github.com/bmcnaboe/agent-layer",
-  "layer_commit": "99862affe764af5599eebda6a9bc8f6dcb4e75c5",
+  "layer_commit": "5e1cf4d69e74560c563eeed8363ba24e21343efe",
   "modules": [
     "agent-core",
     "linear",
@@ -78,119 +78,119 @@
       "module": "linear",
       "source": "modules/linear/skills/linear-accept/SKILL.md",
       "mode": "synced",
-      "sha256": "494f153d34816373506225541edac29b46b73bcffd0dbd202c975d55af2f5425"
+      "sha256": "b3cc793eb269631a6b53c0112db579ef23a54f01b1b67655422611160baef2de"
     },
     {
       "path": ".claude/skills/linear-fix/SKILL.md",
       "module": "linear",
       "source": "modules/linear/skills/linear-fix/SKILL.md",
       "mode": "synced",
-      "sha256": "2c2ac48568dfbcf2dfddcccc7bbe169331f25026b2fae59df5069dde113dd2cf"
+      "sha256": "ff2599fc1c1c9ddf18715ae9e61378d3338d95323e45e11a29770b7c92c1dc71"
     },
     {
       "path": ".claude/skills/linear-log/SKILL.md",
       "module": "linear",
       "source": "modules/linear/skills/linear-log/SKILL.md",
       "mode": "synced",
-      "sha256": "306ad8ae04946c5647fcd76a5fcd5cca7f1779a9428ca1c57f1eb6e6a7543ec9"
+      "sha256": "552a13db9c0c426af44baa5a99d23cda0b2309aceff62df5ed9b1f0dbd37f93e"
     },
     {
       "path": ".claude/skills/linear-plan/SKILL.md",
       "module": "linear",
       "source": "modules/linear/skills/linear-plan/SKILL.md",
       "mode": "synced",
-      "sha256": "ed63a892fe7cf7db85dfc7ea7fabb546f1d19e1f93c3e26830a37d790daf674a"
+      "sha256": "3b323638277416d86289608dfa14f4e86735bd1a3640d6235e0d3417c1039973"
     },
     {
       "path": ".claude/skills/linear-verify-loop/SKILL.md",
       "module": "linear",
       "source": "modules/linear/skills/linear-verify-loop/SKILL.md",
       "mode": "synced",
-      "sha256": "f6e5e10d7f3cd6c2d777ed1078a202938c7b3cf0f073dd5573f44e872efc2d86"
+      "sha256": "66c8dafbadf34299ed064ffa312721221e47878409a39d608ad0a33de753368b"
     },
     {
       "path": ".claude/skills/monitoring-ralph/SKILL.md",
       "module": "ralph",
       "source": "modules/ralph/skills/monitoring-ralph/SKILL.md",
       "mode": "synced",
-      "sha256": "e793a546a3e880269ac546f6a3e197405aa229a66d429d894c7d0a2fa2af588f"
+      "sha256": "ae1717cb6f66a4ffa1d6310f5918d33f7252e112277ebbb8ad5c564ca0bd6468"
     },
     {
       "path": ".claude/skills/pending-changes-review/SKILL.md",
       "module": "agent-core",
       "source": "modules/agent-core/skills/pending-changes-review/SKILL.md",
       "mode": "synced",
-      "sha256": "2b8449af1e6cbbc8da7b4a0e062e6de9341415fe4c0f344a3855e9dcdb8568cc"
+      "sha256": "b461e91d560e90b0b07174974de7928a2605b2c5cd83a9566b4f8c4e3d0c6004"
     },
     {
       "path": ".claude/skills/speckit-analyze/SKILL.md",
       "module": "speckit",
       "source": "modules/speckit/skills/speckit-analyze/SKILL.md",
       "mode": "synced",
-      "sha256": "0472a8aa3f2e2847508bfcb445c28a096e19ed5392fcfc5d70dc0e1c53bf8ead"
+      "sha256": "ddcfb4f5e5a0cc730913ed0610697ed905e3afa2b9f474a46558a8532322ba7d"
     },
     {
       "path": ".claude/skills/speckit-checklist/SKILL.md",
       "module": "speckit",
       "source": "modules/speckit/skills/speckit-checklist/SKILL.md",
       "mode": "synced",
-      "sha256": "b1bd4b4ef08428b25a14c3dcd8d5fd1e40f98ee22cbd83304cd945471e78894d"
+      "sha256": "c6258e49b7a26bbb8715508b29b3ce0fd7ffe5ec86a94305e95e407dbec2bbed"
     },
     {
       "path": ".claude/skills/speckit-clarify/SKILL.md",
       "module": "speckit",
       "source": "modules/speckit/skills/speckit-clarify/SKILL.md",
       "mode": "synced",
-      "sha256": "e0daba4512a5be54b93caefd3fedfd91f0e8956f71f89086dd503f5fd6629629"
+      "sha256": "657889d560d09ba532231e013a429a01cdc9efedc104045424ce5ef7db47d2f6"
     },
     {
       "path": ".claude/skills/speckit-constitution/SKILL.md",
       "module": "speckit",
       "source": "modules/speckit/skills/speckit-constitution/SKILL.md",
       "mode": "synced",
-      "sha256": "467969f365637acbf603e4569549fb276815f56847217e7175b9b73d84516efe"
+      "sha256": "329f2fc46e414087bcc50b1d8302f78844e8c6684d5b0a2081150371a3eb56b9"
     },
     {
       "path": ".claude/skills/speckit-implement/SKILL.md",
       "module": "speckit",
       "source": "modules/speckit/skills/speckit-implement/SKILL.md",
       "mode": "synced",
-      "sha256": "977504cdb205cd971ebd1ff4cd918889620188a84f9b5ebabc767ddce4ab9867"
+      "sha256": "8d8915059c44fb4392ffd358cf76ca7c35e705787a606bd6c9b30f40c31b3fb5"
     },
     {
       "path": ".claude/skills/speckit-plan/SKILL.md",
       "module": "speckit",
       "source": "modules/speckit/skills/speckit-plan/SKILL.md",
       "mode": "synced",
-      "sha256": "7d62e21cfde23470314b17f28dc40a8c85d59697201bd1ab2d76ea616ad476bb"
+      "sha256": "e98527086d489d245cc3841da0516782f65f03edf1a2900e3fd12ffb48ae2ae2"
     },
     {
       "path": ".claude/skills/speckit-specify/SKILL.md",
       "module": "speckit",
       "source": "modules/speckit/skills/speckit-specify/SKILL.md",
       "mode": "synced",
-      "sha256": "d2bd64b5e82df683f256274db13517541c3983644602d94f068d8fe0b312afe2"
+      "sha256": "118bff3357b5203233dfa2d3468b18ba9d8e035d71d55b62f5d24e5bff0165e3"
     },
     {
       "path": ".claude/skills/speckit-tasks/SKILL.md",
       "module": "speckit",
       "source": "modules/speckit/skills/speckit-tasks/SKILL.md",
       "mode": "synced",
-      "sha256": "e7ea55d1903ee00f32137142b77428e88a3f669d3f7aa5d3c289d3d8912b4125"
+      "sha256": "a021a6bb89345144ffb30896171805833c8dc0d65855ea3cceea04b857191453"
     },
     {
       "path": ".claude/skills/speckit-taskstoissues/SKILL.md",
       "module": "speckit",
       "source": "modules/speckit/skills/speckit-taskstoissues/SKILL.md",
       "mode": "synced",
-      "sha256": "f00d5492e442cd84d2dae6a24c046447b43d2c51caef3cb4ef6593cab1945bbe"
+      "sha256": "b9434b10e654daad906d9f3e28b42a427c44f580449af7d57d80a4feb3f317c4"
     },
     {
       "path": ".claude/skills/speckit-upgrade/SKILL.md",
       "module": "speckit",
       "source": "modules/speckit/skills/speckit-upgrade/SKILL.md",
       "mode": "synced",
-      "sha256": "a23212a7c52147342d3744dd26435adb28a73bd7e0021681b7acf821d5dbc65e"
+      "sha256": "3b7465612d39dbd367c7a04e8314e6e9111e0a11ce64c016893dbd0b42b4b544"
     },
     {
       "path": ".github/workflows/agent-layer.yml",

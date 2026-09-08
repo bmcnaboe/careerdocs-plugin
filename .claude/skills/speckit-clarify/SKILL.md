@@ -4,6 +4,7 @@ description: "Identify underspecified areas in the current feature spec by askin
 argument-hint: "Optional areas to clarify in the spec"
 compatibility: "Requires spec-kit project structure with .specify/ directory"
 metadata:
+  internal: true
   author: "github-spec-kit"
   source: "templates/commands/clarify.md"
 user-invocable: true

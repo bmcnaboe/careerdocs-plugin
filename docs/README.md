@@ -5,8 +5,11 @@ platform, then the concept and reference pages as you need them.
 
 ## Setup
 
-- [setup-claude.md](setup-claude.md) — install as a Claude Code / Cowork plugin.
-- [setup-codex.md](setup-codex.md) — install the skills for ChatGPT / Codex.
+The README's one-liner (`install.sh`) installs for Claude Code and Codex at once; these
+pages hold the manual steps, the desktop and web paths, verification, and removal.
+
+- [setup-claude.md](setup-claude.md) — Claude Code, the desktop app, claude.ai, and Cowork.
+- [setup-codex.md](setup-codex.md) — Codex and ChatGPT.
 
 ## Concepts and reference
 

@@ -2,6 +2,8 @@
 name: linear-accept
 description: Autonomous acceptance testing of a Linear ticket — verify that work already claimed complete actually satisfies the ticket, judged from the end user's perspective, and record the verdict back on the ticket. Trigger whenever a message pairs a tracker issue ID (LETTERS-NUMBER — ABC-24, PROD-203 — or a bare integer like "accept 24", shorthand for the default team pinned in `.claude/linear-workspace.md`) with an intent to verify, accept, acceptance-test, QA, sign off on, or confirm-it-actually-works that ticket — typically one sitting in In Review. So "acceptance test ABC-24", "accept ABC-9", "does ABC-38 actually work end to end?", "QA PROD-203 before we ship", "verify the export ticket is really done", and "/linear-accept ABC-24" all qualify. The skill loads the ticket, drafts an acceptance test plan and attaches it, exercises the real product surfaces (the webapp via browser tooling for anything UI-observable; the API and agent-facing surfaces directly for the rest), captures evidence onto the ticket, then moves it to the passed or needs-work state pinned in `.claude/linear-workspace.md` — or leaves status untouched and asks when the verdict is unclear. The approach can be passed inline ("/linear-accept ABC-24 worktree"); it defaults to in-place. Prefer this over linear-fix when the ask is to check/verify/accept finished work rather than to do it, and linear-log when the ask is only to edit the ticket record. Don't trigger for filing a new issue, a plain status bump, or non-issue codes like ERR-503.
 argument-hint: "[ticket-id] [in-place|worktree]"
+metadata:
+  internal: true
 ---
 
 # Linear Accept
