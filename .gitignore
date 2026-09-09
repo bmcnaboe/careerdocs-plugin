@@ -8,3 +8,8 @@ __pycache__/
 .ralph/*
 !.ralph/command-policy
 .ralph-postmortems/
+
+# The repository is the plugin, so anything tracked here is cloned into every
+# install. A project-scope MCP config is developer-local: keep it out of the
+# package. `check_inventory.py` fails if it becomes tracked again.
+.mcp.json

@@ -1,6 +1,7 @@
 """Tests for the package inventory check."""
 
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -101,6 +102,28 @@ def test_openai_missing_skill(tmp_path):
             {"name": "careerdocs", "description": "Core.", "path": "skills/careerdocs"}]},
     )
     assert any("!= skills tree" in e for e in ci.check_openai(root, ci.discover_skills(root)))
+
+
+def test_package_hygiene_ignores_a_non_git_tree(tmp_path):
+    make_repo(tmp_path, {"careerdocs": "Core."})
+    (tmp_path / ".mcp.json").write_text("{}", encoding="utf-8")
+    assert ci.check_package_hygiene(tmp_path) == []
+
+
+def test_package_hygiene_flags_a_tracked_mcp_config(tmp_path):
+    root = make_repo(tmp_path, {"careerdocs": "Core."})
+    (root / ".mcp.json").write_text("{}", encoding="utf-8")
+    subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+    subprocess.run(["git", "add", ".mcp.json"], cwd=root, check=True)
+    errors = ci.check_package_hygiene(root)
+    assert len(errors) == 1 and ".mcp.json is tracked by git" in errors[0]
+
+
+def test_package_hygiene_passes_when_the_mcp_config_is_untracked(tmp_path):
+    root = make_repo(tmp_path, {"careerdocs": "Core."})
+    subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+    (root / ".mcp.json").write_text("{}", encoding="utf-8")
+    assert ci.check_package_hygiene(root) == []
 
 
 def test_repo_inventory_consistent():

@@ -5,8 +5,9 @@ The Claude package is the repository itself (skills auto-discovered from ``skill
 OpenAI package lists its skills explicitly. This derives the inventory from the ``skills/``
 tree and checks it against the Claude manifests (``plugin.json`` / ``marketplace.json`` are
 present and internally consistent) and, when it exists, the OpenAI manifest (identical
-skill names, descriptions, and paths). It also runs ``claude plugin validate .`` when the
-Claude CLI is on PATH. Standard library only; reuses the skills-lint frontmatter parser.
+skill names, descriptions, and paths). It also checks that the package carries no
+developer-local configuration, and runs ``claude plugin validate .`` when the Claude CLI
+is on PATH. Standard library only; reuses the skills-lint frontmatter parser.
 """
 
 from __future__ import annotations
@@ -98,6 +99,32 @@ def check_openai(root: Path, skills: dict[str, dict]) -> list[str]:
     return errors
 
 
+# The plugin root is the repository root, so every tracked file is cloned into each
+# install. A project-scope MCP config names servers only the maintainer can reach, and
+# Claude Code loads a plugin-root ``.mcp.json`` as the plugin's own; declaring an empty
+# ``mcpServers`` in plugin.json does not suppress it. Keeping the file untracked is what
+# keeps it out of the package.
+DEVELOPER_LOCAL = (".mcp.json",)
+
+
+def check_package_hygiene(root: Path) -> list[str]:
+    """Refuse developer-local configuration that the package would ship."""
+    if shutil.which("git") is None or not (root / ".git").exists():
+        return []
+    result = subprocess.run(
+        ["git", "ls-files", "--", *DEVELOPER_LOCAL],
+        cwd=root,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        return []
+    return [
+        f"{tracked} is tracked by git, so every install ships it; untrack it and keep it ignored"
+        for tracked in sorted(filter(None, result.stdout.splitlines()))
+    ]
+
+
 def claude_validate(root: Path) -> list[str]:
     if shutil.which("claude") is None:
         return []
@@ -114,7 +141,7 @@ def claude_validate(root: Path) -> list[str]:
 
 def run_check(root: Path, *, validate: bool = True) -> list[str]:
     skills = discover_skills(root)
-    errors = check_claude(root, skills) + check_openai(root, skills)
+    errors = check_claude(root, skills) + check_openai(root, skills) + check_package_hygiene(root)
     if validate:
         errors += claude_validate(root)
     return errors

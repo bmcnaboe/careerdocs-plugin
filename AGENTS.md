@@ -21,6 +21,11 @@ install it.
   reviewable diff the applicant approves, never a silent write.
 - **Provider-neutral first.** Workflow logic lives once in the shared source; the
   platform packages adapt packaging and invocation only.
+- **Everything tracked here ships.** The repository root is the plugin root, so every
+  file git tracks is cloned into every install. Developer-local configuration stays
+  untracked and ignored — a `.mcp.json` at the root is loaded as the *plugin's* MCP
+  server on each user's machine, and an empty `mcpServers` in `plugin.json` does not
+  suppress it. `check_inventory.py` fails when such a file becomes tracked.
 - **Synced agent-layer files are read-only here** (`.claude/skills/linear-*`,
   `.claude/skills/speckit-*`, `.claude/hooks/*`, `scripts/agent-layer/check.py`,
   `.github/workflows/agent-layer.yml`, `scripts/dev/ralph/*`): edit them in
