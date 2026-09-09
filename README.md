@@ -93,9 +93,10 @@ voice, and generated documents (default `~/career-workspace`). It records the ch
 `--workspace <dir>` overrides it; `careerdocs config workspace <dir>` changes the default.
 In Cowork, the folder you attach to the session is the workspace.
 
-Then onboard your existing materials. Gather your current and past résumés, a LinkedIn or
-network export, and any notes (a `sources/` folder in the workspace keeps them together),
-open a new agent session in any folder, and run the onboard skill:
+Then open a new agent session and run the onboard skill. It checks what is already set
+up, walks you through gathering your materials (résumés, the LinkedIn data export, notes,
+writing samples), builds your profile as a diff you approve, sets up templates and voice,
+and ends with a short tour:
 
 | Agent | Run |
 | --- | --- |
@@ -103,10 +104,7 @@ open a new agent session in any folder, and run the onboard skill:
 | Cowork | `/careerdocs:onboard` in a session with the workspace folder attached; if `/` does not offer it, say "onboard my career documents" |
 | Codex | `$onboard` |
 
-Tell it where the materials are. It inventories them, extracts candidate facts, asks only
-the questions that matter (conflicts, missing dates, what should stay private), shows you
-the resulting profile as a diff, and applies it only after you say yes. From then on, per
-application:
+From then on, per application:
 
 | | Claude Code and Cowork | Codex |
 | --- | --- | --- |

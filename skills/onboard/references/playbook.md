@@ -23,11 +23,22 @@ In Cowork, skip the question: the folder attached to the session is the workspac
 `--workspace <that folder>` on every command (the sandbox home does not persist, so a
 recorded default is not available there).
 
-## 1. Inventory the sources
+## 1. Gather the materials
 
-Ask the applicant where their materials are: current and older resumes (DOCX/PDF), a
-LinkedIn or network export (CSV), and any notes (Markdown/text). List them; you will pass
-their paths to `profile import`.
+Ask the applicant where their materials are and list the paths; you will pass them to
+`profile import`. In order of value:
+
+| Material | Format | How to get it |
+| --- | --- | --- |
+| Résumés, current and older | DOCX, PDF | Already on disk; older versions carry roles the current one dropped |
+| LinkedIn data export | CSV (`Positions.csv`, `Education.csv`, `Skills.csv`, `Certifications.csv`) | LinkedIn → Settings & Privacy → Data privacy → Get a copy of your data → tick the files (or the full archive) → download the zip from the email, usually within ten minutes → put the CSVs in `sources/` |
+| Profile as PDF, the alternative to the export | PDF | On the applicant's own LinkedIn profile: More → Save to PDF; imports like a résumé |
+| Notes and records | Markdown, text | Reviews, brag docs, project write-ups, a bio |
+| Writing samples | any text | Cover letters, emails, posts the applicant likes; used for `voice.md`, not imported |
+
+A profile URL is not an input: the page is behind a login and LinkedIn's terms forbid
+fetching it. `Positions.csv` yields experience candidates with exact dates (the importer
+reads `Company`/`Title`/`Started On`/`Finished On`); other CSVs are read as text blocks.
 
 ## 2. Import
 

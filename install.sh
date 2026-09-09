@@ -347,7 +347,8 @@ forget_workspace() {
 
 # --- What comes next -------------------------------------------------------------------
 
-# The post-install walkthrough: Cowork, then how to onboard, per agent, and what follows.
+# What comes next: Cowork's own install, then the onboard skill, which is the guided
+# setup and tutorial. The steps live there, not here.
 guidance() {
   local claude="$1" codex="$2"
   say ""
@@ -361,34 +362,12 @@ guidance() {
   say "Cowork keeps its own plugin list, so it takes three clicks in the desktop app:"
   say "  Cowork tab > Customize > Plugins > Add marketplace > ${REPO}, then install careerdocs."
   say ""
-  say "Next: onboard your existing materials into one authoritative profile."
-  say "  1. Gather your current and past résumés, a LinkedIn or network export, and any notes."
-  say "     Putting them under the workspace (for example in a sources/ folder) keeps everything"
-  say "     together, but any location works."
-  say "  2. Open a NEW agent session and run the onboard skill:"
-  [ "$claude" = 1 ] && say "       Claude Code:  /careerdocs:onboard   (any folder)"
-  [ "$codex" = 1 ]  && say "       Codex:        \$onboard             (any folder)"
-  say "       Cowork:       /careerdocs:onboard   (with the workspace folder attached)"
-  say "     Tell it where the materials are. It inventories them, extracts candidate facts,"
-  say "     asks only the questions that matter (conflicts, missing dates, what stays private),"
-  say "     shows the resulting profile as a diff, and applies it only after you say yes."
-  say "  3. Per application, from then on:"
-  if [ "$claude" = 1 ]; then
-    say "       /careerdocs:resume        tailor a résumé to a job description"
-    say "       /careerdocs:cover-letter  write the matching cover letter"
-    say "       /careerdocs:update        add a new achievement or correction to your profile"
-  fi
-  if [ "$codex" = 1 ]; then
-    if [ "$claude" = 1 ]; then
-      say "     (Codex: \$resume, \$cover-letter, \$update)"
-    else
-      say "       \$resume        tailor a résumé to a job description"
-      say "       \$cover-letter  write the matching cover letter"
-      say "       \$update        add a new achievement or correction to your profile"
-    fi
-  fi
-  say "  The skills find the recorded workspace from any folder; \"run careerdocs doctor\" in a"
-  say "  session shows what is configured. Everything stays in the workspace on this machine."
+  say "Next, open a NEW session and run the onboard skill. It checks what is already set up,"
+  say "walks you through gathering your materials, builds your profile, and shows you how the"
+  say "plugin works from there:"
+  [ "$claude" = 1 ] && say "  Claude Code:  /careerdocs:onboard"
+  [ "$codex" = 1 ]  && say "  Codex:        \$onboard"
+  say "  Cowork:       /careerdocs:onboard, with the workspace folder attached to the session"
 }
 
 main() {

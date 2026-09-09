@@ -174,6 +174,8 @@ def test_installs_into_both_agents_through_their_plugin_managers(tmp_path):
     assert "no workspace folder was chosen" in result.stdout
     assert "/careerdocs:onboard" in result.stdout and "$onboard" in result.stdout
     assert "Add marketplace > bmcnaboe/careerdocs-plugin" in result.stdout
+    # The steps themselves live in the onboard skill, not in the script's output.
+    assert "LinkedIn" not in result.stdout and "/careerdocs:resume" not in result.stdout
 
 
 def test_rerun_updates_instead_of_reinstalling(tmp_path):
