@@ -4,7 +4,7 @@ description: Guided setup and first-run tutorial for careerdocs, and the flow th
 license: MIT
 compatibility: "Python 3.10+; uv recommended. Requires the careerdocs core skill and its careerdocs CLI."
 metadata:
-  version: "0.2.0"
+  version: "0.2.1"
   author: "careerdocs-plugin contributors"
 ---
 
@@ -19,6 +19,12 @@ diff-then-approve rule, visibility, where state lives). Command detail is in
 The whole run is a conversation. Ask one thing at a time, explain why it is needed in a
 sentence, and accept "skip" or "later" for anything optional. Never make the applicant
 read this file.
+
+**This skill teaches, whatever the state.** Every run ends with the applicant knowing
+what exists, how to get more material in (the LinkedIn export steps included), and how
+to run the other flows. That content is `references/tutorial.md`; deliver it in your own
+words, adapted to their state and environment, without waiting to be asked. A status
+line followed by "give me paths" is not an acceptable outcome.
 
 ## Stage 0 — Check what is already there
 
@@ -36,10 +42,14 @@ Read the report and branch on it:
   `config workspace <dir>`. In Cowork, the folder attached to the session is the
   workspace: run `config init --workspace <that folder>` if it lacks `careerdocs.json`,
   pass `--workspace <that folder>` on every command, and do not ask.
-- **Profile already has entities**: onboarding was done before. Say so, summarize what
-  the profile holds (roles, date range, counts), and offer three exits: add new sources
-  (continue with Stage 2 for those sources only), record a single new fact (hand off to
-  the `update` skill), or just the tour (skip to Stage 5).
+- **Profile already has entities**: onboarding was done before. Say so and summarize
+  what the profile holds (roles, date range, counts, templates and voice present or
+  not). Then give the returning-applicant briefing before asking for anything: how the
+  plugin is used from here (tutorial section 3), how to get more material in, the
+  LinkedIn export steps included (section 2), and where things live (section 4). Close
+  by offering, not requiring, the next moves: add new sources (Stage 2 for those files
+  only), record a single new fact (the `update` skill), set up whatever Stage 4 finds
+  missing, or run the résumé flow if they have a job description at hand.
 - **Pending onboard state** (`state resume onboard <subject>` lists a diff or open
   questions): resume there; answered questions are never asked again.
 - **Sources already registered** (the provider's `sources.jsonl`): list them; do not
@@ -116,26 +126,15 @@ them. Handle whichever `doctor` reported missing.
   short questions (first or third person, words they never want to see, two sentences
   they are proud of). Show the draft and write it only after a yes.
 
-## Stage 5 — The tour
+## Stage 5 — The tutorial
 
-End with a short, concrete tour, adapted to the environment the applicant is in:
-
-- **What exists now**: one profile, every fact traceable to a source, changes only
-  through reviewed diffs.
-- **Per application**: `resume` builds a role brief from a job description, maps each
-  requirement to evidence, drafts in their voice, renders into the template, and runs
-  the checks; `cover-letter` reuses that brief for a complementary letter. Invoke as
-  `/careerdocs:resume` and `/careerdocs:cover-letter` in Claude Code and Cowork,
-  `$resume` and `$cover-letter` in Codex, or in plain words ("tailor my résumé to this
-  job description").
-- **When something changes**: `update` records a new achievement, role, or correction
-  as a reviewed diff and reports which past documents it makes stale.
-- **Where things land**: `applications/<role-slug>/` per role, `baselines/` for
-  untargeted documents, and "run careerdocs doctor" whenever they want to see the state.
-- **Privacy**: everything stays in the workspace on this machine; nothing about them is
-  sent anywhere by this plugin.
-
-Offer to run the résumé flow right away if they have a job description at hand.
+End every run, first or returning, with the tutorial in `references/tutorial.md`:
+what careerdocs is, how to get materials in (LinkedIn export steps and the profile-PDF
+alternative), how each flow is invoked in this environment and what it needs at hand,
+where things live in the workspace, privacy, and the common situations. Adapt it: a
+first-run applicant gets the whole arc; a returning one gets the parts that match what
+they have and what is missing. Then offer to run the résumé flow right away if they have
+a job description at hand.
 
 ## Guardrails
 
