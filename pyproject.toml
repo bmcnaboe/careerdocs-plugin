@@ -1,6 +1,6 @@
 [project]
 name = "careerdocs-plugin"
-version = "0.2.0"
+version = "0.2.1"
 description = "Portable, provider-neutral resume and cover-letter plugin for AI coding agents"
 license = { text = "MIT" }
 requires-python = ">=3.11"
