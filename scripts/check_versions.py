@@ -4,7 +4,7 @@
 ``pyproject.toml`` holds the version of record. Every ``skills/*/SKILL.md`` must declare
 ``metadata.version`` equal to it, and every package manifest that carries a version
 (``.claude-plugin/plugin.json``, ``.claude-plugin/marketplace.json``, and
-``.codex-plugin/plugin.json``) must agree. A missing manifest is reported as absent and,
+``.codex-plugin/plugin.json``) must agree, as must the CLI's own ``__version__``. A missing manifest is reported as absent and,
 unless ``--allow-absent-manifests`` is passed, fails the check.
 
 Standard library only; reuses the skills-lint frontmatter parser.
@@ -14,12 +14,15 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 import tomllib
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import lint_skills  # noqa: E402
+
+PACKAGE_INIT = Path("skills/careerdocs/scripts/careerdocs/__init__.py")
 
 MANIFESTS = {
     "plugin.json": Path(".claude-plugin/plugin.json"),
@@ -76,6 +79,13 @@ def run_check(root: Path, *, require_manifests: bool = False) -> tuple[str, list
             errors.append(
                 f"skills/{name}/SKILL.md metadata.version={version!r} != {vor!r}"
             )
+
+    init_path = root / PACKAGE_INIT
+    if init_path.exists():
+        match = re.search(r'^__version__ = "([^"]*)"', init_path.read_text(encoding="utf-8"), re.M)
+        found = match.group(1) if match else None
+        if found != vor:
+            errors.append(f"{PACKAGE_INIT} __version__={found!r} != {vor!r}")
 
     for label, rel in MANIFESTS.items():
         path = root / rel

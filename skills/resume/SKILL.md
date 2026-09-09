@@ -4,7 +4,7 @@ description: Generate a tailored résumé for a specific job description from th
 license: MIT
 compatibility: "Python 3.10+; uv recommended. Requires the careerdocs core skill and an onboarded profile. Optional LibreOffice for PDF checks."
 metadata:
-  version: "0.1.0"
+  version: "0.2.0"
   author: "careerdocs-plugin contributors"
 ---
 

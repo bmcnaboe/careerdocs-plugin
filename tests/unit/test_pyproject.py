@@ -1,9 +1,13 @@
 """The pyproject.toml is the version of record; it must parse and carry the version."""
 
 import tomllib
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "skills" / "careerdocs" / "scripts"))
+
+from careerdocs import __version__  # noqa: E402
 
 
 def _load():
@@ -18,7 +22,7 @@ def test_pyproject_parses():
 
 def test_pyproject_carries_version():
     data = _load()
-    assert data["project"]["version"] == "0.1.0"
+    assert data["project"]["version"] == __version__
 
 
 def test_requires_python_at_least_311():
