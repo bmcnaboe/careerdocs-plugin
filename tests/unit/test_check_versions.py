@@ -58,7 +58,7 @@ def test_mismatched_skill_fails(tmp_path):
 def test_absent_manifests_reported(tmp_path):
     make_repo(tmp_path)
     _, _, absent = cv.run_check(tmp_path)
-    assert set(absent) == {"plugin.json", "marketplace.json", "openai manifest.json"}
+    assert set(absent) == {"plugin.json", "marketplace.json", "codex plugin.json"}
 
 
 def test_plugin_manifest_version_checked(tmp_path):
@@ -84,7 +84,7 @@ def test_all_agree(tmp_path):
         manifests={
             ".claude-plugin/plugin.json": {"version": "0.1.0"},
             ".claude-plugin/marketplace.json": {"plugins": [{"version": "0.1.0"}]},
-            "packages/openai/manifest.json": {"version": "0.1.0"},
+            ".codex-plugin/plugin.json": {"version": "0.1.0"},
         },
     )
     _, errors, absent = cv.run_check(tmp_path)

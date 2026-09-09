@@ -3,7 +3,7 @@ name: careerdocs
 description: Core conventions and the careerdocs CLI shared by the careerdocs flows (onboard, update, resume, cover letter). Consult this skill for how the four authorities (qualifications, voice, templates, target role) are modeled and located, how flow skills invoke the careerdocs CLI, the diff-then-approve rule for every profile change, visibility semantics, and where workflow state and generated outputs live. Load it before running any careerdocs command or when a flow skill references a convention it does not restate.
 license: MIT
 user-invocable: false
-compatibility: "Python 3.11+; uv recommended (uv run), python3 fallback. Offline except optional link checks. Optional LibreOffice (soffice) for PDF conversion."
+compatibility: "Python 3.10+; uv recommended (uv run), python3 fallback. Offline except optional link checks. Optional LibreOffice (soffice) for PDF conversion."
 metadata:
   version: "0.1.0"
   author: "careerdocs-plugin contributors"
@@ -43,15 +43,26 @@ relative path:
 
 ```sh
 uv run <skill-root>/careerdocs/scripts/careerdocs.py <command> --workspace <dir> [--json]
-# python3 works too; the entry point declares its runtime deps inline (PEP 723).
+# python3 works too: the entry point declares its runtime deps inline (PEP 723) and,
+# without uv, installs them with pip on its first run (PyPI must be reachable).
 ```
 
-- `--workspace <dir>` selects the applicant workspace (default: current directory).
+- `--workspace <dir>` overrides the workspace. Otherwise it resolves from
+  `CAREERDOCS_WORKSPACE`, then the nearest `careerdocs.json` at or above the current
+  directory, then the default the installer or `config workspace <dir>` recorded in
+  `~/.config/careerdocs/workspace`. A bare current directory is **not** a workspace: data
+  commands refuse it (`WORKSPACE_UNRESOLVED`). Never make one implicitly — when nothing
+  resolves, ask the applicant which folder should hold their profile and run
+  `config workspace <dir>`. `doctor` shows what resolved and how. **In Cowork** the
+  workspace is the folder attached to the session (mounted under `/sessions/<session>/mnt/`):
+  use it without asking, pass it as `--workspace`, and run `config init` there when it has
+  no `careerdocs.json` yet — the sandbox's own home directory does not persist, so a
+  recorded default is not available there.
 - `--json` prints machine output on stdout; human output otherwise. Diagnostics go to
   stderr.
 - Exit codes: **0** ok, **1** a check failed, **2** contract or usage error.
 
-Commands (full contract in `references/`): `doctor`, `config init|validate`,
+Commands (full contract in `references/`): `doctor`, `config init|validate|workspace`,
 `profile validate|import|diff|approve|apply|export|status`, `brief`, `map`, `plan`,
 `render`, `check`, `state show|answer|resume`, `version`.
 

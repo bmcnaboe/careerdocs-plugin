@@ -1,7 +1,7 @@
 # Update playbook
 
-Add or correct a qualification from an applicant statement. `careerdocs` runs with
-`--workspace <dir>`.
+Add or correct a qualification from an applicant statement. `<dir>` below is the
+resolved workspace (`doctor` shows it); `--workspace <dir>` only overrides it.
 
 ## 1. Capture the statement with provenance
 

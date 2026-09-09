@@ -1,7 +1,7 @@
 # Résumé playbook
 
-Generate a tailored résumé. `careerdocs` runs with `--workspace <dir>`; artifacts land in
-`applications/<role-slug>/`.
+Generate a tailored résumé. `<dir>` below is the resolved workspace (`doctor` shows it;
+`--workspace <dir>` only overrides it); artifacts land in `applications/<role-slug>/`.
 
 ## 1. Brief
 

@@ -14,7 +14,12 @@ Agent Skills that call it.
 
 ## Install
 
-**Terminal — Claude Code, Codex, or both, detected automatically:**
+Every environment installs the plugin straight from this repository with its own plugin
+manager and keeps its own versioned copy; nothing is copied by hand, and every update
+comes from the same source. `bmcnaboe/careerdocs-plugin` is the short GitHub form all of
+them accept.
+
+### One command: Claude Code and Codex
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/bmcnaboe/careerdocs-plugin/main/install.sh | bash
@@ -26,11 +31,42 @@ Prefer to read it first?
 curl -fsSLO https://raw.githubusercontent.com/bmcnaboe/careerdocs-plugin/main/install.sh && less install.sh && bash install.sh
 ```
 
-The script needs Python 3.11+ or [uv](https://docs.astral.sh/uv/) (uv recommended),
-writes only under `~/.claude` and `~/.agents`, never asks for sudo, and is safe to re-run —
-re-running updates. Pass options after `bash -s --`: `--dry-run` previews, `--uninstall`
-removes, `--only claude` or `--only codex` limits it to one agent. LibreOffice is optional
-and enables PDF output and the PDF checks. macOS and Linux; on Windows use WSL.
+The script detects Claude Code and Codex and runs the commands below for each, asks which
+folder should be your workspace and records it, and ends with the Cowork and onboarding
+steps. It needs Python 3.10+ or [uv](https://docs.astral.sh/uv/) (uv recommended), writes
+only under `~/.claude`, `~/.codex`, `~/.config/careerdocs`, and the workspace folder,
+never asks for sudo, and is safe to re-run — re-running updates. Pass options after
+`bash -s --`: `--dry-run` previews, `--uninstall` removes, `--only claude` or
+`--only codex` limits it to one agent, `--workspace <dir>` answers the workspace prompt up
+front. LibreOffice is optional and enables PDF output and the PDF checks. macOS and Linux;
+on Windows use WSL.
+
+### By environment
+
+**Claude Code** (CLI, desktop app, IDE extensions):
+
+```sh
+claude plugin marketplace add bmcnaboe/careerdocs-plugin
+claude plugin install careerdocs@careerdocs-plugin
+```
+
+Update with `claude plugin update careerdocs@careerdocs-plugin`.
+
+**Codex** (CLI or app, with plugin support):
+
+```sh
+codex plugin marketplace add bmcnaboe/careerdocs-plugin
+codex plugin add careerdocs@careerdocs-plugin
+```
+
+Update with `codex plugin marketplace upgrade careerdocs-plugin` followed by the same
+`codex plugin add`.
+
+**Cowork** (Claude desktop app): nothing to install on your machine. In the Cowork tab
+open **Customize → Plugins**, select **Add marketplace**, enter
+`bmcnaboe/careerdocs-plugin`, and install **careerdocs**. **Update** on the marketplace
+pulls new versions. Cowork keeps its own plugin list, so the commands above do not reach
+it.
 
 **No terminal — ChatGPT or claude.ai:** download the per-skill zips from the
 [latest release](https://github.com/bmcnaboe/careerdocs-plugin/releases/latest) and upload
@@ -46,27 +82,44 @@ wrapper:
 npx skills add bmcnaboe/careerdocs-plugin -g
 ```
 
-Manual steps, verification, updates, and removal per platform:
+Verification, updates, and removal per platform:
 [docs/setup-claude.md](docs/setup-claude.md) and [docs/setup-codex.md](docs/setup-codex.md).
 
 ## First run
 
-Open your agent in the folder that holds your résumés, exports, and notes, and say:
+The installer asks for a **workspace**: the one folder that holds your profile, templates,
+voice, and generated documents (default `~/career-workspace`). It records the choice in
+`~/.config/careerdocs/workspace`, so the skills find it from any folder. Per command,
+`--workspace <dir>` overrides it; `careerdocs config workspace <dir>` changes the default.
+In Cowork, the folder you attach to the session is the workspace.
 
-> onboard my career documents
+Then onboard your existing materials. Gather your current and past résumés, a LinkedIn or
+network export, and any notes (a `sources/` folder in the workspace keeps them together),
+open a new agent session in any folder, and run the onboard skill:
 
-The agent inventories what it finds, proposes a workspace configuration, extracts
-candidate facts, asks only the questions that matter (conflicts, missing dates, what
-should stay private), shows you the resulting profile as a diff, and applies it only after
-you say yes. From then on:
+| Agent | Run |
+| --- | --- |
+| Claude Code | `/careerdocs:onboard` |
+| Cowork | `/careerdocs:onboard` in a session with the workspace folder attached; if `/` does not offer it, say "onboard my career documents" |
+| Codex | `$onboard` |
 
-> tailor my résumé to this job description: …
-> write the matching cover letter
-> I just shipped X — add it to my profile
-> run careerdocs doctor
+Tell it where the materials are. It inventories them, extracts candidate facts, asks only
+the questions that matter (conflicts, missing dates, what should stay private), shows you
+the resulting profile as a diff, and applies it only after you say yes. From then on, per
+application:
 
-Everything it writes stays in your folder; nothing about you is sent anywhere or stored in
-this repository.
+| | Claude Code and Cowork | Codex |
+| --- | --- | --- |
+| Tailor a résumé to a job description | `/careerdocs:resume` | `$resume` |
+| Write the matching cover letter | `/careerdocs:cover-letter` | `$cover-letter` |
+| Add a new achievement or correction to your profile | `/careerdocs:update` | `$update` |
+
+Plain requests work too ("tailor my résumé to this job description: …"); the skill
+command is the reliable way to start a flow. "Run careerdocs doctor" shows what is
+configured, including which workspace resolved and how.
+
+Everything it writes stays in your workspace; nothing about you is sent anywhere or stored
+in this repository.
 
 ## The four flows
 

@@ -1,8 +1,27 @@
 # Onboard playbook
 
 The onboarding flow, step by step. `careerdocs` is the CLI at
-`skills/careerdocs/scripts/careerdocs.py`; run every command with
-`--workspace <dir>`.
+`skills/careerdocs/scripts/careerdocs.py`. `<dir>` below is the workspace: `doctor` shows
+which folder resolved and how, and `--workspace <dir>` is only needed to override it.
+
+## 0. Confirm the workspace
+
+```sh
+careerdocs doctor --json
+```
+
+If `workspace_source` is `cwd`, nothing marks that folder as a workspace and data commands
+will refuse it. Ask the applicant which folder should hold their profile (the installer
+suggests `~/career-workspace`) and record it:
+
+```sh
+careerdocs config workspace <dir>
+```
+
+In Cowork, skip the question: the folder attached to the session is the workspace. Run
+`config init --workspace <that folder>` if it has no `careerdocs.json`, and pass
+`--workspace <that folder>` on every command (the sandbox home does not persist, so a
+recorded default is not available there).
 
 ## 1. Inventory the sources
 

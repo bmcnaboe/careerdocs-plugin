@@ -2,7 +2,7 @@
 name: cover-letter
 description: Generate a cover letter that complements a tailored résumé for the same role. Use after a résumé has been generated for a role (via the resume skill), when the applicant wants a matching cover letter. The flow reuses the existing role brief and requirement map without re-asking anything, plans a short letter that leads with the highest-value evidence, drafts it in the applicant's voice, renders into the letter template, and runs the checks — including one that no résumé bullet is reproduced verbatim. It complements rather than repeats the résumé, traces every claim to a profile ID, never claims a gap requirement, and fits the letter's page budget.
 license: MIT
-compatibility: "Python 3.11+; uv recommended. Requires the careerdocs core skill, an onboarded profile, and an existing brief and map for the role (from the resume skill)."
+compatibility: "Python 3.10+; uv recommended. Requires the careerdocs core skill, an onboarded profile, and an existing brief and map for the role (from the resume skill)."
 metadata:
   version: "0.1.0"
   author: "careerdocs-plugin contributors"

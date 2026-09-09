@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 """Package inventory agreement (SC-001).
 
-The Claude package is the repository itself (skills auto-discovered from ``skills/``); the
-OpenAI package lists its skills explicitly. This derives the inventory from the ``skills/``
-tree and checks it against the Claude manifests (``plugin.json`` / ``marketplace.json`` are
-present and internally consistent) and, when it exists, the OpenAI manifest (identical
-skill names, descriptions, and paths). It also checks that the package carries no
-developer-local configuration, and runs ``claude plugin validate .`` when the Claude CLI
-is on PATH. Standard library only; reuses the skills-lint frontmatter parser.
+The repository root is the plugin for every platform: Claude Code and Cowork read
+``.claude-plugin/``, Codex reads ``.codex-plugin/plugin.json`` and
+``.agents/plugins/marketplace.json``, and all of them load the skills auto-discovered from
+``skills/``. This derives the inventory from the ``skills/`` tree, checks that the Claude
+manifests are present and internally consistent, and checks that the Codex manifests
+describe the same plugin (same name, version, and description; skills from ``skills/``;
+one plugin at the marketplace root under the same marketplace name). It also checks that
+the package carries no developer-local configuration, and runs ``claude plugin validate .``
+when the Claude CLI is on PATH. Standard library only; reuses the skills-lint frontmatter
+parser.
 """
 
 from __future__ import annotations
@@ -77,25 +80,47 @@ def check_claude(root: Path, skills: dict[str, dict]) -> list[str]:
     return errors
 
 
-def check_openai(root: Path, skills: dict[str, dict]) -> list[str]:
-    manifest_path = root / "packages" / "openai" / "manifest.json"
-    if not manifest_path.exists():
-        return []
+CODEX_PLUGIN = Path(".codex-plugin") / "plugin.json"
+CODEX_MARKETPLACE = Path(".agents") / "plugins" / "marketplace.json"
+
+
+def check_codex(root: Path, skills: dict[str, dict]) -> list[str]:
+    """The Codex manifests must describe the plugin the Claude manifests describe."""
+    plugin_path = root / CODEX_PLUGIN
+    market_path = root / CODEX_MARKETPLACE
+    if not plugin_path.exists():
+        return [f"{CODEX_PLUGIN} is missing"]
+    if not market_path.exists():
+        return [f"{CODEX_MARKETPLACE} is missing"]
+    claude_plugin_path = root / ".claude-plugin" / "plugin.json"
+    claude_market_path = root / ".claude-plugin" / "marketplace.json"
+    claude_plugin = _load_json(claude_plugin_path) if claude_plugin_path.exists() else {}
+    claude_market = _load_json(claude_market_path) if claude_market_path.exists() else {}
+    plugin = _load_json(plugin_path)
+    market = _load_json(market_path)
+
     errors: list[str] = []
-    manifest = _load_json(manifest_path)
-    listed = {s["name"]: s for s in manifest.get("skills", [])}
-    if set(listed) != set(skills):
+    for field in ("name", "version", "description"):
+        if plugin.get(field) != claude_plugin.get(field):
+            errors.append(f"{CODEX_PLUGIN} {field} differs from .claude-plugin/plugin.json")
+    if plugin.get("skills") != "./skills/":
+        errors.append(f"{CODEX_PLUGIN} must load skills from './skills/', found {plugin.get('skills')!r}")
+    if market.get("name") != claude_market.get("name"):
+        errors.append(f"{CODEX_MARKETPLACE} name differs from .claude-plugin/marketplace.json")
+    entries = [
+        entry for entry in market.get("plugins", [])
+        if isinstance(entry.get("source"), dict)
+        and entry["source"].get("source") == "local"
+        and entry["source"].get("path") == "./"
+    ]
+    if len(entries) != 1:
         errors.append(
-            f"openai manifest skills {sorted(listed)} != skills tree {sorted(skills)}"
+            f"{CODEX_MARKETPLACE} must have exactly one plugin with a local source at './', found {len(entries)}"
         )
-    for name, info in skills.items():
-        entry = listed.get(name)
-        if entry is None:
-            continue
-        if entry.get("description") != info["description"]:
-            errors.append(f"openai manifest '{name}': description differs from SKILL.md")
-        if entry.get("path") != info["path"]:
-            errors.append(f"openai manifest '{name}': path {entry.get('path')!r} != {info['path']!r}")
+    elif entries[0].get("name") != plugin.get("name"):
+        errors.append(f"{CODEX_MARKETPLACE} plugin name {entries[0].get('name')!r} != {plugin.get('name')!r}")
+    if not skills:
+        errors.append("no skills discovered under skills/")
     return errors
 
 
@@ -141,7 +166,7 @@ def claude_validate(root: Path) -> list[str]:
 
 def run_check(root: Path, *, validate: bool = True) -> list[str]:
     skills = discover_skills(root)
-    errors = check_claude(root, skills) + check_openai(root, skills) + check_package_hygiene(root)
+    errors = check_claude(root, skills) + check_codex(root, skills) + check_package_hygiene(root)
     if validate:
         errors += claude_validate(root)
     return errors

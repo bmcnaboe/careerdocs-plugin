@@ -29,6 +29,27 @@ Validated against `assets/schemas/config.schema.json`.
 | `workflow.page_budget.cover_letter` | `1` | Cover-letter page budget. |
 | `workflow.approval_mode` | `explicit` | Only `explicit` in this version — every write is an approved diff. |
 
+## Locating the workspace
+
+Every command runs against one workspace directory, resolved once per invocation; the
+first of these that applies wins:
+
+1. `--workspace <dir>` on the command line;
+2. the `CAREERDOCS_WORKSPACE` environment variable;
+3. the nearest directory at or above the current one that holds `careerdocs.json`;
+4. the recorded default — one absolute path in `~/.config/careerdocs/workspace`
+   (`$XDG_CONFIG_HOME/careerdocs/workspace`), written by the installer or by
+   `careerdocs config workspace <dir>`;
+5. the current directory.
+
+Only the last is *unestablished*: nothing marks that directory as a workspace, so
+commands that read or write applicant data there fail with `WORKSPACE_UNRESOLVED`
+instead of scattering files into an arbitrary folder. `version`, `doctor`, `config init`,
+`config workspace`, `inventory`, and `organize` still run. `careerdocs config workspace`
+with no argument shows what resolved and how; with `<dir>` it creates the directory if
+needed, records it as the default, and writes its `careerdocs.json`. A recorded default
+that no longer exists is an error, not a silent fallback. `doctor` also names the source.
+
 ## Forbidden content
 
 `config validate` refuses the file if any key or string value looks like a credential

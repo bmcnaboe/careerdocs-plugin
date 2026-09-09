@@ -105,7 +105,7 @@ def register(subparsers, common: argparse.ArgumentParser) -> None:
     mode.add_argument("--apply", action="store_true", help="perform the moves")
     mode.add_argument("--rollback", action="store_true", help="undo the recorded moves")
     parser.add_argument("--dry-run", action="store_true", help="preview without changing anything")
-    parser.set_defaults(func=cmd_organize)
+    parser.set_defaults(func=cmd_organize, needs_workspace=False)
 
 
 def cmd_organize(args) -> int:

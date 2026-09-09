@@ -4,7 +4,8 @@ The config only *locates* the four authorities; it never stores qualifications o
 credentials. This module provides the defaults for every key, a deep-merged resolved
 view for the rest of the CLI, validation against ``config.schema.json``, refusal of
 credential-like or qualification-like content, and the ``config init`` / ``config
-validate`` subcommands.
+validate`` / ``config workspace`` subcommands. Locating the workspace itself is
+:mod:`workspace`'s job.
 """
 
 from __future__ import annotations
@@ -15,10 +16,9 @@ from pathlib import Path
 
 import jsonschema
 
-from . import paths
+from . import paths, workspace
 from .errors import ConfigError
-
-CONFIG_FILENAME = "careerdocs.json"
+from .workspace import CONFIG_FILENAME
 
 # Every key with its default. basic_memory is intentionally omitted: it has required
 # sub-keys, so it is only present when the applicant opts into that provider.
@@ -142,23 +142,67 @@ def register(subparsers, common: argparse.ArgumentParser) -> None:
     init_parser = actions.add_parser(
         "init", parents=[common], help="write a default config if none exists"
     )
-    init_parser.set_defaults(func=cmd_init)
+    init_parser.set_defaults(func=cmd_init, needs_workspace=False)
 
     validate_parser = actions.add_parser(
         "validate", parents=[common], help="validate the config and refuse forbidden keys"
     )
     validate_parser.set_defaults(func=cmd_validate)
 
+    workspace_parser = actions.add_parser(
+        "workspace",
+        parents=[common],
+        help="show how the workspace is located, or record <dir> as the default",
+    )
+    workspace_parser.add_argument(
+        "dir", nargs="?", help="directory to create if needed, record as the default, and initialize"
+    )
+    workspace_parser.set_defaults(func=cmd_workspace, needs_workspace=False)
 
-def cmd_init(args: argparse.Namespace) -> int:
-    path = config_path(args.workspace)
+
+def init_config(workspace_dir: str | Path) -> tuple[bool, Path]:
+    """Write a default config unless one exists; return (created, path)."""
+    path = config_path(workspace_dir)
     if path.exists():
-        message = f"{CONFIG_FILENAME} already exists; leaving it untouched"
-        print(json.dumps({"created": False, "path": str(path)}) if args.json else message)
-        return 0
+        return False, path
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(default_config(), indent=2) + "\n", encoding="utf-8")
-    print(json.dumps({"created": True, "path": str(path)}) if args.json else f"wrote {path}")
+    return True, path
+
+
+def cmd_init(args: argparse.Namespace) -> int:
+    created, path = init_config(args.workspace)
+    if args.json:
+        print(json.dumps({"created": created, "path": str(path)}))
+    else:
+        print(f"wrote {path}" if created else f"{CONFIG_FILENAME} already exists; leaving it untouched")
+    return 0
+
+
+def cmd_workspace(args: argparse.Namespace) -> int:
+    if args.dir is None:
+        report = {
+            "workspace": args.workspace,
+            "source": args.workspace_source,
+            "established": args.workspace_source != "cwd",
+            "pointer": str(workspace.pointer_path()),
+        }
+        if args.json:
+            print(json.dumps(report))
+        else:
+            label = workspace.SOURCE_LABELS[args.workspace_source]
+            print(f"workspace: {args.workspace} (via {label})")
+            print(f"default recorded in: {report['pointer']}")
+        return 0
+    target = Path(args.dir).expanduser().resolve()
+    target.mkdir(parents=True, exist_ok=True)
+    pointer = workspace.write_pointer(target)
+    created, path = init_config(target)
+    if args.json:
+        print(json.dumps({"workspace": str(target), "pointer": str(pointer), "created": created, "path": str(path)}))
+    else:
+        print(f"recorded {target} as the default workspace in {pointer}")
+        print(f"wrote {path}" if created else f"{CONFIG_FILENAME} already present in {target}")
     return 0
 
 

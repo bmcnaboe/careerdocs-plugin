@@ -7,8 +7,12 @@ this file, so Claude Code and Codex read the same conventions.
 
 careerdocs-plugin is a portable, open-source resume and cover-letter plugin for AI
 coding agents: one provider-neutral workflow source, packaged thinly for
-ChatGPT/Codex and Claude Code/Cowork. It works without agent-layer; agent-layer may
-install it.
+ChatGPT/Codex and Claude Code/Cowork. The repository root is the plugin for all of them:
+Claude Code and Cowork read `.claude-plugin/`, Codex reads `.codex-plugin/plugin.json`
+and `.agents/plugins/marketplace.json` (`.agents` links to `.claude`, so that file lives
+at `.claude/plugins/marketplace.json`), and every platform installs it from GitHub with
+its own plugin manager and loads the same `skills/`. It works without agent-layer;
+agent-layer may install it.
 
 ## Hard rules
 

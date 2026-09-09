@@ -1,8 +1,13 @@
 """careerdocs command-line interface.
 
-Global flags (accepted after any subcommand): ``--workspace <dir>`` selects the applicant
-workspace (default: the current directory) and ``--json`` requests machine-readable
-output. Exit codes follow the contract: 0 ok, 1 a check failed, 2 a contract/usage error.
+Global flags (accepted after any subcommand): ``--workspace <dir>`` overrides the
+applicant workspace (otherwise resolved as :mod:`workspace` describes) and ``--json``
+requests machine-readable output. Exit codes follow the contract: 0 ok, 1 a check failed,
+2 a contract/usage error.
+
+A subcommand that sets a workspace up, or never touches one, registers with
+``set_defaults(needs_workspace=False)``; every other command refuses to run against a
+directory nothing marks as a workspace.
 
 Feature modules register their subcommands in :func:`build_parser`; this module ships the
 always-present ``version`` and ``doctor`` commands and the error-to-exit-code mapping.
@@ -11,32 +16,23 @@ always-present ``version`` and ``doctor`` commands and the error-to-exit-code ma
 from __future__ import annotations
 
 import argparse
-import importlib.util
 import json
 import platform
 import shutil
 import sys
 from pathlib import Path
 
-from . import __version__, paths
+from . import __version__, deps, paths, workspace
 from .errors import CareerDocsError
-
-RUNTIME_DEPENDENCIES = {
-    "docxtpl": "docxtpl",
-    "pypdf": "pypdf",
-    "pdfplumber": "pdfplumber",
-    "pypdfium2": "pypdfium2",
-    "jsonschema": "jsonschema",
-    "python-dateutil": "dateutil",
-}
 
 
 def common_parent() -> argparse.ArgumentParser:
     parent = argparse.ArgumentParser(add_help=False)
     parent.add_argument(
         "--workspace",
-        default=".",
-        help="applicant workspace directory (default: current directory)",
+        default=None,
+        help="applicant workspace directory (default: CAREERDOCS_WORKSPACE, the nearest "
+        "careerdocs.json, the recorded default, then the current directory)",
     )
     parent.add_argument(
         "--json",
@@ -58,12 +54,12 @@ def build_parser() -> argparse.ArgumentParser:
     version_parser = subparsers.add_parser(
         "version", parents=[common], help="print plugin and schema versions"
     )
-    version_parser.set_defaults(func=cmd_version)
+    version_parser.set_defaults(func=cmd_version, needs_workspace=False)
 
     doctor_parser = subparsers.add_parser(
         "doctor", parents=[common], help="report configuration and dependency status"
     )
-    doctor_parser.set_defaults(func=cmd_doctor)
+    doctor_parser.set_defaults(func=cmd_doctor, needs_workspace=False)
 
     # Feature modules contribute their subcommands here as they are implemented.
     _register_feature_commands(subparsers, common)
@@ -106,10 +102,7 @@ def schema_version() -> str:
 
 
 def dependency_status() -> dict[str, bool]:
-    return {
-        label: importlib.util.find_spec(module) is not None
-        for label, module in RUNTIME_DEPENDENCIES.items()
-    }
+    return deps.status()
 
 
 def cmd_version(args: argparse.Namespace) -> int:
@@ -124,8 +117,8 @@ def cmd_version(args: argparse.Namespace) -> int:
 
 def cmd_doctor(args: argparse.Namespace) -> int:
     from . import config as config_module
-    from .errors import CareerDocsError
     from .providers import load_provider
+    from .workspace import SOURCE_LABELS
 
     workspace = Path(args.workspace)
     config_present = (workspace / "careerdocs.json").is_file()
@@ -163,6 +156,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
 
     report = {
         "workspace": str(workspace.resolve()),
+        "workspace_source": args.workspace_source,
         "config_present": config_present,
         "config_valid": config_valid,
         "config_error": config_error,
@@ -176,7 +170,8 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     if args.json:
         print(json.dumps(report, indent=2))
     else:
-        print(f"workspace: {report['workspace']}")
+        source = SOURCE_LABELS[report["workspace_source"]]
+        print(f"workspace: {report['workspace']} (via {source})")
         print(f"config: {'present' if config_present else 'absent (defaults)'}"
               f"{'' if config_valid else ' — INVALID: ' + str(config_error)}")
         prov = report["provider"]
@@ -196,6 +191,11 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     try:
+        located = workspace.resolve(getattr(args, "workspace", None))
+        if getattr(args, "needs_workspace", True):
+            workspace.ensure_established(located)
+        args.workspace = str(located.path)
+        args.workspace_source = located.source
         return args.func(args)
     except CareerDocsError as exc:
         print(f"{exc.code}: {exc}", file=sys.stderr)

@@ -161,7 +161,7 @@ def register(subparsers, common: argparse.ArgumentParser) -> None:
     parser = subparsers.add_parser("inventory", parents=[common], help="classify a workspace directory")
     parser.add_argument("dir", help="directory to inventory")
     parser.add_argument("--out", help="output directory (default: <dir>/.careerdocs)")
-    parser.set_defaults(func=cmd_inventory)
+    parser.set_defaults(func=cmd_inventory, needs_workspace=False)
 
 
 def cmd_inventory(args) -> int:

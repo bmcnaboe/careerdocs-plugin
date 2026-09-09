@@ -1,7 +1,8 @@
 # Cover-letter playbook
 
-Write a complementary cover letter. `careerdocs` runs with `--workspace <dir>`; artifacts
-live in `applications/<role-slug>/`.
+Write a complementary cover letter. `<dir>` below is the resolved workspace (`doctor`
+shows it; `--workspace <dir>` only overrides it); artifacts live in
+`applications/<role-slug>/`.
 
 ## 1. Reuse the brief and map
 

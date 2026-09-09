@@ -4,23 +4,31 @@
 #   curl -fsSL https://raw.githubusercontent.com/bmcnaboe/careerdocs-plugin/main/install.sh | bash
 #   curl -fsSL https://raw.githubusercontent.com/bmcnaboe/careerdocs-plugin/main/install.sh | bash -s -- --dry-run
 #
-# Idempotent, no sudo, and it writes only under ~/.claude, ~/.agents, and a temporary
-# directory. It reports Python 3.11+, uv (recommended), and LibreOffice (optional); then,
-# for every agent it detects:
+# Every agent installs the plugin from this repository with its own plugin manager and
+# keeps its own versioned copy; this script copies nothing itself. Idempotent, no sudo,
+# and it writes only under ~/.claude, ~/.codex, ~/.config/careerdocs, and the workspace
+# folder it asks you for. It reports Python 3.10+, uv (recommended), and LibreOffice
+# (optional); asks which folder should be your workspace (the one folder that holds your
+# profile, templates, voice, and generated documents) and records it so the skills find
+# it from any session; then, for every agent it detects:
 #   * Claude Code — adds the GitHub marketplace and installs (or updates) the plugin at
 #     user scope;
-#   * Codex — downloads the repository archive and copies the skills into ~/.agents/skills
-#     with the repository's own installer (packages/openai/install.py --copy).
+#   * Codex — adds the same repository as a Git marketplace and installs (or refreshes)
+#     the plugin, removing the skill copies that earlier versions of this script put
+#     under ~/.agents/skills.
+# Cowork keeps its own plugin list and has no command line, so the script ends with
+# those steps, and with the steps for onboarding your materials.
 #
 # Options:
 #   --only claude|codex   one agent instead of every agent detected
+#   --workspace <dir>     the workspace folder (asked for interactively when omitted)
 #   --ref <git-ref>       branch or tag to install from (default: main)
 #   --dry-run             print what would happen without changing anything
-#   --uninstall           remove what this script installed
+#   --uninstall           remove what this script installed (the workspace stays)
 #   -h, --help            this text
 #
-# Environment: CAREERDOCS_REPO (owner/repo), CAREERDOCS_REF, and CAREERDOCS_ARCHIVE_URL
-# override where the plugin comes from; the tests point the last one at a local file.
+# Environment: CAREERDOCS_REPO (owner/repo) and CAREERDOCS_REF override where the plugin
+# comes from.
 
 set -euo pipefail
 
@@ -30,25 +38,31 @@ MARKETPLACE="careerdocs-plugin"   # the marketplace is named after the repositor
 PLUGIN="careerdocs"               # the plugin inside it; skills invoke as /careerdocs:<skill>
 LEGACY_PLUGIN="careerdocs-plugin" # the plugin's name before it was shortened; replaced on upgrade
 SKILLS=(careerdocs onboard update resume cover-letter)
-SKILLS_DIR="${HOME}/.agents/skills"
+LEGACY_SKILLS_DIR="${HOME}/.agents/skills"   # where earlier versions of this script copied the skills
+CODEX_HOME_DIR="${CODEX_HOME:-${HOME}/.codex}"
+CONFIG_DIR="${XDG_CONFIG_HOME:-${HOME}/.config}/careerdocs"
+POINTER="${CONFIG_DIR}/workspace"   # one line: the recorded default workspace; the CLI reads it
+DEFAULT_WORKSPACE="${HOME}/career-workspace"
 
 only=""
+workspace=""
 dry_run=0
 uninstall=0
-TMP=""
-trap 'if [ -n "$TMP" ]; then rm -rf "$TMP"; fi' EXIT
 
 usage() {
   cat <<'USAGE'
-Usage: install.sh [--only claude|codex] [--ref <git-ref>] [--dry-run] [--uninstall]
+Usage: install.sh [--only claude|codex] [--workspace <dir>] [--ref <git-ref>] [--dry-run] [--uninstall]
 
-Installs the careerdocs plugin into every agent it detects: Claude Code (marketplace +
-plugin, user scope) and Codex (skills copied into ~/.agents/skills). Safe to re-run.
+Installs the careerdocs plugin into every agent it detects, each through its own plugin
+manager: Claude Code (marketplace + plugin, user scope) and Codex (marketplace + plugin).
+Records the workspace folder the skills work in, and prints the Cowork steps. Safe to
+re-run.
 
   --only claude|codex   one agent instead of every agent detected
+  --workspace <dir>     the workspace folder (asked for interactively when omitted)
   --ref <git-ref>       branch or tag to install from (default: main)
   --dry-run             print what would happen without changing anything
-  --uninstall           remove what this script installed
+  --uninstall           remove what this script installed (the workspace stays)
   -h, --help            this text
 USAGE
 }
@@ -67,6 +81,8 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --only) shift; only="${1:-}" ;;
     --only=*) only="${1#--only=}" ;;
+    --workspace) shift; workspace="${1:-}" ;;
+    --workspace=*) workspace="${1#--workspace=}" ;;
     --ref) shift; REF="${1:-}" ;;
     --ref=*) REF="${1#--ref=}" ;;
     --dry-run) dry_run=1 ;;
@@ -80,12 +96,7 @@ case "$only" in ""|claude|codex) ;; *) die "--only takes claude or codex, not '$
 [ -n "$REF" ] || die "--ref needs a value"
 
 python_ok() {
-  have python3 && python3 -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 11) else 1)' 2>/dev/null
-}
-# Runs a Python script with the interpreter available: python3 when it is 3.11+, else a
-# uv-provisioned one (uv downloads an interpreter when none is installed).
-py() {
-  if python_ok; then python3 "$@"; else uv run --no-project --python 3.12 python "$@"; fi
+  have python3 && python3 -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 10) else 1)' 2>/dev/null
 }
 
 preflight() {
@@ -96,9 +107,9 @@ preflight() {
   if python_ok; then
     ok "python3 $(python3 -c 'import platform; print(platform.python_version())')"
   elif have uv; then
-    note "python3 3.11+ is not on PATH; uv will provision an interpreter for the careerdocs CLI"
+    note "python3 3.10+ is not on PATH; uv will provision an interpreter for the careerdocs CLI"
   else
-    die "Python 3.11+ or uv is required. Install uv: curl -LsSf https://astral.sh/uv/install.sh | sh"
+    die "Python 3.10+ or uv is required. Install uv: curl -LsSf https://astral.sh/uv/install.sh | sh"
   fi
   if have uv; then
     ok "uv $(uv --version 2>/dev/null | awk '{print $2}')"
@@ -112,6 +123,8 @@ preflight() {
   fi
 }
 
+# --- Claude Code -----------------------------------------------------------------------
+
 claude_marketplace_present() { claude plugin marketplace list --json 2>/dev/null | grep -q "\"${MARKETPLACE}\""; }
 claude_plugin_present() { claude plugin list --json 2>/dev/null | grep -q "\"${PLUGIN}@${MARKETPLACE}\""; }
 claude_legacy_present() { claude plugin list --json 2>/dev/null | grep -q "\"${LEGACY_PLUGIN}@${MARKETPLACE}\""; }
@@ -121,7 +134,8 @@ install_claude() {
   local source="${REPO}"
   [ "$REF" = "main" ] || source="https://github.com/${REPO}.git#${REF}"
   if claude_marketplace_present; then
-    ok "marketplace ${MARKETPLACE} already added"
+    run claude plugin marketplace update "${MARKETPLACE}"
+    ok "refreshed marketplace ${MARKETPLACE}"
   else
     run claude plugin marketplace add "${source}"
     ok "added marketplace ${source}"
@@ -159,26 +173,19 @@ uninstall_claude() {
   fi
 }
 
-install_codex() {
-  say "Codex"
-  local url="${CAREERDOCS_ARCHIVE_URL:-https://github.com/${REPO}/archive/${REF}.tar.gz}"
-  if [ "$dry_run" = 1 ]; then
-    note "would download ${url} and copy these skills into ${SKILLS_DIR}: ${SKILLS[*]}"
-    return 0
-  fi
-  TMP="$(mktemp -d)"
-  curl -fsSL "$url" -o "$TMP/archive.tar.gz" || die "could not download ${url}"
-  mkdir -p "$TMP/src"
-  tar -xzf "$TMP/archive.tar.gz" -C "$TMP/src" --strip-components=1
-  py "$TMP/src/packages/openai/install.py" --copy --home "$HOME" | sed 's/^/        /'
-  ok "skills copied into ${SKILLS_DIR}"
-}
+# --- Codex -----------------------------------------------------------------------------
 
-uninstall_codex() {
-  say "Codex"
+codex_has_plugins() { codex plugin --help >/dev/null 2>&1; }
+codex_marketplace_present() { codex plugin marketplace list 2>/dev/null | grep -q "^${MARKETPLACE}[[:space:]]"; }
+codex_plugin_present() { codex plugin list 2>/dev/null | grep -q "^${PLUGIN}@${MARKETPLACE}[[:space:]]*installed"; }
+
+# Earlier versions of this script copied the skills into ~/.agents/skills. Those copies
+# would shadow the plugin's skills and drift from it, so they go; a folder of the same
+# name that did not come from this plugin is left alone.
+remove_legacy_codex_copies() {
   local skill dir removed=0
   for skill in "${SKILLS[@]}"; do
-    dir="${SKILLS_DIR}/${skill}"
+    dir="${LEGACY_SKILLS_DIR}/${skill}"
     if [ -L "$dir" ] || [ -e "$dir" ]; then
       if [ -L "$dir" ] || grep -qs "careerdocs-plugin contributors" "$dir/SKILL.md"; then
         run rm -rf "$dir"
@@ -188,56 +195,234 @@ uninstall_codex() {
       fi
     fi
   done
-  ok "removed ${removed} skill(s) from ${SKILLS_DIR}"
+  [ "$removed" = 0 ] || ok "removed ${removed} skill folder(s) an earlier version of this script copied into ${LEGACY_SKILLS_DIR}"
+}
+
+install_codex() {
+  say "Codex"
+  if ! codex_has_plugins; then
+    warn "this Codex ($(codex --version 2>/dev/null | head -n 1)) has no plugin commands; update Codex and re-run, or see docs/setup-codex.md"
+    return 0
+  fi
+  local source="${REPO}"
+  [ "$REF" = "main" ] || source="${REPO}@${REF}"
+  if codex_marketplace_present; then
+    if run codex plugin marketplace upgrade "${MARKETPLACE}"; then
+      ok "refreshed marketplace ${MARKETPLACE}"
+    else
+      note "marketplace ${MARKETPLACE} is not a Git marketplace here; left as it is"
+    fi
+  else
+    run codex plugin marketplace add "${source}"
+    ok "added marketplace ${source}"
+  fi
+  local had=0
+  codex_plugin_present && had=1
+  run codex plugin add "${PLUGIN}@${MARKETPLACE}"
+  if [ "$had" = 1 ]; then ok "updated ${PLUGIN}"; else ok "installed ${PLUGIN}"; fi
+  remove_legacy_codex_copies
+  note "new Codex sessions load it; restart a session that is already open"
+}
+
+uninstall_codex() {
+  say "Codex"
+  if codex_has_plugins; then
+    if codex_plugin_present; then
+      run codex plugin remove "${PLUGIN}@${MARKETPLACE}"
+      ok "uninstalled ${PLUGIN}"
+    else
+      note "plugin not installed"
+    fi
+    if codex_marketplace_present; then
+      run codex plugin marketplace remove "${MARKETPLACE}"
+      ok "removed marketplace ${MARKETPLACE}"
+    else
+      note "marketplace not configured"
+    fi
+  fi
+  remove_legacy_codex_copies
+}
+
+# --- The installed CLI -----------------------------------------------------------------
+
+# The careerdocs CLI entry point inside an installed copy: the newest version in the
+# Claude Code or Codex plugin cache. Fails when neither agent has installed the plugin.
+careerdocs_entry() {
+  local cache entry newest=""
+  for cache in "${HOME}/.claude/plugins/cache" "${CODEX_HOME_DIR}/plugins/cache"; do
+    for entry in "${cache}/${MARKETPLACE}/${PLUGIN}"/*/skills/careerdocs/scripts/careerdocs.py; do
+      [ -f "$entry" ] || continue
+      if [ -z "$newest" ] || [ "$entry" -nt "$newest" ]; then newest="$entry"; fi
+    done
+  done
+  [ -n "$newest" ] || return 1
+  printf '%s\n' "$newest"
+}
+
+# Runs the CLI with whatever can run it (uv resolves its inline dependencies; python3
+# installs them on first run). Fails quietly when nothing can, so callers treat it as
+# best-effort.
+careerdocs_cli() {
+  local entry
+  entry="$(careerdocs_entry)" || return 1
+  if have uv; then uv run "$entry" "$@"
+  elif python_ok; then python3 "$entry" "$@"
+  else return 1
+  fi
 }
 
 smoke_test() {
-  local entry="${SKILLS_DIR}/careerdocs/scripts/careerdocs.py" version
-  [ -f "$entry" ] || return 0
-  if have uv; then
-    note "checking the careerdocs CLI (the first run resolves its dependencies)"
-    if version="$(uv run "$entry" version 2>/dev/null | head -n 1)"; then
-      ok "careerdocs CLI runs (${version})"
-    else
-      warn "the careerdocs CLI did not run cleanly; try: uv run ${entry} version"
-    fi
-  elif python_ok && version="$(python3 "$entry" version 2>/dev/null | head -n 1)"; then
+  local entry version
+  if ! entry="$(careerdocs_entry)"; then
+    note "skipped the CLI check: no installed copy of the plugin was found"
+    return 0
+  fi
+  if have uv; then note "checking the careerdocs CLI (the first run resolves its dependencies)"; fi
+  if version="$(careerdocs_cli version 2>/dev/null | head -n 1)" && [ -n "$version" ]; then
     ok "careerdocs CLI runs (${version})"
+  elif have uv || python_ok; then
+    warn "the careerdocs CLI did not run cleanly; try: uv run ${entry} version"
   else
     note "skipped the CLI check; it needs uv, or python3 with the CLI's dependencies installed"
   fi
 }
 
+# --- Workspace -------------------------------------------------------------------------
+
+# Chooses the workspace: --workspace, else a prompt on the terminal (default: the folder
+# recorded by an earlier run, else ~/career-workspace). Not a terminal: leave it unset.
+ask_workspace() {
+  say "Workspace"
+  local default="$DEFAULT_WORKSPACE" recorded=""
+  if [ -s "$POINTER" ]; then
+    recorded="$(head -n 1 "$POINTER")"
+    [ -d "$recorded" ] && default="$recorded"
+  fi
+  if [ -z "$workspace" ]; then
+    if [ "$dry_run" = 1 ]; then
+      note "would ask for the workspace folder (default ${default}) and record it in ${POINTER}"
+      return 0
+    fi
+    if [ -t 1 ] && [ -r /dev/tty ]; then
+      say "  careerdocs keeps your profile, templates, voice, and generated documents in one"
+      say "  folder, your workspace. Nothing in it is sent anywhere."
+      printf '  Workspace folder [%s]: ' "$default"
+      read -r workspace < /dev/tty || workspace=""
+      [ -n "$workspace" ] || workspace="$default"
+    else
+      note "not running in a terminal, so no workspace folder was chosen; re-run with"
+      note "--workspace <dir>, or in an agent session run: careerdocs config workspace <dir>"
+      return 0
+    fi
+  fi
+  workspace="${workspace/#\~/$HOME}"
+  case "$workspace" in /*) ;; *) workspace="${PWD}/${workspace}" ;; esac
+}
+
+# Creates the chosen workspace, records it, and writes its careerdocs.json (best-effort:
+# the CLI may not be runnable yet; the agent writes the file on first use if so).
+setup_workspace() {
+  [ -n "$workspace" ] || return 0
+  if [ "$dry_run" = 1 ]; then
+    note "would create ${workspace}, record it in ${POINTER}, and write ${workspace}/careerdocs.json"
+    return 0
+  fi
+  mkdir -p "$workspace" "$CONFIG_DIR"
+  printf '%s\n' "$workspace" > "$POINTER"
+  ok "workspace ${workspace} recorded in ${POINTER}"
+  if careerdocs_cli config init --workspace "$workspace" >/dev/null 2>&1; then
+    ok "${workspace}/careerdocs.json is in place"
+  else
+    note "could not run the careerdocs CLI here; the agent writes careerdocs.json on first use"
+  fi
+}
+
+forget_workspace() {
+  if [ -f "$POINTER" ]; then
+    run rm -f "$POINTER"
+    rmdir "$CONFIG_DIR" 2>/dev/null || true
+    ok "forgot the recorded workspace (${POINTER}); the workspace folder itself is untouched"
+  fi
+}
+
+# --- What comes next -------------------------------------------------------------------
+
+# The post-install walkthrough: Cowork, then how to onboard, per agent, and what follows.
+guidance() {
+  local claude="$1" codex="$2"
+  say ""
+  say "Done."
+  if [ -n "$workspace" ]; then
+    say "Workspace: ${workspace}"
+  else
+    say "Workspace: none recorded yet (see above)."
+  fi
+  say ""
+  say "Cowork keeps its own plugin list, so it takes three clicks in the desktop app:"
+  say "  Cowork tab > Customize > Plugins > Add marketplace > ${REPO}, then install careerdocs."
+  say ""
+  say "Next: onboard your existing materials into one authoritative profile."
+  say "  1. Gather your current and past résumés, a LinkedIn or network export, and any notes."
+  say "     Putting them under the workspace (for example in a sources/ folder) keeps everything"
+  say "     together, but any location works."
+  say "  2. Open a NEW agent session and run the onboard skill:"
+  [ "$claude" = 1 ] && say "       Claude Code:  /careerdocs:onboard   (any folder)"
+  [ "$codex" = 1 ]  && say "       Codex:        \$onboard             (any folder)"
+  say "       Cowork:       /careerdocs:onboard   (with the workspace folder attached)"
+  say "     Tell it where the materials are. It inventories them, extracts candidate facts,"
+  say "     asks only the questions that matter (conflicts, missing dates, what stays private),"
+  say "     shows the resulting profile as a diff, and applies it only after you say yes."
+  say "  3. Per application, from then on:"
+  if [ "$claude" = 1 ]; then
+    say "       /careerdocs:resume        tailor a résumé to a job description"
+    say "       /careerdocs:cover-letter  write the matching cover letter"
+    say "       /careerdocs:update        add a new achievement or correction to your profile"
+  fi
+  if [ "$codex" = 1 ]; then
+    if [ "$claude" = 1 ]; then
+      say "     (Codex: \$resume, \$cover-letter, \$update)"
+    else
+      say "       \$resume        tailor a résumé to a job description"
+      say "       \$cover-letter  write the matching cover letter"
+      say "       \$update        add a new achievement or correction to your profile"
+    fi
+  fi
+  say "  The skills find the recorded workspace from any folder; \"run careerdocs doctor\" in a"
+  say "  session shows what is configured. Everything stays in the workspace on this machine."
+}
+
 main() {
   local want_claude=0 want_codex=0
   if [ "$only" != "codex" ] && have claude; then want_claude=1; fi
-  if [ "$only" != "claude" ] && { have codex || [ -d "${HOME}/.codex" ]; }; then want_codex=1; fi
+  if [ "$only" != "claude" ] && have codex; then want_codex=1; fi
   if [ "$only" = "claude" ] && [ "$want_claude" = 0 ]; then die "Claude Code (claude) is not on PATH"; fi
-  if [ "$only" = "codex" ] && [ "$want_codex" = 0 ]; then die "Codex was not found (no codex on PATH and no ~/.codex)"; fi
+  if [ "$only" = "codex" ] && [ "$want_codex" = 0 ]; then die "Codex (codex) is not on PATH"; fi
   if [ "$want_claude" = 0 ] && [ "$want_codex" = 0 ]; then
-    say "Neither Claude Code (claude) nor Codex (codex, ~/.codex) was found."
-    say "Install one of them and re-run, or for other agents: npx skills add ${REPO} -g"
+    say "Neither Claude Code (claude) nor Codex (codex) is on PATH."
+    say "Install one of them and re-run. Cowork needs no install here (see docs/setup-claude.md);"
+    say "other agents: npx skills add ${REPO} -g"
     exit 1
   fi
 
   if [ "$uninstall" = 1 ]; then
     [ "$want_claude" = 1 ] && uninstall_claude
     [ "$want_codex" = 1 ] && uninstall_codex
+    forget_workspace
     say "Removed."
     return 0
   fi
 
   preflight
+  ask_workspace
   [ "$want_claude" = 1 ] && install_claude
   [ "$want_codex" = 1 ] && install_codex
+  setup_workspace
   if [ "$dry_run" = 1 ]; then
     say "Dry run: nothing was changed."
     return 0
   fi
-  [ "$want_codex" = 1 ] && smoke_test
-  say ""
-  say "Done. Open your agent in the folder that holds your résumés and say:"
-  say '  "onboard my career documents"'
+  smoke_test
+  guidance "$want_claude" "$want_codex"
 }
 
 main

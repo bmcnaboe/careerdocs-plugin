@@ -32,6 +32,13 @@ class ConfigError(CareerDocsError):
     exit_code = 2
 
 
+class WorkspaceError(CareerDocsError):
+    """No workspace could be located, or the recorded default is gone."""
+
+    code = "WORKSPACE_UNRESOLVED"
+    exit_code = 2
+
+
 class CheckFailed(CareerDocsError):
     """A verification check failed (exit 1), as opposed to a contract error."""
 

@@ -2,10 +2,10 @@
 """One version everywhere.
 
 ``pyproject.toml`` holds the version of record. Every ``skills/*/SKILL.md`` must declare
-``metadata.version`` equal to it, and every package manifest that exists
+``metadata.version`` equal to it, and every package manifest that carries a version
 (``.claude-plugin/plugin.json``, ``.claude-plugin/marketplace.json``, and
-``packages/openai/manifest.json``) must agree. Manifests that do not exist yet are
-reported as absent, not failed — later tasks add them and require them.
+``.codex-plugin/plugin.json``) must agree. A missing manifest is reported as absent and,
+unless ``--allow-absent-manifests`` is passed, fails the check.
 
 Standard library only; reuses the skills-lint frontmatter parser.
 """
@@ -24,7 +24,7 @@ import lint_skills  # noqa: E402
 MANIFESTS = {
     "plugin.json": Path(".claude-plugin/plugin.json"),
     "marketplace.json": Path(".claude-plugin/marketplace.json"),
-    "openai manifest.json": Path("packages/openai/manifest.json"),
+    "codex plugin.json": Path(".codex-plugin/plugin.json"),
 }
 
 

@@ -1,55 +1,77 @@
 # Setup — Codex and ChatGPT
 
-Codex reads Agent Skills from `~/.agents/skills` (user scope) and from `.agents/skills`
-inside a repository. The OpenAI package here is a manifest plus a standard-library
-installer that places the plugin's five skills in the user-scope location; ChatGPT takes
-the same skills as zip uploads.
+Codex installs plugins from Git marketplaces with its own plugin manager and keeps a
+versioned copy under `~/.codex/plugins/cache`. This repository is such a marketplace:
+`.agents/plugins/marketplace.json` lists the plugin and `.codex-plugin/plugin.json`
+describes it, pointing at the same `skills/` that Claude Code and Cowork load. ChatGPT
+takes the same skills as zip uploads.
 
 ## Prerequisites
 
-- Codex CLI, or ChatGPT on a plan that allows skill uploads.
-- Python 3.11+ or [uv](https://docs.astral.sh/uv/) (uv recommended for the `careerdocs`
-  CLI; `python3` with the dependencies installed also works).
+- Codex CLI or app with plugin support (`codex plugin --help` works).
+- Python 3.10+ or [uv](https://docs.astral.sh/uv/) (uv recommended for the `careerdocs`
+  CLI; under plain `python3` it installs its dependencies with pip on first run).
 - Optional: LibreOffice (`soffice` on PATH) for PDF conversion.
 
 ## Install for Codex
 
-The one-liner detects Codex, downloads the repository archive, and runs the installer
-below in copy mode (and installs for Claude Code too when it finds it):
+The one-liner detects Codex and runs the two commands below (and installs for Claude Code
+too when it finds it):
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/bmcnaboe/careerdocs-plugin/main/install.sh | bash
 ```
 
-From a local clone, run the installer directly. It links each skill into
-`~/.agents/skills/` by default (use `--copy` for a standalone copy):
+By hand, the same two commands:
 
 ```sh
-python3 packages/openai/install.py            # symlink into ~/.agents/skills
-python3 packages/openai/install.py --copy     # copy instead of link
-python3 packages/openai/install.py --dry-run  # preview without changing anything
-python3 packages/openai/install.py --home /some/other/home
-python3 packages/openai/install.py --uninstall
+codex plugin marketplace add bmcnaboe/careerdocs-plugin
+codex plugin add careerdocs@careerdocs-plugin
 ```
 
-The installer refuses to run if the manifest disagrees with the `skills/` tree, so an
-install always matches the source. Codex's built-in `$skill-installer` can also fetch a
-single skill from its GitHub folder, for example
-`https://github.com/bmcnaboe/careerdocs-plugin/tree/main/skills/careerdocs`, one skill at
-a time. Restart Codex after installing so it discovers the new skills.
+`bmcnaboe/careerdocs-plugin@v1.2.0` pins a tag. From a local clone, add the clone's path
+as the marketplace instead and run the same `codex plugin add`; Codex copies the plugin
+into its cache from there. Restart Codex after installing so a session that is already
+open discovers the skills.
+
+Earlier versions of the one-liner copied the skills into `~/.agents/skills`. Re-running
+it removes those copies; by hand, delete the five skill folders there, or they shadow the
+plugin's skills and drift from them.
 
 ## Verify
 
 ```sh
-ls ~/.agents/skills
+codex plugin marketplace list      # careerdocs-plugin
+codex plugin list                  # careerdocs@careerdocs-plugin  installed, enabled
 ```
 
-lists the installed skills. Each installed `SKILL.md` is byte-identical to its source.
-Confirm the CLI:
+In a session, `/skills` lists the plugin's skills, and `$onboard`, `$resume`,
+`$cover-letter`, and `$update` invoke them the same way as any other skill (when a
+personal skill shares a name, Codex lists both). Start with `$onboard`. To confirm the
+CLI itself, run it from the installed copy:
 
 ```sh
-uv run ~/.agents/skills/careerdocs/scripts/careerdocs.py version
+uv run ~/.codex/plugins/cache/careerdocs-plugin/careerdocs/*/skills/careerdocs/scripts/careerdocs.py version
 ```
+
+## Workspace
+
+The skills work in one folder — the **workspace** — that holds your profile, templates,
+voice, and generated documents. The one-liner asks for it (default `~/career-workspace`)
+and records the choice in `~/.config/careerdocs/workspace`, so every session finds it
+whatever folder it starts in. Installing by hand, or from a non-interactive shell, leaves
+it unrecorded; set it from a session with
+
+> careerdocs config workspace ~/career-workspace
+
+or
+
+```sh
+uv run ~/.codex/plugins/cache/careerdocs-plugin/careerdocs/*/skills/careerdocs/scripts/careerdocs.py config workspace ~/career-workspace
+```
+
+Per command, `--workspace <dir>` overrides the recorded default, and a folder that
+already holds a `careerdocs.json` is used when a session starts inside it.
 
 ## Upload to ChatGPT
 
@@ -66,6 +88,18 @@ runtime.
 
 ## Update and remove
 
-Re-running the one-liner updates the copied skills. `install.sh --uninstall` removes them
-(and the Claude Code plugin, when present); from a clone, `python3
-packages/openai/install.py --uninstall` does the same for Codex alone.
+```sh
+codex plugin marketplace upgrade careerdocs-plugin
+codex plugin add careerdocs@careerdocs-plugin
+```
+
+refreshes the marketplace snapshot and reinstalls the current version; re-running the
+one-liner does the same. To remove:
+
+```sh
+codex plugin remove careerdocs@careerdocs-plugin
+codex plugin marketplace remove careerdocs-plugin
+```
+
+`install.sh --uninstall` runs both (and removes the Claude Code install) and forgets the
+recorded workspace default, leaving the workspace folder itself untouched.

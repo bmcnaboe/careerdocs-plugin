@@ -1,0 +1,14 @@
+{
+  "name": "careerdocs",
+  "version": "0.1.0",
+  "description": "Portable, provider-neutral resume and cover-letter workflows: onboard qualifications into one authoritative profile, then generate tailored resumes and cover letters that are verified before they ship.",
+  "skills": "./skills/",
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "careerdocs",
+        "shortDescription": "Tailored résumés and cover letters from one authoritative profile."
+      }
+    }
+  }
+}
