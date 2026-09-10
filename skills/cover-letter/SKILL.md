@@ -4,7 +4,7 @@ description: Generate a cover letter that complements a tailored résumé for th
 license: MIT
 compatibility: "Python 3.10+; uv recommended. Requires the careerdocs core skill, an onboarded profile, and an existing brief and map for the role (from the resume skill)."
 metadata:
-  version: "0.2.1"
+  version: "0.3.0"
   author: "careerdocs-plugin contributors"
 ---
 

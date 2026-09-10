@@ -4,7 +4,7 @@ description: Update the authoritative profile with a new qualification the appli
 license: MIT
 compatibility: "Python 3.10+; uv recommended. Requires the careerdocs core skill and an onboarded profile."
 metadata:
-  version: "0.2.1"
+  version: "0.3.0"
   author: "careerdocs-plugin contributors"
 ---
 

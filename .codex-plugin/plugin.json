@@ -1,6 +1,6 @@
 {
   "name": "careerdocs",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Portable, provider-neutral resume and cover-letter workflows: onboard qualifications into one authoritative profile, then generate tailored resumes and cover letters that are verified before they ship.",
   "skills": "./skills/",
   "extensions": {

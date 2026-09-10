@@ -11,7 +11,7 @@
       "name": "careerdocs",
       "source": "./",
       "description": "Portable resume and cover-letter workflows with one authoritative profile and verified output.",
-      "version": "0.2.1"
+      "version": "0.3.0"
     }
   ]
 }

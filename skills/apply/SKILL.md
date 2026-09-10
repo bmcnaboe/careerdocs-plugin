@@ -4,7 +4,7 @@ description: Produce a complete application for one job posting through a short 
 license: MIT
 compatibility: "Python 3.10+; uv recommended. Requires the careerdocs core skill, an onboarded profile, templates, and voice; the update, resume, and cover-letter skills do the work. Optional LibreOffice for PDF checks."
 metadata:
-  version: "0.2.1"
+  version: "0.3.0"
   author: "careerdocs-plugin contributors"
 ---
 

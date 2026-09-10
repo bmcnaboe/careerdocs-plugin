@@ -4,7 +4,7 @@ description: Guided setup and first-run tutorial for careerdocs, and the flow th
 license: MIT
 compatibility: "Python 3.10+; uv recommended. Requires the careerdocs core skill and its careerdocs CLI."
 metadata:
-  version: "0.2.1"
+  version: "0.3.0"
   author: "careerdocs-plugin contributors"
 ---
 
