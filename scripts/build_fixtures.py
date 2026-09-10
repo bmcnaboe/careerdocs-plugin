@@ -219,7 +219,7 @@ def _preserve_spaces(document) -> None:
 
 def _header(document, *, after: float) -> None:
     _paragraph(document, "{{ contact_name }}", size=20, bold=True, center=True, after=2)
-    _paragraph(document, "{{ contact_details }}", center=True, after=after)
+    _paragraph(document, "{{ contact_details }}", size=10, center=True, after=after)
 
 
 def _finish(document, directory: Path, manifest: dict) -> None:

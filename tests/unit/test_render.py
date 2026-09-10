@@ -244,3 +244,33 @@ def test_render_puts_the_name_on_its_own_line(tmp_path):
     lines = read_docx_text(out).splitlines()
     assert lines[0] == "Jordan Rivera"
     assert "jordan.rivera@example.com" in lines[1]
+
+
+def test_link_map_uses_bare_display_forms():
+    profile = {"entities": [
+        {"type": "contact", "email": "a@example.com", "visibility": "public", "verification": "applicant_verified",
+         "links": [{"label": "LinkedIn", "url": "https://www.linkedin.com/in/x/"}]},
+        {"type": "patent", "url": "https://patents.example.com/p1", "visibility": "public", "verification": "applicant_verified"},
+        {"type": "project", "links": [{"label": "Repo", "url": "https://github.com/x/y"}], "visibility": "private", "verification": "applicant_verified"},
+    ]}
+    assert render.link_map(profile) == {
+        "linkedin.com/in/x": "https://www.linkedin.com/in/x/",
+        "patents.example.com/p1": "https://patents.example.com/p1",
+        "a@example.com": "mailto:a@example.com",
+    }
+
+
+def test_linkify_makes_profile_links_clickable_without_changing_text(tmp_path):
+    p = build_plan(tmp_path)
+    profile = load_provider(tmp_path, default_config()).read()
+    out = tmp_path / "resume.docx"
+    render.render_document(p, TEMPLATE_JSON, TEMPLATE_DOCX, out)
+    before = read_docx_text(out)
+    assert render.linkify(out, render.link_map(profile)) >= 1  # at least the email
+    assert read_docx_text(out) == before  # the visible text is unchanged, so the checks still hold
+    from docx import Document
+
+    document = Document(str(out))
+    targets = {rel.target_ref for rel in document.part.rels.values() if rel.reltype.endswith("/hyperlink")}
+    assert "mailto:jordan.rivera@example.com" in targets
+    assert document.element.body.findall(".//{http://schemas.openxmlformats.org/wordprocessingml/2006/main}hyperlink")

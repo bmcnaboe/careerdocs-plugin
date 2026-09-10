@@ -167,7 +167,8 @@ RESUME_SECTION = {"id": "experience", "entity_types": ["experience", "achievemen
 def test_contact_unit_is_name_then_details():
     contact = entity("contact", name="A B", email="a@example.com", phone="(555) 555-0100",
                      location="Metropolis, USA", links=[{"label": "GitHub", "url": "https://github.com/ab/"}])
-    assert plan._entity_text(contact) == "A B\nMetropolis, USA · (555) 555-0100 · a@example.com · https://github.com/ab/"
+    assert plan._entity_text(contact) == "A B\nMetropolis, USA · (555) 555-0100 · a@example.com · github.com/ab"
+    assert plan.display_link("https://www.linkedin.com/in/handle/") == "linkedin.com/in/handle"
 
 
 def test_experience_unit_separates_role_and_dates_with_a_tab():

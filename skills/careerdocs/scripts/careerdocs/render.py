@@ -8,7 +8,10 @@ of the plan's source ids and every check marked pending. The newest render alway
 the plain name: a previous render of that name is rotated to a ``_bak1`` suffix (``_bak1``
 to ``_bak2``, and so on) together with its PDF, record, and layout renders, so nothing is
 overwritten or lost. ``--pdf`` converts via LibreOffice (`soffice`) when it is on PATH, and
-records the conversion as skipped with a reason when it is not.
+records the conversion as skipped with a reason when it is not. Every link the profile
+holds (contact and project links, patent URLs, the contact email) appears in the text as
+its bare display form and is made a real hyperlink after rendering, so the DOCX and the
+PDF are clickable without any template placeholder.
 """
 
 from __future__ import annotations
@@ -95,6 +98,69 @@ def rotate_previous(directory: Path, stem: str) -> None:
             slots.add(int(match.group("n")))
     for n in sorted(slots, reverse=True):
         _move_render(directory, stem if n == 0 else f"{stem}_bak{n}", f"{stem}_bak{n + 1}")
+
+
+def link_map(profile: dict) -> dict[str, str]:
+    """Display form → target for every link the visible profile holds: entity ``links[]``
+    and ``url`` fields as bare domains, and the contact email as a ``mailto:`` link."""
+    links: dict[str, str] = {}
+    for entity in profile["entities"]:
+        if not plan_module.is_visible(entity):
+            continue
+        for url in [link.get("url") for link in entity.get("links") or []] + [entity.get("url")]:
+            if url:
+                links[plan_module.display_link(url)] = url
+        if entity["type"] == "contact" and entity.get("email"):
+            links[entity["email"]] = f"mailto:{entity['email']}"
+    return links
+
+
+def linkify(docx_path: Path, links: dict[str, str]) -> int:
+    """Wrap each occurrence of a link's display text in a hyperlink to its target, keeping
+    the run's own formatting so the text reads as before. Returns the number of links."""
+    if not links:
+        return 0
+    import copy
+
+    from docx import Document
+    from docx.opc.constants import RELATIONSHIP_TYPE
+    from docx.oxml import OxmlElement
+    from docx.oxml.ns import qn
+    from docx.text.run import Run
+
+    document = Document(str(docx_path))
+    pattern = re.compile("|".join(re.escape(d) for d in sorted(links, key=len, reverse=True)))
+    made = 0
+    for paragraph in document.paragraphs:
+        for run in list(paragraph.runs):
+            text = run.text
+            if not pattern.search(text):
+                continue
+            pieces: list[tuple[str, str | None]] = []
+            position = 0
+            for match in pattern.finditer(text):
+                if match.start() > position:
+                    pieces.append((text[position:match.start()], None))
+                pieces.append((match.group(0), links[match.group(0)]))
+                position = match.end()
+            if position < len(text):
+                pieces.append((text[position:], None))
+            anchor = run._r
+            for piece, target in pieces:
+                new_run = copy.deepcopy(anchor)
+                Run(new_run, paragraph).text = piece
+                element = new_run
+                if target:
+                    hyperlink = OxmlElement("w:hyperlink")
+                    hyperlink.set(qn("r:id"), paragraph.part.relate_to(target, RELATIONSHIP_TYPE.HYPERLINK, is_external=True))
+                    hyperlink.append(new_run)
+                    element = hyperlink
+                    made += 1
+                anchor.addprevious(element)
+            anchor.getparent().remove(anchor)
+    if made:
+        document.save(str(docx_path))
+    return made
 
 
 def _unit_context(unit: dict) -> dict:
@@ -229,6 +295,7 @@ def cmd_render(args) -> int:
     rotate_previous(out_dir, stem)
     out_docx = out_dir / f"{stem}.docx"
     render_document(plan, template, template_docx, out_docx)
+    linkify(out_docx, link_map(load_provider(args.workspace, cfg).read()))
 
     pdf_path = None
     pdf_available = shutil.which("soffice") is not None

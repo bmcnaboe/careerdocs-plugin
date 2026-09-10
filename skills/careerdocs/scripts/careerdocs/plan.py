@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from collections import defaultdict
 from pathlib import Path
 
@@ -57,6 +58,15 @@ def display_date(value, *, default: str = "present") -> str:
     return year
 
 
+def display_link(url: str) -> str:
+    """``https://www.linkedin.com/in/handle/`` → ``linkedin.com/in/handle``: the scheme,
+    ``www.``, and a trailing slash dropped. The target keeps the full URL; render makes the
+    display form clickable."""
+    bare = re.sub(r"^https?://", "", url.strip())
+    bare = re.sub(r"^www\.", "", bare)
+    return bare.rstrip("/")
+
+
 def _entity_text(entity: dict, section: dict | None = None) -> str:
     etype = entity["type"]
     if etype == "achievement":
@@ -80,7 +90,7 @@ def _entity_text(entity: dict, section: dict | None = None) -> str:
         return entity.get("name", "")
     if etype == "contact":
         details = [entity.get("location"), entity.get("phone"), entity.get("email")]
-        details += [link["url"] for link in entity.get("links") or [] if link.get("url")]
+        details += [display_link(link["url"]) for link in entity.get("links") or [] if link.get("url")]
         line = " · ".join(p for p in details if p)
         name = entity.get("name", "")
         return f"{name}\n{line}" if line else name

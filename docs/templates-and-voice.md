@@ -63,6 +63,11 @@ followed by the name. Its résumé body:
 {%p endfor %}
 ```
 
+Links need no placeholder: every link the profile holds (contact and project links, patent
+URLs, the contact email) is planned as its bare display form (`linkedin.com/in/handle`) and,
+after rendering, wrapped in a real hyperlink to the full URL with the run's own formatting,
+so the DOCX and the PDF are clickable and the visible text still matches the plan.
+
 Keep the styling (fonts, spacing, margins) in the DOCX; the plugin replaces only the
 placeholder content. Two rules keep a restyled template compatible with the checks: every
 paragraph the template adds on its own (a sign-off, boilerplate) goes on the manifest's
