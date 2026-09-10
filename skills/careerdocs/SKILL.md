@@ -111,7 +111,8 @@ Relative to the workspace, under the configured directories (defaults shown):
   `plan.json`.
 - Rendered documents and their records: `outputs/` (`<Name>-<Kind>.docx`, `.pdf`,
   `.record.json`; the pattern is `outputs.file_name`). The newest render carries the
-  plain name; the previous one is rotated to a `_bak1` suffix, never overwritten.
+  plain name; a replaced render moves to `outputs/archive/` under its generation stamp,
+  never overwritten.
 - Generated baselines: `baselines/<positioning>/`.
 - Workflow state: `.careerdocs/state/<flow>/<subject>.json` — append-only
   questions, the pending diff, and artifact paths, so any flow resumes without repeating

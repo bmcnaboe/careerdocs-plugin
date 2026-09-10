@@ -113,7 +113,7 @@ def test_cli_render_writes_docx_and_record(tmp_path, capsys):
     assert record["kind"] == "resume" and record["source_ids"]
 
 
-def test_render_rotates_the_previous_render(tmp_path, capsys):
+def test_render_archives_the_previous_render(tmp_path, capsys):
     from careerdocs import cli
 
     ws = str(tmp_path)
@@ -134,21 +134,22 @@ def test_render_rotates_the_previous_render(tmp_path, capsys):
     (outputs / "layout" / "Jordan-Rivera-Resume-p1.png").write_bytes(b"png")
     first = (outputs / "Jordan-Rivera-Resume.docx").read_bytes()
     capsys.readouterr()
+    assert cli.main(argv) == 0
+    assert cli.main(argv) == 0
 
-    assert cli.main(argv) == 0
-    assert cli.main(argv) == 0
-    names = sorted(f.name for f in outputs.iterdir() if f.is_file())
-    assert names == sorted([
-        "Jordan-Rivera-Resume.docx", "Jordan-Rivera-Resume.record.json",
-        "Jordan-Rivera-Resume_bak1.docx", "Jordan-Rivera-Resume_bak1.record.json",
-        "Jordan-Rivera-Resume_bak2.docx", "Jordan-Rivera-Resume_bak2.record.json",
-    ])
-    # The oldest render is now _bak2, its layout render moved with it, and its record
-    # points at its new path; the newest carries the plain name.
-    assert (outputs / "Jordan-Rivera-Resume_bak2.docx").read_bytes() == first
-    assert (outputs / "layout" / "Jordan-Rivera-Resume_bak2-p1.png").exists()
-    record = json.loads((outputs / "Jordan-Rivera-Resume_bak2.record.json").read_text())
-    assert record["document"] == str(outputs / "Jordan-Rivera-Resume_bak2.docx")
+    # The output folder holds only the current render; earlier ones sit in archive/ under
+    # their generation stamp, layout renders and records (paths rewritten) moved with them.
+    current = sorted(f.name for f in outputs.iterdir() if f.is_file())
+    assert current == ["Jordan-Rivera-Resume.docx", "Jordan-Rivera-Resume.record.json"]
+    archive = outputs / "archive"
+    archived = sorted(f for f in archive.iterdir() if f.suffix == ".docx")
+    assert len(archived) == 2 and all(f.name.startswith("Jordan-Rivera-Resume-20") for f in archived)
+    assert any(f.read_bytes() == first for f in archived)
+    for document in archived:
+        record = json.loads((archive / f"{document.stem}.record.json").read_text())
+        assert record["document"] == str(document)
+    pngs = list((archive / "layout").glob("*-p1.png"))
+    assert len(pngs) == 1 and (archive / (pngs[0].name[: -len("-p1.png")] + ".docx")).exists()
 
 
 COVER_DIR = ROOT / "examples" / "applicant" / "templates" / "cover-letter"

@@ -39,7 +39,7 @@ Full detail in `references/playbook.md`.
 5. **Draft units in voice** — rewrite each unit's text in the applicant's voice
    (`voice.md`), keeping every claim traceable to its `source_ids`.
 6. **`render --kind resume [--pdf]`** — fill the template; the document is written as
-   `<Name>-Resume.docx`, and any previous render is rotated to a `_bak1` suffix.
+   `<Name>-Resume.docx`, and any previous render moves to `outputs/archive/`.
 7. **`check <document>`** — run the five checks (factual, links/dates, extraction,
    pagination, layout) and write the output record.
 8. **Report cuts and gaps** — tell the applicant what was cut for space and which

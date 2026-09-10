@@ -5,9 +5,9 @@ the application's ``outputs/`` (a baseline under ``baselines/<positioning>/``) a
 ``<Name>-<Kind>.docx`` — ``outputs.file_name`` in the config, with ``{name}``, ``{kind}``,
 ``{org}``, and ``{slug}`` placeholders — beside an output-record skeleton carrying the union
 of the plan's source ids and every check marked pending. The newest render always carries
-the plain name: a previous render of that name is rotated to a ``_bak1`` suffix (``_bak1``
-to ``_bak2``, and so on) together with its PDF, record, and layout renders, so nothing is
-overwritten or lost. ``--pdf`` converts via LibreOffice (`soffice`) when it is on PATH, and
+the plain name: a previous render of that name moves into ``archive/`` beside it, named
+with its generation stamp, together with its PDF, record, and layout renders, so
+``outputs/`` holds only the current documents and nothing is overwritten or lost. ``--pdf`` converts via LibreOffice (`soffice`) when it is on PATH, and
 records the conversion as skipped with a reason when it is not. Every link the profile
 holds (contact and project links, patent URLs, the contact email) appears in the text as
 its bare display form and is made a real hyperlink after rendering, so the DOCX and the
@@ -22,6 +22,7 @@ import re
 import shutil
 import subprocess
 from collections import defaultdict
+from datetime import datetime, timezone
 from pathlib import Path
 
 from . import __version__
@@ -37,7 +38,7 @@ _ALL_CHECKS = ("factual", "links_dates", "extraction", "pagination", "layout")
 
 _KIND_LABELS = {"resume": "Resume", "cover_letter": "Cover-Letter"}
 _SIDE_SUFFIXES = (".docx", ".pdf", ".record.json")
-_BAK_RE = re.compile(r"^(?P<stem>.+)_bak(?P<n>\d+)$")
+_ARCHIVE_DIR = "archive"
 
 
 def slugify(text: str) -> str:
@@ -64,40 +65,54 @@ def document_stem(plan: dict, template: dict, kind: str, pattern: str, *, slug: 
     return stem or values["kind"]
 
 
-def _move_render(directory: Path, old_stem: str, new_stem: str) -> None:
+def _move_render(source_dir: Path, old_stem: str, target_dir: Path, new_stem: str) -> None:
     for suffix in _SIDE_SUFFIXES:
-        source = directory / f"{old_stem}{suffix}"
+        source = source_dir / f"{old_stem}{suffix}"
         if source.exists():
-            source.rename(directory / f"{new_stem}{suffix}")
-    layout = directory / "layout"
+            source.rename(target_dir / f"{new_stem}{suffix}")
+    layout = source_dir / "layout"
     if layout.is_dir():
         page = re.compile(rf"^{re.escape(old_stem)}(-p\d+\.png)$")
         for png in sorted(layout.iterdir()):
             match = page.match(png.name)
             if match:
-                png.rename(layout / f"{new_stem}{match.group(1)}")
-    record_path = directory / f"{new_stem}.record.json"
+                (target_dir / "layout").mkdir(exist_ok=True)
+                png.rename(target_dir / "layout" / f"{new_stem}{match.group(1)}")
+    record_path = target_dir / f"{new_stem}.record.json"
     if record_path.is_file():
         record = json.loads(record_path.read_text(encoding="utf-8"))
-        record["document"] = str(directory / f"{new_stem}.docx")
+        record["document"] = str(target_dir / f"{new_stem}.docx")
         if record.get("pdf"):
-            record["pdf"] = str(directory / f"{new_stem}.pdf")
+            record["pdf"] = str(target_dir / f"{new_stem}.pdf")
         record_path.write_text(json.dumps(record, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
-def rotate_previous(directory: Path, stem: str) -> None:
-    """Free ``stem`` for a new render by shifting every earlier render up one backup slot:
-    the plain name becomes ``_bak1``, ``_bak1`` becomes ``_bak2``, and so on. The document,
-    its PDF, its record (paths rewritten), and its layout renders move together."""
-    if not any((directory / f"{stem}{suffix}").exists() for suffix in _SIDE_SUFFIXES):
-        return
-    slots = {0}
-    for path in directory.iterdir():
-        match = _BAK_RE.match(path.name.split(".")[0])
-        if match and match.group("stem") == stem:
-            slots.add(int(match.group("n")))
-    for n in sorted(slots, reverse=True):
-        _move_render(directory, stem if n == 0 else f"{stem}_bak{n}", f"{stem}_bak{n + 1}")
+def _generation_stamp(record_path: Path, fallback: Path) -> str:
+    """``20260910T192908Z`` from the record's ``generated_at``, else the file's mtime."""
+    try:
+        generated = json.loads(record_path.read_text(encoding="utf-8")).get("generated_at")
+        if generated:
+            return re.sub(r"[-:]", "", generated)
+    except (OSError, ValueError):
+        pass
+    return datetime.fromtimestamp(fallback.stat().st_mtime, tz=timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+
+
+def archive_previous(directory: Path, stem: str) -> Path | None:
+    """Move an existing render of ``stem`` — document, PDF, record (paths rewritten), and
+    layout renders — into ``archive/`` under its generation stamp, so the plain name is free
+    and the output folder holds only the current documents. Returns the archived document."""
+    present = [directory / f"{stem}{suffix}" for suffix in _SIDE_SUFFIXES if (directory / f"{stem}{suffix}").exists()]
+    if not present:
+        return None
+    archive = directory / _ARCHIVE_DIR
+    archive.mkdir(exist_ok=True)
+    stamp = _generation_stamp(directory / f"{stem}.record.json", present[0])
+    new_stem, counter = f"{stem}-{stamp}", 2
+    while any((archive / f"{new_stem}{suffix}").exists() for suffix in _SIDE_SUFFIXES):
+        new_stem, counter = f"{stem}-{stamp}-{counter}", counter + 1
+    _move_render(directory, stem, archive, new_stem)
+    return archive / f"{new_stem}.docx"
 
 
 def link_map(profile: dict) -> dict[str, str]:
@@ -292,7 +307,7 @@ def cmd_render(args) -> int:
     stem = document_stem(plan, template, args.kind, cfg["outputs"]["file_name"],
                          slug=f"baseline-{positioning}" if args.baseline else slug, org=org)
     out_dir.mkdir(parents=True, exist_ok=True)
-    rotate_previous(out_dir, stem)
+    archive_previous(out_dir, stem)
     out_docx = out_dir / f"{stem}.docx"
     render_document(plan, template, template_docx, out_docx)
     linkify(out_docx, link_map(load_provider(args.workspace, cfg).read()))

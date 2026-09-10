@@ -75,9 +75,9 @@ careerdocs render --kind resume --pdf --role-slug <slug> --workspace <dir>
 ```
 
 Writes `<Name>-Resume.docx` (and `.pdf` when LibreOffice is present) and an output record
-skeleton. A previous render of that name is rotated to a `_bak1` suffix (`_bak1` to
-`_bak2`, and so on) with its PDF, record, and layout renders, so nothing is lost and the
-newest document always carries the plain name.
+skeleton. A previous render of that name moves to `outputs/archive/` under its generation
+stamp, with its PDF, record, and layout renders, so the output folder holds only the
+current documents and nothing is lost.
 
 ## 7. Check
 
