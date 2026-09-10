@@ -114,3 +114,13 @@ def test_verbatim_bullet_check_passes_when_complementary():
 def test_verbatim_bullet_check_ignores_short_fragments():
     bullets = ["Python"]  # too short to count as a reused bullet
     assert factual.verbatim_bullet_check("I write Python daily.", bullets)["status"] == "pass"
+
+
+def test_factual_allows_each_line_of_a_multiline_unit(tmp_path):
+    p, profile, text = build(tmp_path)
+    # The header renders the contact unit's name and details as separate lines.
+    assert "Jordan Rivera" in text.splitlines()
+    result = factual.check(text, p, profile, allowlist=TEMPLATE_JSON["allowlist"])
+    assert result["status"] == "pass", result["details"]
+    # A line that is not a unit, a line of a unit, or allowlisted still fails.
+    assert factual.check(text + "\nJordan", p, profile, allowlist=TEMPLATE_JSON["allowlist"])["status"] == "fail"

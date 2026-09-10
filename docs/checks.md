@@ -7,8 +7,9 @@ check fails. Each check reports `{ status: pass | fail | skipped, details }`.
 
 ## The five checks
 
-1. **Factual traceability** — every content line of the document must be a plan unit (or a
-   template-provided string on the template's `allowlist`), and every number and date must
+1. **Factual traceability** — every content line of the document must be a plan unit, one
+   line of a multi-line unit (the contact unit is the name, then the details line), or a
+   template-provided string on the template's `allowlist`; and every number and date must
    trace to an entity the plan cites. This is what stops invented qualifications and
    altered metrics. Always runs.
 

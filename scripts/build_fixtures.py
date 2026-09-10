@@ -9,12 +9,14 @@ documents. The two resumes deliberately disagree on one end date (the Globex rol
 is the conflict the onboarding flow must surface. Text fixtures (config, voice, notes,
 CSV, job description, extracted candidates) are committed directly, not generated here.
 
-Run: ``uv run --extra dev python scripts/build_fixtures.py``
+Run: ``uv run --extra dev python scripts/build_fixtures.py`` (``--templates-only`` rebuilds
+just the two example templates).
 """
 
 from __future__ import annotations
 
 import json
+import sys
 from datetime import datetime
 from pathlib import Path
 
@@ -127,7 +129,7 @@ RESUME_TEMPLATE_JSON = {
         {"id": "education", "title": "Education", "placeholder": "education", "entity_types": ["education"], "max_items": 5, "required": False},
     ],
     "allowlist": ["Experience", "Skills", "Education"],
-    "style_notes": "Two-page budget; verb-first bullets; no buzzwords.",
+    "style_notes": "Two-page budget; verb-first bullets; no buzzwords. Single column, centered name, ruled headings, right-tab dates.",
 }
 
 COVER_LETTER_TEMPLATE_JSON = {
@@ -140,39 +142,137 @@ COVER_LETTER_TEMPLATE_JSON = {
         {"id": "header", "title": "", "placeholder": "contact", "entity_types": ["contact"], "max_items": 1, "required": True},
         {"id": "body", "title": "", "placeholder": "body", "kind": "sentence", "entity_types": ["experience", "skill"], "max_items": 6, "required": True},
     ],
-    "allowlist": [],
-    "style_notes": "One page; complements the resume; draft prose in voice, never paste resume bullets.",
+    "allowlist": ["Sincerely,"],
+    "style_notes": "One page; complements the resume; draft prose in voice, never paste resume bullets. The greeting is the first body unit; the template carries the sign-off.",
 }
 
 
-def _build_docxtpl_template(directory: Path, manifest: dict) -> None:
+_INK = "1F1F1F"
+_MARGIN_INCHES = 0.7
+_TEXT_WIDTH_INCHES = 8.5 - 2 * _MARGIN_INCHES
+
+
+def _base_document():
+    """Letter page, 0.7-inch margins, Calibri 10.5 pt body in near-black."""
     from docx import Document
+    from docx.oxml.ns import qn
+    from docx.shared import Inches, Pt, RGBColor
 
     document = Document()
-    document.add_paragraph("{{ contact }}")
-    document.add_paragraph("{%p for section in sections %}")
-    document.add_paragraph("{{ section.title }}")
-    document.add_paragraph("{%p for unit in section.units %}")
-    document.add_paragraph("{{ unit.text }}")
-    document.add_paragraph("{%p endfor %}")
-    document.add_paragraph("{%p endfor %}")
+    section = document.sections[0]
+    section.page_width, section.page_height = Inches(8.5), Inches(11)
+    for margin in ("left_margin", "right_margin", "top_margin", "bottom_margin"):
+        setattr(section, margin, Inches(_MARGIN_INCHES))
+    normal = document.styles["Normal"]
+    normal.font.name, normal.font.size = "Calibri", Pt(10.5)
+    normal.font.color.rgb = RGBColor.from_string(_INK)
+    normal.element.rPr.rFonts.set(qn("w:eastAsia"), "Calibri")
+    normal.paragraph_format.space_before = Pt(0)
+    normal.paragraph_format.space_after = Pt(0)
+    normal.paragraph_format.line_spacing = 1.0
+    return document
+
+
+def _paragraph(document, text=None, *, size=None, bold=None, center=False, before=None,
+               after=None, style=None, caps=False):
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+    from docx.shared import Pt
+
+    paragraph = document.add_paragraph(style=style)
+    if center:
+        paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    if before is not None:
+        paragraph.paragraph_format.space_before = Pt(before)
+    if after is not None:
+        paragraph.paragraph_format.space_after = Pt(after)
+    if text is not None:
+        run = paragraph.add_run(text)
+        if size:
+            run.font.size = Pt(size)
+        if bold is not None:
+            run.bold = bold
+        if caps:
+            run.font.all_caps = True  # displayed in capitals; the text itself stays as written
+    return paragraph
+
+
+def _rule_below(paragraph) -> None:
+    from docx.oxml import OxmlElement
+    from docx.oxml.ns import qn
+
+    border = OxmlElement("w:bottom")
+    for attribute, value in (("w:val", "single"), ("w:sz", "6"), ("w:space", "1"), ("w:color", _INK)):
+        border.set(qn(attribute), value)
+    borders = OxmlElement("w:pBdr")
+    borders.append(border)
+    paragraph._p.get_or_add_pPr().append(borders)
+
+
+def _preserve_spaces(document) -> None:
+    # Rendered values may begin or end with a space; keep every text run intact.
+    from docx.oxml.ns import qn
+
+    for text in document.element.body.iter(qn("w:t")):
+        text.set("{http://www.w3.org/XML/1998/namespace}space", "preserve")
+
+
+def _header(document, *, after: float) -> None:
+    _paragraph(document, "{{ contact_name }}", size=20, bold=True, center=True, after=2)
+    _paragraph(document, "{{ contact_details }}", center=True, after=after)
+
+
+def _finish(document, directory: Path, manifest: dict) -> None:
+    _preserve_spaces(document)
     props = document.core_properties
     props.created = FIXED_TIME
     props.modified = FIXED_TIME
-
     directory.mkdir(parents=True, exist_ok=True)
     document.save(str(directory / "template.docx"))
     (directory / "template.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
 
 
 def build_resume_template(directory: Path) -> None:
-    directory.mkdir(parents=True, exist_ok=True)
-    _build_docxtpl_template(directory, RESUME_TEMPLATE_JSON)
+    """Single column: centered name and contact line, ruled uppercase section headings,
+    bold role lines with the dates on a right tab stop, bulleted achievements."""
+    from docx.enum.text import WD_TAB_ALIGNMENT
+    from docx.shared import Inches, Pt
+
+    document = _base_document()
+    _header(document, after=3)
+    _paragraph(document, "{%p for section in sections %}")
+    _paragraph(document, "{%p if section.units %}")
+    _rule_below(_paragraph(document, "{{ section.title }}", size=11, bold=True, before=10, after=3.5, caps=True))
+    _paragraph(document, "{%p for unit in section.units %}")
+    _paragraph(document, "{%p if unit.kind == 'bullet' %}")
+    _paragraph(document, "{{ unit.text }}", style="List Bullet", after=2)
+    _paragraph(document, "{%p elif section.id == 'experience' %}")
+    role = _paragraph(document, before=6, after=1)
+    role.paragraph_format.tab_stops.add_tab_stop(Inches(_TEXT_WIDTH_INCHES), WD_TAB_ALIGNMENT.RIGHT)
+    run = role.add_run("{{ unit.head }}")
+    run.bold, run.font.size = True, Pt(11)
+    role.add_run().add_tab()
+    role.add_run("{{ unit.tail }}")
+    _paragraph(document, "{%p else %}")
+    _paragraph(document, "{{ unit.text }}", after=2)
+    _paragraph(document, "{%p endif %}")
+    _paragraph(document, "{%p endfor %}")
+    _paragraph(document, "{%p endif %}")
+    _paragraph(document, "{%p endfor %}")
+    _finish(document, directory, RESUME_TEMPLATE_JSON)
 
 
 def build_cover_letter_template(directory: Path) -> None:
-    directory.mkdir(parents=True, exist_ok=True)
-    _build_docxtpl_template(directory, COVER_LETTER_TEMPLATE_JSON)
+    """The same header, body paragraphs, and a sign-off followed by the name."""
+    document = _base_document()
+    _header(document, after=16)
+    _paragraph(document, "{%p for section in sections %}")
+    _paragraph(document, "{%p for unit in section.units %}")
+    _paragraph(document, "{{ unit.text }}", size=11, after=8)
+    _paragraph(document, "{%p endfor %}")
+    _paragraph(document, "{%p endfor %}")
+    _paragraph(document, "Sincerely,", size=11, before=2, after=14)
+    _paragraph(document, "{{ contact_name }}", size=11)
+    _finish(document, directory, COVER_LETTER_TEMPLATE_JSON)
 
 
 _RESUME_LINES = [
@@ -212,17 +312,19 @@ def build_example_resume_pdf(path: Path) -> None:
     pdf.save()
 
 
-def main() -> None:
-    build_resume_a_docx(SOURCES / "resume-a.docx")
-    build_resume_b_pdf(SOURCES / "resume-b.pdf")
+def main(argv: list[str] | None = None) -> None:
+    templates_only = "--templates-only" in (argv if argv is not None else sys.argv[1:])
+    if not templates_only:
+        build_resume_a_docx(SOURCES / "resume-a.docx")
+        build_resume_b_pdf(SOURCES / "resume-b.pdf")
+        build_example_resume_pdf(RENDERED / "example-resume.pdf")
+        print(f"built {SOURCES / 'resume-a.docx'}")
+        print(f"built {SOURCES / 'resume-b.pdf'}")
+        print(f"built {RENDERED / 'example-resume.pdf'}")
     build_resume_template(TEMPLATES / "resume")
     build_cover_letter_template(TEMPLATES / "cover-letter")
-    build_example_resume_pdf(RENDERED / "example-resume.pdf")
-    print(f"built {SOURCES / 'resume-a.docx'}")
-    print(f"built {SOURCES / 'resume-b.pdf'}")
     print(f"built {TEMPLATES / 'resume' / 'template.docx'}")
     print(f"built {TEMPLATES / 'cover-letter' / 'template.docx'}")
-    print(f"built {RENDERED / 'example-resume.pdf'}")
 
 
 if __name__ == "__main__":

@@ -1,9 +1,10 @@
 """Factual traceability check.
 
-Every content line of the rendered document must be a plan unit (or a template-provided
-string on the allowlist), and every number and date in the document must trace to one of
-the entities the plan cites. This is what stops invented qualifications and altered
-metrics from reaching a document.
+Every content line of the rendered document must be a plan unit — or one line of a
+multi-line unit, such as the contact unit's name and details lines — or a
+template-provided string on the allowlist, and every number and date in the document must
+trace to one of the entities the plan cites. This is what stops invented qualifications
+and altered metrics from reaching a document.
 """
 
 from __future__ import annotations
@@ -39,7 +40,10 @@ def check(document_text: str, plan: dict, profile: dict, allowlist=()) -> dict:
     cited = cited_entity_ids(plan)
     blob = " ".join(_blob(by_id[i]) for i in cited if i in by_id)
     blob_digits = set(re.sub(r"\D", " ", blob).split())
-    allowed_lines = {u["text"] for u in plan["units"]} | set(allowlist)
+    allowed_lines = set(allowlist)
+    for unit in plan["units"]:
+        allowed_lines.add(unit["text"])
+        allowed_lines.update(line.strip() for line in unit["text"].splitlines())
 
     findings: list[str] = []
     for line in (line.strip() for line in document_text.splitlines()):

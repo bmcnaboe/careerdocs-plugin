@@ -28,6 +28,8 @@
       "required": true
     }
   ],
-  "allowlist": [],
-  "style_notes": "One page; complements the resume; draft prose in voice, never paste resume bullets."
+  "allowlist": [
+    "Sincerely,"
+  ],
+  "style_notes": "One page; complements the resume; draft prose in voice, never paste resume bullets. The greeting is the first body unit; the template carries the sign-off."
 }

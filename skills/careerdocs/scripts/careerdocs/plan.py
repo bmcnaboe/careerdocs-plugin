@@ -6,6 +6,13 @@ emphasis set by the chosen positioning), plus a cut list for anything the page b
 section's `max_items` cannot fit. Gap requirements contribute no evidence, so no gap is
 ever cited as satisfied. Switching positioning re-emphasizes and reorders without changing
 any fact.
+
+Unit text follows two conventions the templates rely on: the contact unit is two lines
+(the name, then the details line), and an experience unit separates the role from its
+dates with a tab. A résumé's experience section is reverse-chronological, each role
+followed by its own achievements; positioning orders the achievements within a role and
+every section outside the chronology. The contact unit and a role that still has
+achievements in the plan are never cut for the page budget.
 """
 
 from __future__ import annotations
@@ -22,6 +29,7 @@ from .providers import load_provider
 
 _EMPHASIS_WEIGHT = {"high": 0, "medium": 1, "low": 2}
 _DEFAULT_UNITS_PER_PAGE = 12
+_MONTHS = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
 
 
 def _visible(entity: dict) -> bool:
@@ -37,13 +45,33 @@ def emphasis_for(entity: dict, positioning: str) -> str:
     return "medium"
 
 
+def display_date(value, *, default: str = "present") -> str:
+    """``2021-06`` or ``2021-06-15`` → ``Jun 2021``; ``2021`` → ``2021``; empty → ``default``."""
+    if not value:
+        return default
+    parts = str(value).split("-")
+    year = parts[0]
+    if len(parts) >= 2 and parts[1].isdigit() and 1 <= int(parts[1]) <= 12:
+        return f"{_MONTHS[int(parts[1]) - 1]} {year}"
+    return year
+
+
+def _display_link(url: str) -> str:
+    for prefix in ("https://", "http://"):
+        if url.startswith(prefix):
+            url = url[len(prefix):]
+    return url.rstrip("/")
+
+
 def _entity_text(entity: dict) -> str:
     etype = entity["type"]
     if etype == "achievement":
         return entity.get("statement", "")
     if etype == "experience":
-        span = f"{entity.get('start_date', '')}–{entity.get('end_date') or 'present'}"
-        return f"{entity.get('title', '')}, {entity.get('organization', '')} ({span})".strip()
+        role = ", ".join(p for p in (entity.get("title"), entity.get("organization")) if p)
+        start = display_date(entity.get("start_date"), default="")
+        span = f"{start} – {display_date(entity.get('end_date'))}" if start else display_date(entity.get("end_date"))
+        return f"{role}\t{span}"
     if etype == "skill":
         return entity.get("name", "")
     if etype == "education":
@@ -51,9 +79,11 @@ def _entity_text(entity: dict) -> str:
     if etype == "project":
         return entity.get("name", "")
     if etype == "contact":
-        return " · ".join(
-            p for p in (entity.get("name"), entity.get("email"), entity.get("phone"), entity.get("location")) if p
-        )
+        details = [entity.get("location"), entity.get("phone"), entity.get("email")]
+        details += [_display_link(link["url"]) for link in entity.get("links") or [] if link.get("url")]
+        line = " · ".join(p for p in details if p)
+        name = entity.get("name", "")
+        return f"{name}\n{line}" if line else name
     return entity.get("name") or entity.get("title") or ""
 
 
@@ -77,8 +107,53 @@ def value_scores(mapping: list[dict], brief: dict | None) -> dict[str, int]:
     return scores
 
 
+def _home_role(entity: dict, by_id: dict, role_by_org: dict) -> str | None:
+    """The experience an achievement belongs under: its parent experience, or, for a
+    project achievement, the (most recent) experience at the project's organization."""
+    parent = by_id.get(entity.get("parent_id") or "")
+    if not parent:
+        return None
+    if parent["type"] == "experience":
+        return parent["id"]
+    if parent["type"] == "project":
+        return role_by_org.get(parent.get("organization") or "")
+    return None
+
+
+def _role_by_org(units: list[dict], by_id: dict) -> dict:
+    roles = [by_id[u["source_ids"][0]] for u in units if by_id.get(u["source_ids"][0], {}).get("type") == "experience"]
+    roles.sort(key=lambda e: e.get("start_date") or "", reverse=True)
+    mapping: dict = {}
+    for role in roles:
+        mapping.setdefault(role.get("organization") or "", role["id"])
+    return mapping
+
+
+def _chronological(units: list[dict], by_id: dict) -> list[dict]:
+    """Reverse-chronological roles, each followed by its own achievements (in emphasis
+    order); units with no role among those kept follow the last role."""
+    def entity_of(unit):
+        return by_id.get(unit["source_ids"][0], {})
+
+    roles = [u for u in units if entity_of(u).get("type") == "experience"]
+    if not roles:
+        return units
+    roles.sort(key=lambda u: entity_of(u).get("start_date") or "", reverse=True)
+    role_by_org = _role_by_org(units, by_id)
+    grouped = {u["source_ids"][0]: [u] for u in roles}
+    rest: list[dict] = []
+    for unit in units:
+        entity = entity_of(unit)
+        if entity.get("type") == "experience":
+            continue
+        home = _home_role(entity, by_id, role_by_org) if entity.get("type") == "achievement" else None
+        (grouped[home] if home in grouped else rest).append(unit)
+    return [u for role in roles for u in grouped[role["source_ids"][0]]] + rest
+
+
 def generate_plan(mapping: list[dict], profile: dict, template: dict, positioning: str,
                   *, voice=None, brief=None, baseline: bool = False) -> dict:
+    by_id = {e["id"]: e for e in profile["entities"]}
     if baseline:
         # A baseline has no target role: every visible entity is eligible evidence.
         cited = {e["id"] for e in profile["entities"] if _visible(e)}
@@ -93,7 +168,6 @@ def generate_plan(mapping: list[dict], profile: dict, template: dict, positionin
     values = value_scores(mapping, brief) if is_letter else {}
     units: list[dict] = []
     cuts: list[dict] = []
-    unit_no = 0
 
     for section in template["sections"]:
         types = set(section["entity_types"])
@@ -111,12 +185,11 @@ def generate_plan(mapping: list[dict], profile: dict, template: dict, positionin
         dropped = pool[max_items:] if max_items is not None else []
 
         for entity in kept:
-            unit_no += 1
             source_ids = [entity["id"]]
             if entity["type"] == "achievement" and entity.get("parent_id"):
                 source_ids.append(entity["parent_id"])
             units.append({
-                "unit_id": f"u{unit_no}",
+                "unit_id": "",
                 "section_id": section["id"],
                 "kind": _kind_for(entity, section),
                 "text": _entity_text(entity),
@@ -129,10 +202,33 @@ def generate_plan(mapping: list[dict], profile: dict, template: dict, positionin
     page_budget = template.get("page_budget", 2)
     per_page = template.get("units_per_page", _DEFAULT_UNITS_PER_PAGE)
     cap = page_budget * per_page
+
+    def protected(unit: dict) -> bool:
+        entity = by_id.get(unit["source_ids"][0], {})
+        if entity.get("type") == "contact":
+            return True
+        if entity.get("type") != "experience":
+            return False
+        role_by_org = _role_by_org(units, by_id)
+        return any(
+            _home_role(by_id.get(u["source_ids"][0], {}), by_id, role_by_org) == entity["id"]
+            for u in units if by_id.get(u["source_ids"][0], {}).get("type") == "achievement"
+        )
+
     while len(units) > cap:
-        idx = max(range(len(units)), key=lambda i: (_EMPHASIS_WEIGHT[units[i]["emphasis"]], i))
+        candidates = [i for i in range(len(units)) if not protected(units[i])] or list(range(len(units)))
+        idx = max(candidates, key=lambda i: (_EMPHASIS_WEIGHT[units[i]["emphasis"]], i))
         removed = units.pop(idx)
         cuts.append({"entity_id": removed["source_ids"][0], "reason": f"exceeds page budget of {page_budget}"})
+
+    ordered: list[dict] = []
+    for section in template["sections"]:
+        section_units = [u for u in units if u["section_id"] == section["id"]]
+        if not is_letter and {"experience", "achievement"} <= set(section["entity_types"]):
+            section_units = _chronological(section_units, by_id)
+        ordered.extend(section_units)
+    for number, unit in enumerate(ordered, start=1):
+        unit["unit_id"] = f"u{number}"
 
     return {
         "positioning": positioning,
@@ -140,7 +236,7 @@ def generate_plan(mapping: list[dict], profile: dict, template: dict, positionin
         "template": {"name": template.get("name"), "version": template.get("version")},
         "voice": voice,
         "page_budget": page_budget,
-        "units": units,
+        "units": ordered,
         "cuts": cuts,
     }
 

@@ -176,3 +176,23 @@ def test_cli_render_pdf_branch(tmp_path):
     assert outputs
     if shutil.which("soffice"):
         assert list((app / "outputs").glob("resume-*.pdf"))
+
+
+def test_build_context_exposes_contact_lines_and_unit_halves(tmp_path):
+    p = build_plan(tmp_path)
+    context = render.build_context(p, TEMPLATE_JSON)
+    assert context["contact_name"] == "Jordan Rivera"
+    assert context["contact"] == f"Jordan Rivera\n{context['contact_details']}"
+    assert "jordan.rivera@example.com" in context["contact_details"]
+    experience = next(s for s in context["sections"] if s["id"] == "experience")
+    role = next(u for u in experience["units"] if u["kind"] == "field")
+    assert "\t" not in role["head"] and role["tail"]  # role, then dates
+
+
+def test_render_puts_the_name_on_its_own_line(tmp_path):
+    p = build_plan(tmp_path)
+    out = tmp_path / "resume.docx"
+    render.render_document(p, TEMPLATE_JSON, TEMPLATE_DOCX, out)
+    lines = read_docx_text(out).splitlines()
+    assert lines[0] == "Jordan Rivera"
+    assert "jordan.rivera@example.com" in lines[1]

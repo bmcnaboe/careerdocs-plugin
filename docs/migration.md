@@ -55,7 +55,7 @@ present and `applicant_verified`.
 Draft `voice/voice.md` from the applicant's current documents and any brand or style
 guidance. Convert the current résumé DOCX into `templates/resume/template.docx` plus a
 `template.json` manifest — keep the styling, replace the content with the docxtpl
-placeholders (`{{ contact }}` and the `sections`/`units` loop), and set the page budget —
+placeholders (`{{ contact_name }}`, `{{ contact_details }}`, and the `sections`/`units` loop), and set the page budget —
 and derive a `templates/cover-letter/` template.
 
 ## 5. Generate and verify baselines

@@ -32,6 +32,13 @@ def stamp() -> str:
     return datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
 
 
+def _unit_context(unit: dict) -> dict:
+    # A tab splits a unit into a head and a tail (an experience unit's role and dates), so a
+    # template can style the two halves — a bold role, a right-aligned date — separately.
+    head, _, tail = unit["text"].partition("\t")
+    return {"text": unit["text"], "kind": unit["kind"], "head": head, "tail": tail}
+
+
 def build_context(plan: dict, template: dict) -> dict:
     by_section: dict[str, list] = defaultdict(list)
     for unit in plan["units"]:
@@ -45,10 +52,19 @@ def build_context(plan: dict, template: dict) -> dict:
             contact_text = units[0]["text"] if units else ""
             continue
         sections.append({
+            "id": section["id"],
             "title": section.get("title", ""),
-            "units": [{"text": u["text"], "kind": u["kind"]} for u in units],
+            "units": [_unit_context(u) for u in units],
         })
-    return {"contact": contact_text, "positioning": plan["positioning"], "sections": sections}
+    # The contact unit is two lines: the name, then the details line.
+    contact_name, _, contact_details = contact_text.partition("\n")
+    return {
+        "contact": contact_text,
+        "contact_name": contact_name,
+        "contact_details": contact_details,
+        "positioning": plan["positioning"],
+        "sections": sections,
+    }
 
 
 def render_document(plan: dict, template: dict, template_docx: Path, out_path: Path) -> None:

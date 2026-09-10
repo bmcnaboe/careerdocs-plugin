@@ -157,3 +157,51 @@ def test_gap_requirement_not_cited():
     result = plan.generate_plan(mp, profile_with([exp, unused]), template, "builder")
     cited = {sid for u in result["units"] for sid in u["source_ids"]}
     assert unused["id"] not in cited  # the gap's (absent) evidence never appears
+
+
+# --- unit text conventions and chronology ---
+
+RESUME_SECTION = {"id": "experience", "entity_types": ["experience", "achievement"], "max_items": 20}
+
+
+def test_contact_unit_is_name_then_details():
+    contact = entity("contact", name="A B", email="a@example.com", phone="(555) 555-0100",
+                     location="Metropolis, USA", links=[{"label": "GitHub", "url": "https://github.com/ab/"}])
+    assert plan._entity_text(contact) == "A B\nMetropolis, USA · (555) 555-0100 · a@example.com · github.com/ab"
+
+
+def test_experience_unit_separates_role_and_dates_with_a_tab():
+    exp = entity("experience", organization="Acme", title="Eng", start_date="2018-03", end_date="2021-06-15")
+    assert plan._entity_text(exp) == "Eng, Acme\tMar 2018 – Jun 2021"
+    current = entity("experience", organization="Acme", title="Eng", start_date="2022")
+    assert plan._entity_text(current) == "Eng, Acme\t2022 – present"
+
+
+def test_experience_section_is_reverse_chronological_with_achievements_under_their_role():
+    old = entity("experience", organization="Old", title="Eng", start_date="2015-01", positioning=["builder"])
+    new = entity("experience", organization="New", title="Lead", start_date="2020-01", positioning=["executive"])
+    old_win = entity("achievement", statement="Did old thing", parent_id=old["id"], positioning=["builder"])
+    new_win = entity("achievement", statement="Did new thing", parent_id=new["id"])
+    project = entity("project", name="Side", organization="New")
+    project_win = entity("achievement", statement="Shipped side", parent_id=project["id"], positioning=["builder"])
+    entities = [old, new, old_win, new_win, project, project_win]
+    template = {"name": "t", "version": "1", "page_budget": 2, "sections": [RESUME_SECTION]}
+    result = plan.generate_plan(map_all_direct(entities), profile_with(entities), template, "builder")
+    order = [u["source_ids"][0] for u in result["units"]]
+    # Newest role first despite builder positioning; each role's achievements follow it in
+    # emphasis order, and a project achievement sits under the role at its organization.
+    assert order == [new["id"], project_win["id"], new_win["id"], old["id"], old_win["id"]]
+    assert [u["unit_id"] for u in result["units"]] == ["u1", "u2", "u3", "u4", "u5"]
+
+
+def test_page_cap_never_cuts_the_contact_or_a_role_with_achievements():
+    contact = entity("contact", name="A B", email="a@example.com")
+    role = entity("experience", organization="Acme", title="Eng", start_date="2020-01")
+    wins = [entity("achievement", statement=f"Win {i}", parent_id=role["id"], positioning=["builder"]) for i in range(4)]
+    entities = [contact, role, *wins]
+    template = {"name": "t", "version": "1", "page_budget": 1, "units_per_page": 4, "sections": [
+        {"id": "header", "entity_types": ["contact"], "max_items": 1}, RESUME_SECTION]}
+    result = plan.generate_plan(map_all_direct(entities), profile_with(entities), template, "builder")
+    kept = [u["source_ids"][0] for u in result["units"]]
+    assert len(kept) == 4 and contact["id"] in kept and role["id"] in kept
+    assert len(result["cuts"]) == 2
