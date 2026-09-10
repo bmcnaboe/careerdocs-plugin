@@ -31,6 +31,9 @@ Write the letter as connected prose in the applicant's voice (`voice.md`):
   something you are growing into, or leave it out — never invent coverage.
 - **Frame the letter.** The greeting is the first body unit, cited to the contact entity;
   the template carries the sign-off (`Sincerely,` on its allowlist, then the name).
+- **Honor the approach.** When the brief carries an `approach`, its `letter_length`
+  (`note`, roughly 150 to 200 words; `page`, roughly 300 to 400), `tone`, and `avoid`
+  are the applicant's decisions; the page budget still governs.
 
 ## 4. Render
 

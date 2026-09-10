@@ -1,0 +1,3 @@
+name: Career Apply
+description: Guided interview that produces a complete application for one posting, orchestrating the update, resume, and cover-letter skills.
+allow_implicit_invocation: false

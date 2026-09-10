@@ -52,6 +52,7 @@ Give the invocation for the environment they are in:
 | Tailor a résumé | `/careerdocs:resume` | `$resume` | "tailor my résumé to this job description: …" |
 | Matching cover letter | `/careerdocs:cover-letter` | `$cover-letter` | "write the cover letter for that role" |
 | Record a change | `/careerdocs:update` | `$update` | "I just shipped X, add it to my profile" |
+| The whole application, guided | `/careerdocs:apply` | `$apply` | "apply to this posting: …" |
 
 In Cowork, a session must have the workspace folder attached; in Claude Code and Codex
 any folder works because the workspace is recorded.
@@ -75,6 +76,12 @@ checked so no résumé line is copied verbatim. Same folder.
 **Update.** For a new job, a new achievement, a certification, or a correction. The
 applicant states it; the flow records it with them as the source, proposes a diff, applies
 it after a yes, and reports which earlier documents are now stale.
+
+**Apply.** The guided path for one posting: it builds the brief and map, shows the fit
+and the keywords the profile lacks, asks which of those the applicant genuinely has (and
+records them through update, with a yes), agrees the approach in one exchange
+(positioning, lead evidence, what to compress, résumé length, letter length and tone,
+what to avoid), then produces both documents, checked, with the cuts and gaps reported.
 
 **Doctor.** "Run careerdocs doctor" shows the workspace, config, profile size, templates,
 voice, PDF converter, and dependencies at any time.
@@ -104,7 +111,8 @@ flow.
 
 ## 6. Common situations
 
-- **"I have a job description now."** Run the résumé flow; onboard is done.
+- **"I have a job description now."** Run apply for the guided path, or the résumé flow
+  alone; onboard is done.
 - **"I changed jobs" or "I got a certification."** Run update.
 - **"Something in my profile is wrong."** Run update and state the correction; it
   becomes a reviewed diff with the applicant as the source.

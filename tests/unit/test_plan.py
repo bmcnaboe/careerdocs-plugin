@@ -213,3 +213,11 @@ def test_role_summary_is_a_second_line_only_when_the_section_opts_in():
     assert plan._entity_text(exp, {"id": "experience", "entity_types": ["experience"]}) == "Eng, Acme\tMar 2018 – present"
     with_summary = plan._entity_text(exp, {"id": "experience", "entity_types": ["experience"], "role_summaries": True})
     assert with_summary == "Eng, Acme\tMar 2018 – present\nA fintech startup."
+
+
+def test_page_budget_override_caps_the_plan():
+    entities = [entity("experience", organization=f"Org{i}", title="Eng", start_date="2020-01") for i in range(5)]
+    template = {"name": "t", "version": "1", "page_budget": 2, "units_per_page": 2,
+                "sections": [{"id": "experience", "entity_types": ["experience"]}]}
+    result = plan.generate_plan(map_all_direct(entities), profile_with(entities), template, "builder", page_budget=1)
+    assert result["page_budget"] == 1 and len(result["units"]) == 2 and len(result["cuts"]) == 3

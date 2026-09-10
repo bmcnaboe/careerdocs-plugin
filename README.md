@@ -111,6 +111,7 @@ From then on, per application:
 | Tailor a résumé to a job description | `/careerdocs:resume` | `$resume` |
 | Write the matching cover letter | `/careerdocs:cover-letter` | `$cover-letter` |
 | Add a new achievement or correction to your profile | `/careerdocs:update` | `$update` |
+| The whole application for one posting, guided | `/careerdocs:apply` | `$apply` |
 
 Plain requests work too ("tailor my résumé to this job description: …"); the skill
 command is the reliable way to start a flow. "Run careerdocs doctor" shows what is
@@ -119,7 +120,7 @@ configured, including which workspace resolved and how.
 Everything it writes stays in your workspace; nothing about you is sent anywhere or stored
 in this repository.
 
-## The four flows
+## The five flows
 
 1. **Onboard / import** — inventory existing sources (resumes, exports, notes), extract
    candidate facts, reconcile them into one profile, and ask only the questions that
@@ -131,6 +132,9 @@ in this repository.
    checks.
 4. **Complementary cover letter** — reuse the brief and map to draft a letter that
    complements the resume rather than repeating it.
+5. **Apply** — a short guided interview that runs the three flows above for one posting:
+   fit and gaps, qualifications you confirm, an agreed approach (positioning, emphasis,
+   length, tone), then both documents checked and reported.
 
 ## The four authorities
 

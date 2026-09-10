@@ -101,3 +101,14 @@ def test_keyword_coverage_reports_literal_presence():
     assert rows["kubernetes"]["present"] and rows["kubernetes"]["requirement_ids"] == ["req-1", "req-2"]
     assert rows["platform"]["present"]
     assert not rows["terraform"]["present"]  # private entities do not count
+
+
+def test_brief_accepts_an_agreed_approach():
+    b = brief.generate_brief(JD.read_text())
+    b["approach"] = {"positioning": "executive", "lead_evidence": ["achievement_x"], "compress": ["Initech"],
+                     "resume_pages": 1, "letter_length": "note", "tone": "direct and warm", "avoid": ["salary"]}
+    assert brief.validate_brief(b) == []
+    b["approach"]["resume_pages"] = 0
+    assert brief.validate_brief(b)
+    b["approach"] = {"length": "short"}
+    assert brief.validate_brief(b)

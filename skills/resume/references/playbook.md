@@ -48,7 +48,10 @@ the applicant has not confirmed.
 
 Pick **executive** (leadership, scope, outcomes first) or **builder** (hands-on delivery
 first). The recommendation is in the brief; the applicant decides. Positioning changes
-what is emphasized and in what order — never the facts.
+what is emphasized and in what order — never the facts. An agreed approach recorded on
+the brief (`approach`: positioning, lead evidence, what to compress, résumé pages, what
+to avoid) is the applicant's decision already made; `plan` reads its positioning and
+`resume_pages`, and the drafting step follows the rest.
 
 ## 4. Plan
 
@@ -56,9 +59,10 @@ what is emphasized and in what order — never the facts.
 careerdocs plan --positioning <executive|builder> --kind resume --role-slug <slug> --workspace <dir> --json
 ```
 
-Selects and orders evidence within the template's page budget and lists cuts. Review the
-cut list; if something important was cut, adjust emphasis (positioning) or the template
-budget rather than inflating claims.
+Selects and orders evidence within the page budget — `--page-budget` for this plan, else
+the brief's `approach.resume_pages`, else the template's — and lists cuts. Review the cut
+list; if something important was cut, adjust emphasis (positioning) or the budget rather
+than inflating claims.
 
 ## 5. Draft in voice
 

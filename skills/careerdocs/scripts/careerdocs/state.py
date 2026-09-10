@@ -17,7 +17,7 @@ from . import config as config_module
 from . import util
 from .errors import CareerDocsError
 
-FLOWS = ("onboard", "update", "resume", "cover_letter")
+FLOWS = ("onboard", "update", "resume", "cover_letter", "apply")
 
 
 def state_path(workspace, cfg: dict, flow: str, subject: str) -> Path:
@@ -118,6 +118,7 @@ def register(subparsers, common: argparse.ArgumentParser) -> None:
     _flow_subject(answer)
     answer.add_argument("--question", required=True)
     answer.add_argument("--answer", required=True)
+    answer.add_argument("--text", help="the question's wording, when recording one the CLI did not generate")
     answer.set_defaults(func=cmd_answer)
 
     resume = actions.add_parser("resume", parents=[common], help="show what remains to resume")
@@ -146,6 +147,10 @@ def cmd_show(args) -> int:
 
 def cmd_answer(args) -> int:
     path, state = get_or_create(args.workspace, _cfg(args), args.flow, args.subject)
+    # An interview question the agent asked (not one the CLI generated) is recorded on
+    # first answer, so a resumed flow sees it as asked and answered.
+    if not already_asked(state, args.question):
+        add_question(state, args.question, args.text or args.question)
     answer_question(state, args.question, args.answer)
     save_state(path, state)
     print(json.dumps({"answered": args.question}) if args.json else f"recorded answer to {args.question}")

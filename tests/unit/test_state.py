@@ -92,3 +92,15 @@ def test_cli_answer_then_resume(tmp_path, capsys):
     assert cli.main(["state", "resume", "onboard", "default", "--workspace", str(tmp_path), "--json"]) == 0
     resume = json.loads(capsys.readouterr().out)
     assert resume["unanswered"] == []
+
+
+def test_state_answer_records_an_interview_question_for_apply(tmp_path, capsys):
+    ws = str(tmp_path)
+    assert cli.main(["state", "answer", "apply", "acme-cto", "--question", "role", "--text", "Organization, role, slug",
+                     "--answer", "Acme — CTO (acme-cto)", "--workspace", ws]) == 0
+    capsys.readouterr()
+    assert cli.main(["state", "resume", "apply", "acme-cto", "--workspace", ws, "--json"]) == 0
+    pending = json.loads(capsys.readouterr().out)
+    assert pending["unanswered"] == []
+    st = state.load_state(state.state_path(tmp_path, CFG, "apply", "acme-cto"))
+    assert st["questions"][0] == {**st["questions"][0], "id": "role", "text": "Organization, role, slug", "answer": "Acme — CTO (acme-cto)"}

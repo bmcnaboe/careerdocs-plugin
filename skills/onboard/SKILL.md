@@ -133,7 +133,7 @@ what careerdocs is, how to get materials in (LinkedIn export steps and the profi
 alternative), how each flow is invoked in this environment and what it needs at hand,
 where things live in the workspace, privacy, and the common situations. Adapt it: a
 first-run applicant gets the whole arc; a returning one gets the parts that match what
-they have and what is missing. Then offer to run the résumé flow right away if they have
+they have and what is missing. Then offer to run the apply flow right away if they have
 a job description at hand.
 
 ## Guardrails

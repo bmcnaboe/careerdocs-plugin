@@ -162,7 +162,7 @@ def _chronological(units: list[dict], by_id: dict) -> list[dict]:
 
 
 def generate_plan(mapping: list[dict], profile: dict, template: dict, positioning: str,
-                  *, voice=None, brief=None, baseline: bool = False) -> dict:
+                  *, voice=None, brief=None, baseline: bool = False, page_budget: int | None = None) -> dict:
     by_id = {e["id"]: e for e in profile["entities"]}
     if baseline:
         # A baseline has no target role: every visible entity is eligible evidence.
@@ -209,7 +209,7 @@ def generate_plan(mapping: list[dict], profile: dict, template: dict, positionin
         for entity in dropped:
             cuts.append({"entity_id": entity["id"], "reason": f"exceeds {section['id']} budget of {max_items}"})
 
-    page_budget = template.get("page_budget", 2)
+    page_budget = page_budget or template.get("page_budget", 2)
     per_page = template.get("units_per_page", _DEFAULT_UNITS_PER_PAGE)
     cap = page_budget * per_page
 
@@ -271,6 +271,8 @@ def register(subparsers, common: argparse.ArgumentParser) -> None:
     parser.add_argument("--kind", choices=["resume", "cover_letter"], default="resume")
     parser.add_argument("--role-slug")
     parser.add_argument("--baseline", action="store_true", help="role-less baseline from all visible evidence")
+    parser.add_argument("--page-budget", type=int, metavar="PAGES",
+                        help="pages for this plan (default: the brief's approach, then the template)")
     parser.set_defaults(func=cmd_plan)
 
 
@@ -297,13 +299,14 @@ def _resolve_slug(args, cfg: dict) -> str:
 
 def cmd_plan(args) -> int:
     cfg = config_module.resolve_config(args.workspace)
-    positioning = args.positioning or cfg["workflow"]["positioning_default"]
     profile = load_provider(args.workspace, cfg).read()
     template = load_template(args.workspace, cfg, args.kind)
 
     if args.baseline:
+        positioning = args.positioning or cfg["workflow"]["positioning_default"]
         plan = generate_plan([], profile, template, positioning,
-                             voice={"path": cfg["voice"]["path"]}, baseline=True)
+                             voice={"path": cfg["voice"]["path"]}, baseline=True,
+                             page_budget=args.page_budget)
         out_dir = Path(args.workspace) / cfg["outputs"]["baselines_dir"] / positioning
     else:
         slug = _resolve_slug(args, cfg)
@@ -311,8 +314,12 @@ def cmd_plan(args) -> int:
         mapping = json.loads((app_dir / "map.json").read_text(encoding="utf-8"))
         brief_path = app_dir / "brief.json"
         brief = json.loads(brief_path.read_text(encoding="utf-8")) if brief_path.is_file() else None
+        # The agreed approach on the brief supplies the defaults; flags override it.
+        approach = (brief or {}).get("approach") or {}
+        positioning = args.positioning or approach.get("positioning") or cfg["workflow"]["positioning_default"]
+        page_budget = args.page_budget or (approach.get("resume_pages") if args.kind == "resume" else None)
         plan = generate_plan(mapping, profile, template, positioning,
-                             voice={"path": cfg["voice"]["path"]}, brief=brief)
+                             voice={"path": cfg["voice"]["path"]}, brief=brief, page_budget=page_budget)
         out_dir = app_dir
 
     errors = validate_plan(plan, template)

@@ -1,6 +1,6 @@
 ---
 name: careerdocs
-description: Core conventions and the careerdocs CLI shared by the careerdocs flows (onboard, update, resume, cover letter). Consult this skill for how the four authorities (qualifications, voice, templates, target role) are modeled and located, how flow skills invoke the careerdocs CLI, the diff-then-approve rule for every profile change, visibility semantics, and where workflow state and generated outputs live. Load it before running any careerdocs command or when a flow skill references a convention it does not restate.
+description: Core conventions and the careerdocs CLI shared by the careerdocs flows (onboard, update, resume, cover letter, apply). Consult this skill for how the four authorities (qualifications, voice, templates, target role) are modeled and located, how flow skills invoke the careerdocs CLI, the diff-then-approve rule for every profile change, visibility semantics, and where workflow state and generated outputs live. Load it before running any careerdocs command or when a flow skill references a convention it does not restate.
 license: MIT
 user-invocable: false
 compatibility: "Python 3.10+; uv recommended (uv run), python3 fallback. Offline except optional link checks. Optional LibreOffice (soffice) for PDF conversion."
@@ -11,10 +11,11 @@ metadata:
 
 # careerdocs
 
-Shared conventions and the `careerdocs` CLI behind four flows: **onboard**, **update**,
-**resume**, **cover-letter**. The flow skills own the
-conversation; this skill owns the rules they all obey and the deterministic commands they
-all call. Read it before running any `careerdocs` command.
+Shared conventions and the `careerdocs` CLI behind five flows: **onboard**, **update**,
+**resume**, **cover-letter**, and **apply**, which orchestrates the last three through a
+guided interview. The flow skills own the conversation; this skill owns the rules they all
+obey and the deterministic commands they all call. Read it before running any
+`careerdocs` command.
 
 ## The four authorities
 
