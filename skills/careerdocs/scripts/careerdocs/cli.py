@@ -115,6 +115,35 @@ def cmd_version(args: argparse.Namespace) -> int:
     return 0
 
 
+# Headings résumé parsers recognise; anything else is reported by doctor as advice.
+STANDARD_SECTION_TITLES = frozenset({
+    "", "Summary", "Experience", "Projects", "Skills", "Technical Skills", "Education",
+    "Patents", "Publications", "Certifications", "Awards",
+})
+
+
+def template_advisories(workspace: Path, cfg: dict) -> list[str]:
+    """Non-failing advice about the templates: a section title an automated résumé parser
+    is unlikely to recognise."""
+    advisories: list[str] = []
+    templates_dir = workspace / cfg["templates"]["dir"]
+    for label, key in (("resume", "resume"), ("cover letter", "cover_letter")):
+        manifest_path = templates_dir / cfg["templates"][key] / "template.json"
+        if not manifest_path.is_file():
+            continue
+        try:
+            sections = json.loads(manifest_path.read_text(encoding="utf-8")).get("sections", [])
+        except (json.JSONDecodeError, AttributeError):
+            continue
+        for section in sections:
+            title = section.get("title", "")
+            if title not in STANDARD_SECTION_TITLES:
+                advisories.append(
+                    f"template ({label}): section title {title!r} is not a heading résumé parsers "
+                    f"key on (Experience, Projects, Skills, Education, ...)")
+    return advisories
+
+
 def cmd_doctor(args: argparse.Namespace) -> int:
     from . import config as config_module
     from .providers import load_provider
@@ -166,6 +195,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
         "converter": {"soffice": shutil.which("soffice") is not None},
         "dependencies": dependency_status(),
         "python": platform.python_version(),
+        "advisories": template_advisories(workspace, cfg),
     }
     if args.json:
         print(json.dumps(report, indent=2))
@@ -179,6 +209,8 @@ def cmd_doctor(args: argparse.Namespace) -> int:
               + (f"reachable, {prov['entities']} entities" if prov["reachable"] else f"UNREACHABLE: {prov['error']}"))
         print(f"template (resume): {'present' if templates['resume'] else 'missing'}")
         print(f"template (cover letter): {'present' if templates['cover_letter'] else 'missing'}")
+        for advice in report["advisories"]:
+            print(f"advice: {advice}")
         print(f"voice ({voice['path']}): {'present' if voice['present'] else 'missing'}")
         print(f"PDF converter (soffice): {'found' if report['converter']['soffice'] else 'not found'}")
         for name, present in report["dependencies"].items():

@@ -28,15 +28,18 @@ Full detail in `references/playbook.md`.
    nuance; validate with `brief --validate`.
 2. **`map`** — for each requirement, the CLI proposes evidence and a classification. Apply
    real judgement: **direct** (the profile clearly meets it), **transferable** (adjacent
-   experience), or **gap** (no honest support). A gap carries no evidence.
+   experience), or **gap** (no honest support). A gap carries no evidence. Then
+   `brief --coverage` lists requirement keywords the profile lacks: reword a synonym with
+   the posting's term; add a genuinely held skill only through the update flow with the
+   applicant's yes; leave the rest.
 3. **Choose positioning** — executive or builder (default from config). This changes
    selection and emphasis, never the facts.
 4. **`plan --positioning <mode>`** — select, order, and emphasize evidence within the
    template's page budget; anything over budget is cut and reported.
 5. **Draft units in voice** — rewrite each unit's text in the applicant's voice
    (`voice.md`), keeping every claim traceable to its `source_ids`.
-6. **`render --kind resume [--pdf]`** — fill the template; a timestamped file is written,
-   never overwriting.
+6. **`render --kind resume [--pdf]`** — fill the template; the document is written as
+   `<Name>-Resume.docx`, and any previous render is rotated to a `_bak1` suffix.
 7. **`check <document>`** — run the five checks (factual, links/dates, extraction,
    pagination, layout) and write the output record.
 8. **Report cuts and gaps** — tell the applicant what was cut for space and which

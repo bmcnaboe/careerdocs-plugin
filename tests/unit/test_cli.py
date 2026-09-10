@@ -93,3 +93,15 @@ def test_entry_point_runs_as_script():
     )
     assert result.returncode == 0
     assert json.loads(result.stdout)["careerdocs"] == __version__
+
+
+def test_doctor_advises_on_non_standard_section_titles(tmp_path, capsys):
+    cli.main(["config", "init", "--workspace", str(tmp_path)])
+    manifest = tmp_path / "templates" / "resume" / "template.json"
+    manifest.parent.mkdir(parents=True)
+    manifest.write_text(json.dumps({"sections": [
+        {"id": "experience", "title": "Experience"}, {"id": "skills", "title": "Technical Focus"}]}), encoding="utf-8")
+    capsys.readouterr()
+    assert cli.main(["doctor", "--workspace", str(tmp_path), "--json"]) == 0
+    report = json.loads(capsys.readouterr().out)
+    assert len(report["advisories"]) == 1 and "Technical Focus" in report["advisories"][0]

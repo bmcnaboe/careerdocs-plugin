@@ -92,3 +92,12 @@ def test_config_validate_schema_violation_exits_2(tmp_path):
         encoding="utf-8",
     )
     assert cli.main(["config", "validate", "--workspace", str(tmp_path)]) == 2
+
+
+def test_file_name_pattern_is_configurable(tmp_path):
+    from careerdocs import config as config_module
+
+    assert config_module.default_config()["outputs"]["file_name"] == "{name}-{kind}"
+    (tmp_path / "careerdocs.json").write_text(
+        '{"version": "1", "outputs": {"file_name": "{name}-{kind}-{org}"}}', encoding="utf-8")
+    assert config_module.resolve_config(tmp_path)["outputs"]["file_name"] == "{name}-{kind}-{org}"

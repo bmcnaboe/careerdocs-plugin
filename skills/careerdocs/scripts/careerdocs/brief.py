@@ -4,8 +4,11 @@
 kind), pulls keywords, and recommends a positioning mode, writing
 ``<applications_dir>/<slug>/brief.json``. The agent fills in the organization, role, and
 any nuance; ``brief --validate <brief.json>`` checks the completed brief against the schema
-and its invariants. Deterministic and offline; a URL job description is saved to a file
-first, then passed in.
+and its invariants. ``brief --coverage <brief.json>`` reports which requirement keywords
+appear literally in the visible profile and which do not — a prompt for judgement (a
+synonym to reword, or a genuinely held skill to add through the update flow with the
+applicant's yes), never an automatic addition. Deterministic and offline; a URL job
+description is saved to a file first, then passed in.
 """
 
 from __future__ import annotations
@@ -19,6 +22,7 @@ from pathlib import Path
 from . import config as config_module
 from . import ids, schema, util
 from .errors import CareerDocsError
+from .plan import is_visible
 
 _STOPWORDS = {
     "the", "and", "for", "with", "you", "our", "your", "will", "are", "has", "have",
@@ -108,6 +112,26 @@ def generate_brief(jd_text: str, source: dict | None = None) -> dict:
     }
 
 
+_CONTENT_FIELDS = ("name", "title", "headline", "organization", "location", "statement", "summary",
+                   "degree", "field_of_study", "role", "venue", "level")
+
+
+def keyword_coverage(brief: dict, profile: dict) -> list[dict]:
+    """Each requirement keyword, whether it appears literally (case-insensitive) in the
+    visible profile's content fields, and the requirements that use it."""
+    blob = " ".join(
+        str(entity.get(field) or "")
+        for entity in profile["entities"] if is_visible(entity)
+        for field in _CONTENT_FIELDS
+    ).lower()
+    rows: dict[str, dict] = {}
+    for requirement in brief["requirements"]:
+        for keyword in requirement.get("keywords", []):
+            row = rows.setdefault(keyword.lower(), {"keyword": keyword, "present": keyword.lower() in blob, "requirement_ids": []})
+            row["requirement_ids"].append(requirement["id"])
+    return list(rows.values())
+
+
 def validate_brief(brief: dict) -> list[str]:
     errors = [f"schema: {e}" for e in schema.validate_against("role-brief", brief)]
     if errors:
@@ -128,6 +152,8 @@ def register(subparsers, common: argparse.ArgumentParser) -> None:
     parser.add_argument("input", help="job-description file, or a brief.json with --validate")
     parser.add_argument("--role-slug", help="application slug (default: derived from the path)")
     parser.add_argument("--validate", action="store_true", help="validate a completed brief")
+    parser.add_argument("--coverage", action="store_true",
+                        help="report which of a brief's requirement keywords the profile lacks")
     parser.set_defaults(func=cmd_brief)
 
 
@@ -153,6 +179,20 @@ def cmd_brief(args) -> int:
         if errors:
             raise CareerDocsError("role brief is invalid", exit_code=1)
         print(json.dumps({"valid": True}) if args.json else "role brief is valid")
+        return 0
+
+    if args.coverage:
+        from .providers import load_provider
+
+        brief = json.loads(input_path.read_text(encoding="utf-8"))
+        rows = keyword_coverage(brief, load_provider(args.workspace, cfg).read())
+        missing = [row for row in rows if not row["present"]]
+        if args.json:
+            print(json.dumps({"keywords": rows, "missing": [row["keyword"] for row in missing]}))
+        else:
+            print(f"{len(rows) - len(missing)} of {len(rows)} requirement keyword(s) appear in the profile")
+            for row in missing:
+                print(f"missing: {row['keyword']} ({', '.join(row['requirement_ids'])})")
         return 0
 
     jd_text = input_path.read_text(encoding="utf-8")

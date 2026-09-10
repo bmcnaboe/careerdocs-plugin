@@ -23,6 +23,7 @@ Validated against `assets/schemas/config.schema.json`.
 | `voice.path` | `voice/voice.md` | The applicant's voice profile. |
 | `outputs.applications_dir` | `applications` | Per-role application folders. |
 | `outputs.baselines_dir` | `baselines` | Generated baseline documents. |
+| `outputs.file_name` | `{name}-{kind}` | Rendered document name; placeholders `{name}` (the contact's name), `{kind}` (`Resume` / `Cover-Letter`), `{org}` (the brief's organization), `{slug}`. The newest render carries this name; the previous one is rotated to a `_bak1` suffix. |
 | `workflow.state_dir` | `.careerdocs/state` | Resumable workflow state. |
 | `workflow.positioning_default` | `builder` | Default positioning (`executive` or `builder`). |
 | `workflow.page_budget.resume` | `2` | Résumé page budget. |
@@ -65,7 +66,7 @@ the config.
   "providers": { "authoritative": "markdown", "markdown": { "path": "profile" } },
   "templates": { "dir": "templates", "resume": "resume", "cover_letter": "cover-letter" },
   "voice": { "path": "voice/voice.md" },
-  "outputs": { "applications_dir": "applications", "baselines_dir": "baselines" },
+  "outputs": { "applications_dir": "applications", "baselines_dir": "baselines", "file_name": "{name}-{kind}" },
   "workflow": { "positioning_default": "builder", "page_budget": { "resume": 2, "cover_letter": 1 } }
 }
 ```

@@ -109,8 +109,9 @@ Relative to the workspace, under the configured directories (defaults shown):
 - Sources ledger: `sources.jsonl`; approvals: `approvals.jsonl`; diffs: `diffs/`.
 - Application artifacts: `applications/<role-slug>/` — `brief.json`, `map.json`,
   `plan.json`.
-- Rendered documents and their records: `outputs/` (`<file>.docx`, `.pdf`,
-  `.record.json`).
+- Rendered documents and their records: `outputs/` (`<Name>-<Kind>.docx`, `.pdf`,
+  `.record.json`; the pattern is `outputs.file_name`). The newest render carries the
+  plain name; the previous one is rotated to a `_bak1` suffix, never overwritten.
 - Generated baselines: `baselines/<positioning>/`.
 - Workflow state: `.careerdocs/state/<flow>/<subject>.json` — append-only
   questions, the pending diff, and artifact paths, so any flow resumes without repeating

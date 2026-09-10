@@ -167,7 +167,7 @@ RESUME_SECTION = {"id": "experience", "entity_types": ["experience", "achievemen
 def test_contact_unit_is_name_then_details():
     contact = entity("contact", name="A B", email="a@example.com", phone="(555) 555-0100",
                      location="Metropolis, USA", links=[{"label": "GitHub", "url": "https://github.com/ab/"}])
-    assert plan._entity_text(contact) == "A B\nMetropolis, USA · (555) 555-0100 · a@example.com · github.com/ab"
+    assert plan._entity_text(contact) == "A B\nMetropolis, USA · (555) 555-0100 · a@example.com · https://github.com/ab/"
 
 
 def test_experience_unit_separates_role_and_dates_with_a_tab():
@@ -205,3 +205,10 @@ def test_page_cap_never_cuts_the_contact_or_a_role_with_achievements():
     kept = [u["source_ids"][0] for u in result["units"]]
     assert len(kept) == 4 and contact["id"] in kept and role["id"] in kept
     assert len(result["cuts"]) == 2
+
+
+def test_role_summary_is_a_second_line_only_when_the_section_opts_in():
+    exp = entity("experience", organization="Acme", title="Eng", start_date="2018-03", summary="A fintech startup.")
+    assert plan._entity_text(exp, {"id": "experience", "entity_types": ["experience"]}) == "Eng, Acme\tMar 2018 – present"
+    with_summary = plan._entity_text(exp, {"id": "experience", "entity_types": ["experience"], "role_summaries": True})
+    assert with_summary == "Eng, Acme\tMar 2018 – present\nA fintech startup."

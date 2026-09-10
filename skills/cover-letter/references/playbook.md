@@ -41,7 +41,7 @@ careerdocs render --kind cover_letter --pdf --role-slug <slug> --workspace <dir>
 ## 5. Check
 
 ```sh
-careerdocs check applications/<slug>/outputs/<letter>.docx --workspace <dir>
+careerdocs check applications/<slug>/outputs/<Name>-Cover-Letter.docx --workspace <dir>
 ```
 
 Runs the standard checks, and the verbatim-bullet check: no résumé bullet may appear

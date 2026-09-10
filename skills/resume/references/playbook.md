@@ -31,6 +31,19 @@ judgement and edit `map.json`:
 
 Validate: `careerdocs map --validate applications/<slug>/map.json`.
 
+## 2b. Keyword coverage
+
+```sh
+careerdocs brief applications/<slug>/brief.json --coverage --workspace <dir> --json
+```
+
+Lists each requirement keyword the visible profile does not contain literally. Automated
+screeners match words, so judge each miss: a synonym of existing evidence is reworded with
+the posting's term when drafting (the fact does not change); a skill the applicant
+genuinely has but the profile lacks goes through the update flow — statement provenance,
+their explicit yes — and then `map` again; anything else stays absent. Never add a keyword
+the applicant has not confirmed.
+
 ## 3. Choose positioning
 
 Pick **executive** (leadership, scope, outcomes first) or **builder** (hands-on delivery
@@ -51,7 +64,9 @@ budget rather than inflating claims.
 
 Rewrite each unit's `text` in the applicant's voice (`voice.md`): verb-first, concrete,
 no banned phrases. Every claim must still trace to the unit's `source_ids`. Do not add a
-fact that is not in the profile.
+fact that is not in the profile. Keep a role line as `Title, Organization<tab>dates`, with
+any descriptor on the role's summary line (`role_summaries` in the manifest), never inside
+the role line: parsers read the whole line as the title and company.
 
 ## 6. Render
 
@@ -59,13 +74,15 @@ fact that is not in the profile.
 careerdocs render --kind resume --pdf --role-slug <slug> --workspace <dir>
 ```
 
-Writes a timestamped `.docx` (and `.pdf` when LibreOffice is present) and an output
-record skeleton. Never overwrites a previous render.
+Writes `<Name>-Resume.docx` (and `.pdf` when LibreOffice is present) and an output record
+skeleton. A previous render of that name is rotated to a `_bak1` suffix (`_bak1` to
+`_bak2`, and so on) with its PDF, record, and layout renders, so nothing is lost and the
+newest document always carries the plain name.
 
 ## 7. Check
 
 ```sh
-careerdocs check applications/<slug>/outputs/<file>.docx --workspace <dir>
+careerdocs check applications/<slug>/outputs/<Name>-Resume.docx --workspace <dir>
 ```
 
 Runs factual, links/dates, extraction, pagination, and layout. Fix any failure at its

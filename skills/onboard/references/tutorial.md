@@ -108,6 +108,10 @@ flow.
 - **"I changed jobs" or "I got a certification."** Run update.
 - **"Something in my profile is wrong."** Run update and state the correction; it
   becomes a reviewed diff with the applicant as the source.
+- **"The posting uses words my profile doesn't."** Name skills the way postings do —
+  the literal tool, method, and model names — when confirming candidates, and the
+  résumé flow's keyword coverage will ask about any requirement keyword the profile
+  still lacks; only a skill you confirm is added.
 - **"I want a different résumé design."** Restyle `templates/resume/template.docx`
   freely as long as the placeholders stay; `docs/templates-and-voice.md` in the plugin
   explains the placeholder loop, and the sanitized examples under `examples/applicant/`

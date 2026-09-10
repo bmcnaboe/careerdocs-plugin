@@ -56,8 +56,19 @@ def test_render_omits_gap_requirement_content(tmp_path):
     assert "medical device" not in text
 
 
-def test_stamped_output_naming():
-    assert render.stamp().endswith("Z") and "T" in render.stamp()
+def test_document_stem_from_contact_and_kind(tmp_path):
+    p = build_plan(tmp_path)
+    assert render.slugify("Jordan Q. Rivera-Smith") == "Jordan-Q-Rivera-Smith"
+    assert render.document_stem(p, TEMPLATE_JSON, "resume", "{name}-{kind}") == "Jordan-Rivera-Resume"
+    assert render.document_stem(p, TEMPLATE_JSON, "cover_letter", "{name}-{kind}-{org}", org="Globex Corp") == "Jordan-Rivera-Cover-Letter-Globex-Corp"
+    # An empty placeholder never leaves a dangling hyphen.
+    assert render.document_stem(p, TEMPLATE_JSON, "resume", "{name}-{kind}-{org}") == "Jordan-Rivera-Resume"
+
+
+def test_unit_context_splits_role_dates_and_note():
+    unit = {"text": "Eng, Acme\tMar 2018 – Jun 2021\nA fintech startup.", "kind": "field"}
+    context = render._unit_context(unit)
+    assert (context["head"], context["tail"], context["note"]) == ("Eng, Acme", "Mar 2018 – Jun 2021", "A fintech startup.")
 
 
 def test_build_record_shape(tmp_path):
@@ -97,9 +108,47 @@ def test_cli_render_writes_docx_and_record(tmp_path, capsys):
     assert rc == 0
     out = json.loads(capsys.readouterr().out)
     doc = Path(out["document"])
-    assert doc.exists() and doc.name.startswith("resume-")
+    assert doc.exists() and doc.name == "Jordan-Rivera-Resume.docx"
     record = json.loads(Path(out["record"]).read_text())
     assert record["kind"] == "resume" and record["source_ids"]
+
+
+def test_render_rotates_the_previous_render(tmp_path, capsys):
+    from careerdocs import cli
+
+    ws = str(tmp_path)
+    cli.main(["config", "init", "--workspace", ws])
+    dest = tmp_path / "templates" / "resume"
+    dest.mkdir(parents=True)
+    shutil.copy(TEMPLATE_DOCX, dest / "template.docx")
+    shutil.copy(TEMPLATE_DIR / "template.json", dest / "template.json")
+    p = build_plan(tmp_path)
+    app = tmp_path / "applications" / "example-role"
+    app.mkdir(parents=True)
+    (app / "plan.json").write_text(json.dumps(p), encoding="utf-8")
+    outputs = app / "outputs"
+    argv = ["render", "--kind", "resume", "--role-slug", "example-role", "--workspace", ws, "--json"]
+
+    assert cli.main(argv) == 0
+    (outputs / "layout").mkdir()
+    (outputs / "layout" / "Jordan-Rivera-Resume-p1.png").write_bytes(b"png")
+    first = (outputs / "Jordan-Rivera-Resume.docx").read_bytes()
+    capsys.readouterr()
+
+    assert cli.main(argv) == 0
+    assert cli.main(argv) == 0
+    names = sorted(f.name for f in outputs.iterdir() if f.is_file())
+    assert names == sorted([
+        "Jordan-Rivera-Resume.docx", "Jordan-Rivera-Resume.record.json",
+        "Jordan-Rivera-Resume_bak1.docx", "Jordan-Rivera-Resume_bak1.record.json",
+        "Jordan-Rivera-Resume_bak2.docx", "Jordan-Rivera-Resume_bak2.record.json",
+    ])
+    # The oldest render is now _bak2, its layout render moved with it, and its record
+    # points at its new path; the newest carries the plain name.
+    assert (outputs / "Jordan-Rivera-Resume_bak2.docx").read_bytes() == first
+    assert (outputs / "layout" / "Jordan-Rivera-Resume_bak2-p1.png").exists()
+    record = json.loads((outputs / "Jordan-Rivera-Resume_bak2.record.json").read_text())
+    assert record["document"] == str(outputs / "Jordan-Rivera-Resume_bak2.docx")
 
 
 COVER_DIR = ROOT / "examples" / "applicant" / "templates" / "cover-letter"
@@ -172,10 +221,9 @@ def test_cli_render_pdf_branch(tmp_path):
 
     rc = cli.main(["render", "--kind", "resume", "--role-slug", "example-role", "--pdf", "--workspace", ws])
     assert rc == 0
-    outputs = list((app / "outputs").glob("resume-*.docx"))
-    assert outputs
+    assert (app / "outputs" / "Jordan-Rivera-Resume.docx").exists()
     if shutil.which("soffice"):
-        assert list((app / "outputs").glob("resume-*.pdf"))
+        assert (app / "outputs" / "Jordan-Rivera-Resume.pdf").exists()
 
 
 def test_build_context_exposes_contact_lines_and_unit_halves(tmp_path):

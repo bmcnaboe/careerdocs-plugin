@@ -9,7 +9,8 @@ any fact.
 
 Unit text follows two conventions the templates rely on: the contact unit is two lines
 (the name, then the details line), and an experience unit separates the role from its
-dates with a tab. A résumé's experience section is reverse-chronological, each role
+dates with a tab, followed, when the section sets ``role_summaries``, by the role's summary
+on a second line. A résumé's experience section is reverse-chronological, each role
 followed by its own achievements; positioning orders the achievements within a role and
 every section outside the chronology. The contact unit and a role that still has
 achievements in the plan are never cut for the page budget.
@@ -32,7 +33,7 @@ _DEFAULT_UNITS_PER_PAGE = 12
 _MONTHS = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
 
 
-def _visible(entity: dict) -> bool:
+def is_visible(entity: dict) -> bool:
     return entity.get("visibility") != "private" and entity.get("verification") != "unverified"
 
 
@@ -56,14 +57,7 @@ def display_date(value, *, default: str = "present") -> str:
     return year
 
 
-def _display_link(url: str) -> str:
-    for prefix in ("https://", "http://"):
-        if url.startswith(prefix):
-            url = url[len(prefix):]
-    return url.rstrip("/")
-
-
-def _entity_text(entity: dict) -> str:
+def _entity_text(entity: dict, section: dict | None = None) -> str:
     etype = entity["type"]
     if etype == "achievement":
         return entity.get("statement", "")
@@ -71,7 +65,13 @@ def _entity_text(entity: dict) -> str:
         role = ", ".join(p for p in (entity.get("title"), entity.get("organization")) if p)
         start = display_date(entity.get("start_date"), default="")
         span = f"{start} – {display_date(entity.get('end_date'))}" if start else display_date(entity.get("end_date"))
-        return f"{role}\t{span}"
+        text = f"{role}\t{span}"
+        # A section that opts in (``role_summaries``) carries the role's summary as a second
+        # line, so the descriptor sits under the role line rather than inside it.
+        summary = (entity.get("summary") or "").strip()
+        if section and section.get("role_summaries") and summary:
+            text += "\n" + summary
+        return text
     if etype == "skill":
         return entity.get("name", "")
     if etype == "education":
@@ -80,7 +80,7 @@ def _entity_text(entity: dict) -> str:
         return entity.get("name", "")
     if etype == "contact":
         details = [entity.get("location"), entity.get("phone"), entity.get("email")]
-        details += [_display_link(link["url"]) for link in entity.get("links") or [] if link.get("url")]
+        details += [link["url"] for link in entity.get("links") or [] if link.get("url")]
         line = " · ".join(p for p in details if p)
         name = entity.get("name", "")
         return f"{name}\n{line}" if line else name
@@ -156,7 +156,7 @@ def generate_plan(mapping: list[dict], profile: dict, template: dict, positionin
     by_id = {e["id"]: e for e in profile["entities"]}
     if baseline:
         # A baseline has no target role: every visible entity is eligible evidence.
-        cited = {e["id"] for e in profile["entities"] if _visible(e)}
+        cited = {e["id"] for e in profile["entities"] if is_visible(e)}
     else:
         cited = {
             ev["entity_id"]
@@ -173,7 +173,7 @@ def generate_plan(mapping: list[dict], profile: dict, template: dict, positionin
         types = set(section["entity_types"])
         pool = [
             e for e in profile["entities"]
-            if e["type"] in types and _visible(e) and (e["id"] in cited or e["type"] == "contact")
+            if e["type"] in types and is_visible(e) and (e["id"] in cited or e["type"] == "contact")
         ]
         if is_letter:
             # A cover letter leads with the highest-value evidence, then emphasis.
@@ -192,7 +192,7 @@ def generate_plan(mapping: list[dict], profile: dict, template: dict, positionin
                 "unit_id": "",
                 "section_id": section["id"],
                 "kind": _kind_for(entity, section),
-                "text": _entity_text(entity),
+                "text": _entity_text(entity, section),
                 "source_ids": source_ids,
                 "emphasis": emphasis_for(entity, positioning),
             })

@@ -17,7 +17,7 @@
     },
     "templates": { "type": "object", "additionalProperties": false, "properties": { "dir": { "type": "string", "default": "templates" }, "resume": { "type": "string", "default": "resume" }, "cover_letter": { "type": "string", "default": "cover-letter" } } },
     "voice": { "type": "object", "additionalProperties": false, "properties": { "path": { "type": "string", "default": "voice/voice.md" } } },
-    "outputs": { "type": "object", "additionalProperties": false, "properties": { "applications_dir": { "type": "string", "default": "applications" }, "baselines_dir": { "type": "string", "default": "baselines" } } },
+    "outputs": { "type": "object", "additionalProperties": false, "properties": { "applications_dir": { "type": "string", "default": "applications" }, "baselines_dir": { "type": "string", "default": "baselines" }, "file_name": { "type": "string", "default": "{name}-{kind}" } } },
     "workflow": {
       "type": "object", "additionalProperties": false,
       "properties": {

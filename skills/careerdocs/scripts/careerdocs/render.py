@@ -1,20 +1,24 @@
 """Render a content plan into the DOCX template, and record what was produced.
 
-``render`` fills the template (docxtpl) from the content plan, writing a timestamped file
-under the application's ``outputs/`` (never overwriting), and writes an output-record
-skeleton beside it with the union of the plan's source ids and every check marked pending.
-``--pdf`` converts via LibreOffice (`soffice`) when it is on PATH, and records the
-conversion as skipped with a reason when it is not.
+``render`` fills the template (docxtpl) from the content plan and writes the document under
+the application's ``outputs/`` (a baseline under ``baselines/<positioning>/``) as
+``<Name>-<Kind>.docx`` — ``outputs.file_name`` in the config, with ``{name}``, ``{kind}``,
+``{org}``, and ``{slug}`` placeholders — beside an output-record skeleton carrying the union
+of the plan's source ids and every check marked pending. The newest render always carries
+the plain name: a previous render of that name is rotated to a ``_bak1`` suffix (``_bak1``
+to ``_bak2``, and so on) together with its PDF, record, and layout renders, so nothing is
+overwritten or lost. ``--pdf`` converts via LibreOffice (`soffice`) when it is on PATH, and
+records the conversion as skipped with a reason when it is not.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import re
 import shutil
 import subprocess
 from collections import defaultdict
-from datetime import datetime, timezone
 from pathlib import Path
 
 from . import __version__
@@ -28,15 +32,78 @@ _PDF_CHECKS = ("pagination", "layout")
 _ALL_CHECKS = ("factual", "links_dates", "extraction", "pagination", "layout")
 
 
-def stamp() -> str:
-    return datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+_KIND_LABELS = {"resume": "Resume", "cover_letter": "Cover-Letter"}
+_SIDE_SUFFIXES = (".docx", ".pdf", ".record.json")
+_BAK_RE = re.compile(r"^(?P<stem>.+)_bak(?P<n>\d+)$")
+
+
+def slugify(text: str) -> str:
+    """``Jordan Rivera`` → ``Jordan-Rivera``: words joined by hyphens, punctuation dropped."""
+    return "-".join(re.findall(r"[^\W_]+", text))
+
+
+def document_stem(plan: dict, template: dict, kind: str, pattern: str, *, slug: str = "", org: str = "") -> str:
+    """The file name (without suffix) from ``outputs.file_name``: ``{name}`` is the contact
+    unit's first line, ``{kind}`` Resume or Cover-Letter, ``{org}`` the brief's organization,
+    ``{slug}`` the application slug (``baseline-<positioning>`` for a baseline)."""
+    contact = ""
+    for section in template["sections"]:
+        if section.get("placeholder") == "contact" or "contact" in section.get("entity_types", []):
+            units = [u for u in plan["units"] if u["section_id"] == section["id"]]
+            contact = units[0]["text"] if units else ""
+    values = {"name": slugify(contact.partition("\n")[0]), "kind": _KIND_LABELS.get(kind, kind),
+              "org": slugify(org), "slug": slugify(slug)}
+    try:
+        stem = pattern.format(**values)
+    except (KeyError, IndexError, ValueError) as exc:
+        raise CareerDocsError(f"outputs.file_name {pattern!r} is not a valid pattern: {exc}", code="USAGE") from exc
+    stem = re.sub(r"-{2,}", "-", stem).strip("-")
+    return stem or values["kind"]
+
+
+def _move_render(directory: Path, old_stem: str, new_stem: str) -> None:
+    for suffix in _SIDE_SUFFIXES:
+        source = directory / f"{old_stem}{suffix}"
+        if source.exists():
+            source.rename(directory / f"{new_stem}{suffix}")
+    layout = directory / "layout"
+    if layout.is_dir():
+        page = re.compile(rf"^{re.escape(old_stem)}(-p\d+\.png)$")
+        for png in sorted(layout.iterdir()):
+            match = page.match(png.name)
+            if match:
+                png.rename(layout / f"{new_stem}{match.group(1)}")
+    record_path = directory / f"{new_stem}.record.json"
+    if record_path.is_file():
+        record = json.loads(record_path.read_text(encoding="utf-8"))
+        record["document"] = str(directory / f"{new_stem}.docx")
+        if record.get("pdf"):
+            record["pdf"] = str(directory / f"{new_stem}.pdf")
+        record_path.write_text(json.dumps(record, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
+def rotate_previous(directory: Path, stem: str) -> None:
+    """Free ``stem`` for a new render by shifting every earlier render up one backup slot:
+    the plain name becomes ``_bak1``, ``_bak1`` becomes ``_bak2``, and so on. The document,
+    its PDF, its record (paths rewritten), and its layout renders move together."""
+    if not any((directory / f"{stem}{suffix}").exists() for suffix in _SIDE_SUFFIXES):
+        return
+    slots = {0}
+    for path in directory.iterdir():
+        match = _BAK_RE.match(path.name.split(".")[0])
+        if match and match.group("stem") == stem:
+            slots.add(int(match.group("n")))
+    for n in sorted(slots, reverse=True):
+        _move_render(directory, stem if n == 0 else f"{stem}_bak{n}", f"{stem}_bak{n + 1}")
 
 
 def _unit_context(unit: dict) -> dict:
-    # A tab splits a unit into a head and a tail (an experience unit's role and dates), so a
-    # template can style the two halves — a bold role, a right-aligned date — separately.
-    head, _, tail = unit["text"].partition("\t")
-    return {"text": unit["text"], "kind": unit["kind"], "head": head, "tail": tail}
+    # The first line splits at a tab into a head and a tail (an experience unit's role and
+    # dates); any further lines are the note (a role's summary), so a template can style the
+    # three parts — a bold role, a right-aligned date, a plain descriptor line — separately.
+    first, _, note = unit["text"].partition("\n")
+    head, _, tail = first.partition("\t")
+    return {"text": unit["text"], "kind": unit["kind"], "head": head, "tail": tail, "note": note}
 
 
 def build_context(plan: dict, template: dict) -> dict:
@@ -117,15 +184,6 @@ def build_record(plan: dict, *, document: Path, kind: str, positioning: str,
     return record
 
 
-def _unique_path(directory: Path, base: str, suffix: str) -> Path:
-    candidate = directory / f"{base}{suffix}"
-    counter = 2
-    while candidate.exists():
-        candidate = directory / f"{base}-{counter}{suffix}"
-        counter += 1
-    return candidate
-
-
 # --- CLI ---
 
 
@@ -162,7 +220,14 @@ def cmd_render(args) -> int:
 
     # Baselines land directly under baselines/<positioning>/; role outputs under outputs/.
     out_dir = app_dir if args.baseline else app_dir / "outputs"
-    out_docx = _unique_path(out_dir, f"{args.kind}-{stamp()}", ".docx")
+    org = ""
+    if brief_path and brief_path.is_file():
+        org = json.loads(brief_path.read_text(encoding="utf-8")).get("organization", "")
+    stem = document_stem(plan, template, args.kind, cfg["outputs"]["file_name"],
+                         slug=f"baseline-{positioning}" if args.baseline else slug, org=org)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    rotate_previous(out_dir, stem)
+    out_docx = out_dir / f"{stem}.docx"
     render_document(plan, template, template_docx, out_docx)
 
     pdf_path = None

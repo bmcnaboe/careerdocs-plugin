@@ -83,3 +83,21 @@ def test_cli_brief_validate_mode(tmp_path):
     bad = tmp_path / "bad.json"
     bad.write_text(json.dumps({"requirements": [], "recommended_positioning": "x"}), encoding="utf-8")
     assert cli.main(["brief", str(bad), "--validate", "--workspace", str(tmp_path)]) == 1
+
+
+def test_keyword_coverage_reports_literal_presence():
+    from careerdocs import brief as brief_module
+
+    profile = {"entities": [
+        {"type": "skill", "name": "Kubernetes", "visibility": "public", "verification": "applicant_verified"},
+        {"type": "skill", "name": "Terraform", "visibility": "private", "verification": "applicant_verified"},
+        {"type": "achievement", "statement": "Ran the platform team.", "visibility": "public", "verification": "applicant_verified"},
+    ]}
+    b = {"requirements": [
+        {"id": "req-1", "text": "", "kind": "must", "keywords": ["kubernetes", "terraform"]},
+        {"id": "req-2", "text": "", "kind": "nice", "keywords": ["platform", "kubernetes"]},
+    ], "recommended_positioning": "builder"}
+    rows = {row["keyword"]: row for row in brief_module.keyword_coverage(b, profile)}
+    assert rows["kubernetes"]["present"] and rows["kubernetes"]["requirement_ids"] == ["req-1", "req-2"]
+    assert rows["platform"]["present"]
+    assert not rows["terraform"]["present"]  # private entities do not count

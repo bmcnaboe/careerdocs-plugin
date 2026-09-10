@@ -124,11 +124,12 @@ RESUME_TEMPLATE_JSON = {
     "units_per_page": 12,
     "sections": [
         {"id": "header", "title": "", "placeholder": "contact", "entity_types": ["contact"], "max_items": 1, "required": True},
-        {"id": "experience", "title": "Experience", "placeholder": "experience", "entity_types": ["experience", "achievement"], "max_items": 12, "required": True},
+        {"id": "experience", "title": "Experience", "placeholder": "experience", "entity_types": ["experience", "achievement"], "max_items": 12, "required": True, "role_summaries": True},
+        {"id": "projects", "title": "Projects", "placeholder": "projects", "entity_types": ["project"], "max_items": 6, "required": False},
         {"id": "skills", "title": "Skills", "placeholder": "skills", "entity_types": ["skill"], "max_items": 20, "required": False},
         {"id": "education", "title": "Education", "placeholder": "education", "entity_types": ["education"], "max_items": 5, "required": False},
     ],
-    "allowlist": ["Experience", "Skills", "Education"],
+    "allowlist": ["Experience", "Projects", "Skills", "Education"],
     "style_notes": "Two-page budget; verb-first bullets; no buzzwords. Single column, centered name, ruled headings, right-tab dates.",
 }
 
@@ -233,7 +234,8 @@ def _finish(document, directory: Path, manifest: dict) -> None:
 
 def build_resume_template(directory: Path) -> None:
     """Single column: centered name and contact line, ruled uppercase section headings,
-    bold role lines with the dates on a right tab stop, bulleted achievements."""
+    bold role lines with the dates on a right tab stop and the role's summary beneath,
+    bulleted achievements."""
     from docx.enum.text import WD_TAB_ALIGNMENT
     from docx.shared import Inches, Pt
 
@@ -252,6 +254,9 @@ def build_resume_template(directory: Path) -> None:
     run.bold, run.font.size = True, Pt(11)
     role.add_run().add_tab()
     role.add_run("{{ unit.tail }}")
+    _paragraph(document, "{%p if unit.note %}")
+    _paragraph(document, "{{ unit.note }}", after=1)
+    _paragraph(document, "{%p endif %}")
     _paragraph(document, "{%p else %}")
     _paragraph(document, "{{ unit.text }}", after=2)
     _paragraph(document, "{%p endif %}")

@@ -24,7 +24,18 @@
         "achievement"
       ],
       "max_items": 12,
-      "required": true
+      "required": true,
+      "role_summaries": true
+    },
+    {
+      "id": "projects",
+      "title": "Projects",
+      "placeholder": "projects",
+      "entity_types": [
+        "project"
+      ],
+      "max_items": 6,
+      "required": false
     },
     {
       "id": "skills",
@@ -49,6 +60,7 @@
   ],
   "allowlist": [
     "Experience",
+    "Projects",
     "Skills",
     "Education"
   ],
