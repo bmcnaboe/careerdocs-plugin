@@ -5,6 +5,10 @@ reconciled by precedence, and turned into ``add_entity`` operations — with any
 sources disagree on recorded as a conflict rather than silently overwritten. The result
 feeds ``profile diff``; nothing is written until the applicant approves and applies.
 
+An achievement resolves its ``parent_ref`` to an experience or project and is linked from
+that parent's ``achievement_ids`` in the same diff: on the parent's ``add_entity`` when the
+parent is new, through an ``update_field`` when the profile already holds it.
+
 Precedence when values differ: an applicant ``statement`` beats an ``applicant_verified``
 import, which beats the newest plain import. The loser becomes a conflict candidate.
 """
@@ -21,6 +25,7 @@ _META_KEYS = {
     "type", "provenance", "ref", "parent_ref", "verification", "visibility",
     "id", "conflicts", "created_at", "updated_at",
 }
+_PARENT_TYPES = ("experience", "project")
 
 
 def norm(value) -> str:
@@ -136,16 +141,23 @@ def build_operations(profile: dict, payload) -> list[dict]:
             if candidate.get("ref"):
                 ref_to_id[candidate["ref"]] = entity_id
 
+    added_parents = {
+        op["entity"]["id"]: op["entity"]
+        for op in operations
+        if op["op"] == "add_entity" and op["entity"]["type"] in _PARENT_TYPES
+    }
+    existing_parents = {e["id"]: e for e in profile["entities"] if e["type"] in _PARENT_TYPES}
+
     achievement_groups: "OrderedDict[tuple, list]" = OrderedDict()
     for candidate in achievements:
         achievement_groups.setdefault((candidate.get("parent_ref"), norm(candidate.get("statement"))), []).append(candidate)
 
-    parent_to_new_achievements: dict[str, list[str]] = defaultdict(list)
+    parent_to_new_achievements: dict[str, list[dict]] = defaultdict(list)
     for _, group in achievement_groups.items():
         entity, conflicts = _merge_group(group)
         parent_ref = group[0].get("parent_ref")
         parent_id = ref_to_id.get(parent_ref)
-        if parent_id is None:
+        if parent_id not in added_parents and parent_id not in existing_parents:
             raise CareerDocsError(f"achievement parent_ref {parent_ref!r} does not resolve to an experience or project")
         entity["parent_id"] = parent_id
         entity_id = ids.new_id("achievement")
@@ -153,12 +165,21 @@ def build_operations(profile: dict, payload) -> list[dict]:
         if conflicts:
             entity["conflicts"] = conflicts
         operations.append({"op": "add_entity", "entity": entity})
-        parent_to_new_achievements[parent_id].append(entity_id)
+        parent_to_new_achievements[parent_id].append(entity)
 
-    for op in operations:
-        if op["op"] == "add_entity" and op["entity"]["type"] in ("experience", "project"):
-            new_ids = parent_to_new_achievements.get(op["entity"]["id"])
-            if new_ids:
-                op["entity"].setdefault("achievement_ids", []).extend(new_ids)
+    for parent_id, new_achievements in parent_to_new_achievements.items():
+        new_ids = [achievement["id"] for achievement in new_achievements]
+        if parent_id in added_parents:
+            added_parents[parent_id].setdefault("achievement_ids", []).extend(new_ids)
+            continue
+        # The parent is already in the profile, so the link lands as an update: the diff
+        # shows it and apply leaves parent and achievements pointing at each other. The
+        # first new achievement's source speaks for the change.
+        current_ids = existing_parents[parent_id].get("achievement_ids", [])
+        operations.append({
+            "op": "update_field", "id": parent_id, "field": "achievement_ids",
+            "from": current_ids, "to": current_ids + new_ids,
+            "provenance": new_achievements[0]["provenance"][0],
+        })
 
     return operations
