@@ -1,7 +1,7 @@
 {
   "version": 1,
   "layer_repo": "https://github.com/bmcnaboe/agent-layer",
-  "layer_commit": "d76d011fa52b3eedee71e5c15b34f9bab8f045ef",
+  "layer_commit": "f60ec56f6c0747073ce4a6711d5f998ffaeaa578",
   "modules": [
     "agent-core",
     "linear",
@@ -197,7 +197,7 @@
       "module": "agent-core",
       "source": "modules/agent-core/workflows/agent-layer.yml",
       "mode": "synced",
-      "sha256": "06fcf681b2bfb31d69da8e8f7fbc4a46f5bdc4cc279a07a7ba3406e22cedd3e5"
+      "sha256": "cb2933f2516505106e561f9f2e240b691b76797f7896bb27a2c324445af89429"
     },
     {
       "path": "CLAUDE.md",
