@@ -24,16 +24,25 @@ cut and reported; a letter should be short, so expect cuts.
 
 Write the letter as connected prose in the applicant's voice (`voice.md`):
 
+- **Serve the role.** Open on the organization's mission and the problem the role exists
+  to solve, then show how the applicant would meet it; every paragraph answers a need.
+  Enthusiasm goes to the role and the company, never to what the applicant wants:
+  "I want", "I'm looking for", and similar self-centered framing stay out.
+- **Cover the must requirements** that have direct evidence, in a natural flow with its
+  own logic, not a checklist of the posting.
+- **Sound confident and humble.** Sure of the evidence, glad to do the work, easy to
+  work with; no boasting, no self-deprecation.
 - **Complement, do not repeat.** Do not paste résumé bullets. Add motivation, fit for the
   team, and context the résumé cannot carry.
 - **Trace every claim** to a profile entity (the plan units' `source_ids`).
 - **Be honest about gaps.** Never claim a gap requirement. If it matters, frame it as
-  something you are growing into, or leave it out — never invent coverage.
+  something the applicant is growing into, or leave it out — never invent coverage.
 - **Frame the letter.** The greeting is the first body unit, cited to the contact entity;
   the template carries the sign-off (`Sincerely,` on its allowlist, then the name).
 - **Honor the approach.** When the brief carries an `approach`, its `letter_length`
   (`note`, roughly 150 to 200 words; `page`, roughly 300 to 400), `tone`, and `avoid`
-  are the applicant's decisions; the page budget still governs.
+  are the applicant's decisions; the page budget still governs. `tone` refines these
+  rules and never removes one.
 
 ## 4. Render
 

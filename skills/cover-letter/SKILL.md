@@ -29,7 +29,8 @@ Full detail in `references/playbook.md`.
    evidence (must requirements with direct evidence first) into a few paragraph units
    within the one-page budget.
 3. **Draft in voice** — write the letter in the applicant's voice as connected prose that
-   *complements* the résumé: motivation, fit, and context, not a re-listing of bullets.
+   serves the role and *complements* the résumé: the organization's needs answered with
+   the applicant's evidence, not a re-listing of bullets. The playbook holds the rules.
 4. **`render --kind cover_letter [--pdf]`** — fill the letter template.
 5. **`check <document>`** — run the checks. Additionally confirm no résumé bullet appears
    verbatim, every claim traces to a profile ID, and no gap requirement is claimed.
