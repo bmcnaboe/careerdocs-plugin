@@ -19,5 +19,6 @@
 
 # Voice profile — Jordan Rivera
 
-First person, past tense, concrete numbers. Short declarative sentences that open with a
-verb. Avoids buzzwords; names the outcome and the mechanism.
+Concrete and direct; avoids buzzwords. Résumé bullets open with a verb and name the
+outcome and mechanism. Letters use conversational first person and natural contractions:
+"I'd be glad to help your team make releases easier to manage."

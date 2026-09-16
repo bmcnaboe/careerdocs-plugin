@@ -1,10 +1,10 @@
 ---
 name: cover-letter
-description: Generate a cover letter that complements a tailored résumé for the same role. Use after a résumé has been generated for a role (via the resume skill), when the applicant wants a matching cover letter. The flow reuses the existing role brief and requirement map without re-asking anything, plans a short letter that leads with the highest-value evidence, drafts it in the applicant's voice, renders into the letter template, and runs the checks — including one that no résumé bullet is reproduced verbatim. It complements rather than repeats the résumé, traces every claim to a profile ID, never claims a gap requirement, and fits the letter's page budget.
+description: Write a conversational, enthusiastic cover letter that connects the applicant's evidence to the employer's needs. Use after a tailored résumé exists for the role. Reuses the brief and map, drafts and reviews in the applicant's voice, and renders a complementary letter within the page budget.
 license: MIT
 compatibility: "Python 3.10+; uv recommended. Requires the careerdocs core skill, an onboarded profile, and an existing brief and map for the role (from the resume skill)."
 metadata:
-  version: "0.3.2"
+  version: "0.3.3"
   author: "careerdocs-plugin contributors"
 ---
 
@@ -28,18 +28,8 @@ Full detail in `references/playbook.md`.
 2. **`plan --kind cover_letter --positioning <mode>`** — selects the highest-value
    evidence (must requirements with direct evidence first) into a few paragraph units
    within the one-page budget.
-3. **Draft in voice** — write the letter in the applicant's voice as connected prose that
-   serves the role and *complements* the résumé: the organization's needs answered with
-   the applicant's evidence, not a re-listing of bullets. The playbook holds the rules.
+3. **Draft and review** — follow the playbook's writing guidance and editorial review
+   before rendering.
 4. **`render --kind cover_letter [--pdf]`** — fill the letter template.
-5. **`check <document>`** — run the checks. Additionally confirm no résumé bullet appears
-   verbatim, every claim traces to a profile ID, and no gap requirement is claimed.
-
-## Guardrails
-
-- Complement, do not repeat: the verbatim-bullet check fails if a résumé bullet is
-  reproduced word-for-word.
-- Honest about gaps: a gap requirement is never claimed; if it matters, address it as
-  growth or omit it — never invent coverage.
-- Every claim traces to a profile entity, like the résumé.
-- The letter fits its page budget (one page by default).
+5. **`check <document>`** — run the standard checks and separately confirm that no résumé
+   bullet appears verbatim.

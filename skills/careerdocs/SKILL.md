@@ -5,7 +5,7 @@ license: MIT
 user-invocable: false
 compatibility: "Python 3.10+; uv recommended (uv run), python3 fallback. Offline except optional link checks. Optional LibreOffice (soffice) for PDF conversion."
 metadata:
-  version: "0.3.2"
+  version: "0.3.3"
   author: "careerdocs-plugin contributors"
 ---
 

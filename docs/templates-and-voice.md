@@ -94,9 +94,12 @@ reported by `plan`.
 
 ## Voice profile — `voice.md`
 
-An applicant-owned Markdown file (default `voice/voice.md`) with a frontmatter block the
-renderer passes to the drafting step and the checks read. Fields: `version`, `person`
+An applicant-owned Markdown file (default `voice/voice.md`) that the agent reads when
+drafting. Frontmatter fields: `version`, `person`
 (first or third), `tense_rules`, `tone` (adjectives with examples), `preferred_terms[]`,
 `banned_phrases[]`, `sentence_shape` (length, openers), `sample_sentences[]`. The drafting
-step writes in this voice; the factual check keeps the prose honest, and banned phrases
-should never appear. See `examples/applicant/voice/voice.md` for a sanitized example.
+step follows these preferences and checks claims against their sources. Use the Markdown
+body for document-specific guidance: résumé bullets can be verb-first while letters
+sound conversational, warm, and enthusiastic. See `examples/applicant/voice/voice.md`
+for a sanitized example. The CLI checks do not evaluate voice; the cover-letter flow
+includes an editorial review before rendering.

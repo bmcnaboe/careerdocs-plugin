@@ -73,8 +73,8 @@ Propose, in one short list with a default for each item, and confirm in one exch
 - **resume_pages** — the template's budget, or 1 when a one-page résumé suits the role.
 - **letter_length** — `note` (a brief note, roughly 150 to 200 words) or `page` (a full
   page, roughly 300 to 400 words); `note` when the posting asks for a note.
-- **tone** — drawn from `voice.md` (person, tone adjectives) and the posting's register,
-  for example "direct and warm, first person".
+- **tone** — the applicant's voice, with a conversational, warm, enthusiastic first-person
+  register for the letter; résumé style stays separate.
 - **avoid** — topics, phrases, or facts to keep out of both documents.
 
 Write the agreed values to `brief.json` under `approach`, validate the brief, and record
@@ -102,7 +102,7 @@ careerdocs state answer apply <slug> --question resume --text "Résumé document
 ```
 
 **Cover letter** — the cover-letter playbook from its plan step, honoring
-`letter_length`, `tone`, and `avoid`; render; check, including the verbatim-bullet check.
+`letter_length`, `tone`, and `avoid`; draft, review, render, and check as it directs.
 Record the path under question `letter`.
 
 ## 5. The report

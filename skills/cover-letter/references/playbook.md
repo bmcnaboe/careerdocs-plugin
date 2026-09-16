@@ -16,33 +16,34 @@ for the résumé — the workflow state already has the answers.
 careerdocs plan --kind cover_letter --positioning <executive|builder> --role-slug <slug> --workspace <dir> --json
 ```
 
-The plan leads with the highest-value evidence — direct evidence for `must` requirements
-first — and fits a few paragraph units into the one-page budget. Anything over budget is
-cut and reported; a letter should be short, so expect cuts.
+Use the selected evidence to build a coherent story around the role's most important
+needs. Answer the posting's application questions; let the résumé carry secondary detail.
+Keep within the page budget and report cuts.
 
 ## 3. Draft in voice
 
-Write the letter as connected prose in the applicant's voice (`voice.md`):
+Write connected prose in the applicant's voice (`voice.md`):
 
-- **Serve the role.** Open on the organization's mission and the problem the role exists
-  to solve, then show how the applicant would meet it; every paragraph answers a need.
-  Enthusiasm goes to the role and the company, never to what the applicant wants:
-  "I want", "I'm looking for", and similar self-centered framing stay out.
-- **Cover the must requirements** that have direct evidence, in a natural flow with its
-  own logic, not a checklist of the posting.
-- **Sound confident and humble.** Sure of the evidence, glad to do the work, easy to
-  work with; no boasting, no self-deprecation.
-- **Complement, do not repeat.** Do not paste résumé bullets. Add motivation, fit for the
-  team, and context the résumé cannot carry.
-- **Trace every claim** to a profile entity (the plan units' `source_ids`).
-- **Be honest about gaps.** Never claim a gap requirement. If it matters, frame it as
-  something the applicant is growing into, or leave it out — never invent coverage.
-- **Frame the letter.** The greeting is the first body unit, cited to the contact entity;
-  the template carries the sign-off (`Sincerely,` on its allowlist, then the name).
-- **Honor the approach.** When the brief carries an `approach`, its `letter_length`
-  (`note`, roughly 150 to 200 words; `page`, roughly 300 to 400), `tone`, and `avoid`
-  are the applicant's decisions; the page budget still governs. `tone` refines these
-  rules and never removes one.
+- Express specific enthusiasm for the role and the organization's mission or customer
+  value. Personal motivation belongs when it explains the contribution the applicant
+  is excited to make.
+- Connect a few strong examples to the employer's needs, balancing supported requirements
+  with natural flow. Add judgment, context, or collaboration beyond the résumé's facts.
+- Sound like a pleasant, confident, humble prospective colleague: conversational first
+  person, natural contractions, and a warm close. Apply letter-specific voice guidance;
+  résumé fragments and verb-first rules belong to the résumé.
+- Ground qualifications in profile entities (`source_ids`), employer facts in supplied
+  role material, and commitments in applicant statements. Never invent a mission,
+  personal history, qualifications, or learning activity to cover a gap.
+- Honor the brief's `approach`: `letter_length` (`note`, roughly 150–200 words; `page`,
+  roughly 300–400), `tone`, and `avoid`, within the template's page budget.
+
+The greeting is the first body unit, cited to the contact entity. The template carries
+the sign-off (`Sincerely,` on its allowlist, then the name).
+
+Before rendering, read the draft aloud and compare it with the résumé and sources.
+Revise weak enthusiasm, unclear contribution, stiff or boastful phrasing, unsupported
+claims, and repetition that adds nothing. The CLI checks do not assess these qualities.
 
 ## 4. Render
 
@@ -56,6 +57,4 @@ careerdocs render --kind cover_letter --pdf --role-slug <slug> --workspace <dir>
 careerdocs check applications/<slug>/outputs/<Name>-Cover-Letter.docx --workspace <dir>
 ```
 
-Runs the standard checks, and the verbatim-bullet check: no résumé bullet may appear
-word-for-word in the letter. Confirm every claim traces to a profile ID, no gap
-requirement is claimed, and the letter fits its page budget.
+Run the standard checks and separately confirm no résumé bullet appears word-for-word.
