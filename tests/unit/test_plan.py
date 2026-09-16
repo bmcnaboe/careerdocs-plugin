@@ -114,6 +114,18 @@ def test_cover_letter_orders_by_requirement_value():
     assert body[0]["source_ids"][0] == high["id"]
 
 
+def test_plan_carries_identity_and_alignment():
+    exp = entity("experience", organization="Acme", title="Eng", start_date="2020-01-01")
+    alignment = {"why": "Because.", "through_line": "One idea."}
+    result = plan.generate_plan(map_all_direct([exp]), profile_with([exp]), COVER_TEMPLATE, "builder",
+                                identity={"path": "identity/identity.md"}, alignment=alignment)
+    assert result["identity"] == {"path": "identity/identity.md"} and result["alignment"] == alignment
+    assert plan.validate_plan(result, COVER_TEMPLATE) == []
+    # A baseline has no role, so no alignment; the plan still validates.
+    baseline = plan.generate_plan([], profile_with([exp]), COVER_TEMPLATE, "builder", baseline=True)
+    assert baseline["alignment"] is None and plan.validate_plan(baseline, COVER_TEMPLATE) == []
+
+
 def test_cover_letter_page_budget_cuts():
     entities = [entity("achievement", statement=f"Did thing {i}", parent_id="x") for i in range(10)]
     # achievements need a parent to render; use a fake parent id but they are still cited.

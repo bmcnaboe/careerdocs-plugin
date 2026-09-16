@@ -115,3 +115,30 @@ def test_no_verbatim_bullets(tmp_path):
     profile = load_provider(tmp_path).read()
     result = factual.check(letter_text, letter_plan, profile, allowlist=COVER_JSON["allowlist"])
     assert result["status"] == "pass", result["details"]
+
+
+def test_letter_plan_carries_identity_and_alignment(tmp_path):
+    """US6: the letter is planned with the applicant's identity and the role alignment."""
+    ws, app, _, _ = résumé_then_letter(tmp_path)
+    identity_dir = tmp_path / "identity"
+    identity_dir.mkdir()
+    shutil.copy(ROOT / "examples" / "applicant" / "identity" / "identity.md", identity_dir / "identity.md")
+    role = json.loads((app / "brief.json").read_text())
+    role["alignment"] = {"why": "Releases nobody notices are the point.", "values": ["Craft"],
+                         "through_line": "Boring platforms are a craft.", "lead_story": "The quiet cutover"}
+    (app / "brief.json").write_text(json.dumps(role), encoding="utf-8")
+    assert run(["brief", str(app / "brief.json"), "--validate", "--workspace", ws])[0] == 0
+
+    # Only the alignment fields still missing are asked, and none once they are answered.
+    open_questions = run_json(["brief", str(app / "brief.json"), "--alignment", "--workspace", ws, "--json"])["questions"]
+    assert [q["field"] for q in open_questions] == ["interests", "focus"]
+
+    run(["plan", "--positioning", "builder", "--kind", "cover_letter", "--role-slug", SLUG, "--workspace", ws])
+    letter_plan = json.loads((app / "plan.json").read_text())
+    assert letter_plan["identity"] == {"path": "identity/identity.md"}
+    assert letter_plan["alignment"] == role["alignment"]
+
+    rendered = run_json(["render", "--kind", "cover_letter", "--role-slug", SLUG, "--workspace", ws, "--json"])
+    record = json.loads(Path(rendered["record"]).read_text())
+    assert record["identity"] == {"path": "identity/identity.md"}
+    assert run_json(["check", rendered["document"], "--workspace", ws, "--json"])["checks"]["factual"]["status"] == "pass"

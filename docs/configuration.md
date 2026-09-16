@@ -1,6 +1,6 @@
 # Configuration — `careerdocs.json`
 
-The optional `careerdocs.json` at the root of a workspace only *locates* the four
+The optional `careerdocs.json` at the root of a workspace only *locates* the five
 authorities and workflow policy. It stores no qualifications and no credentials. Every key
 has a default, so the file is optional; `careerdocs config init` writes a default one, and
 `careerdocs config validate` checks it and refuses forbidden content.
@@ -21,6 +21,7 @@ Validated against `assets/schemas/config.schema.json`.
 | `templates.resume` | `resume` | Résumé template subfolder (contains `template.docx` + `template.json`). |
 | `templates.cover_letter` | `cover-letter` | Cover-letter template subfolder. |
 | `voice.path` | `voice/voice.md` | The applicant's voice profile. |
+| `identity.path` | `identity/identity.md` | The applicant's identity profile: values, personality, motivations, working style, career focus, interests, stories. |
 | `outputs.applications_dir` | `applications` | Per-role application folders. |
 | `outputs.baselines_dir` | `baselines` | Generated baseline documents. |
 | `outputs.file_name` | `{name}-{kind}` | Rendered document name; placeholders `{name}` (the contact's name), `{kind}` (`Resume` / `Cover-Letter`), `{org}` (the brief's organization), `{slug}`. The newest render carries this name; a replaced render moves to `archive/` under its generation stamp. |
@@ -66,6 +67,7 @@ the config.
   "providers": { "authoritative": "markdown", "markdown": { "path": "profile" } },
   "templates": { "dir": "templates", "resume": "resume", "cover_letter": "cover-letter" },
   "voice": { "path": "voice/voice.md" },
+  "identity": { "path": "identity/identity.md" },
   "outputs": { "applications_dir": "applications", "baselines_dir": "baselines", "file_name": "{name}-{kind}" },
   "workflow": { "positioning_default": "builder", "page_budget": { "resume": 2, "cover_letter": 1 } }
 }

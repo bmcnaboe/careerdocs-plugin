@@ -7,6 +7,10 @@ section's `max_items` cannot fit. Gap requirements contribute no evidence, so no
 ever cited as satisfied. Switching positioning re-emphasizes and reorders without changing
 any fact.
 
+A role plan also carries the identity profile's path and the brief's ``alignment`` so the
+drafting step has the applicant's own through-line at hand and the output record can name
+them.
+
 Unit text follows two conventions the templates rely on: the contact unit is two lines
 (the name, then the details line), and an experience unit separates the role from its
 dates with a tab, followed, when the section sets ``role_summaries``, by the role's summary
@@ -162,7 +166,8 @@ def _chronological(units: list[dict], by_id: dict) -> list[dict]:
 
 
 def generate_plan(mapping: list[dict], profile: dict, template: dict, positioning: str,
-                  *, voice=None, brief=None, baseline: bool = False, page_budget: int | None = None) -> dict:
+                  *, voice=None, identity=None, alignment=None, brief=None, baseline: bool = False,
+                  page_budget: int | None = None) -> dict:
     by_id = {e["id"]: e for e in profile["entities"]}
     if baseline:
         # A baseline has no target role: every visible entity is eligible evidence.
@@ -245,6 +250,8 @@ def generate_plan(mapping: list[dict], profile: dict, template: dict, positionin
         "kind": template.get("kind", "resume"),
         "template": {"name": template.get("name"), "version": template.get("version")},
         "voice": voice,
+        "identity": identity,
+        "alignment": alignment,
         "page_budget": page_budget,
         "units": ordered,
         "cuts": cuts,
@@ -302,10 +309,12 @@ def cmd_plan(args) -> int:
     profile = load_provider(args.workspace, cfg).read()
     template = load_template(args.workspace, cfg, args.kind)
 
+    voice = {"path": cfg["voice"]["path"]}
+    identity = {"path": cfg["identity"]["path"]}
     if args.baseline:
         positioning = args.positioning or cfg["workflow"]["positioning_default"]
         plan = generate_plan([], profile, template, positioning,
-                             voice={"path": cfg["voice"]["path"]}, baseline=True,
+                             voice=voice, identity=identity, baseline=True,
                              page_budget=args.page_budget)
         out_dir = Path(args.workspace) / cfg["outputs"]["baselines_dir"] / positioning
     else:
@@ -319,7 +328,8 @@ def cmd_plan(args) -> int:
         positioning = args.positioning or approach.get("positioning") or cfg["workflow"]["positioning_default"]
         page_budget = args.page_budget or (approach.get("resume_pages") if args.kind == "resume" else None)
         plan = generate_plan(mapping, profile, template, positioning,
-                             voice={"path": cfg["voice"]["path"]}, brief=brief, page_budget=page_budget)
+                             voice=voice, identity=identity, alignment=(brief or {}).get("alignment"),
+                             brief=brief, page_budget=page_budget)
         out_dir = app_dir
 
     errors = validate_plan(plan, template)

@@ -7,8 +7,10 @@ any nuance; ``brief --validate <brief.json>`` checks the completed brief against
 and its invariants. ``brief --coverage <brief.json>`` reports which requirement keywords
 appear literally in the visible profile and which do not — a prompt for judgement (a
 synonym to reword, or a genuinely held skill to add through the update flow with the
-applicant's yes), never an automatic addition. Deterministic and offline; a URL job
-description is saved to a file first, then passed in.
+applicant's yes), never an automatic addition. ``brief --alignment <brief.json>`` lists the
+role-alignment questions the brief has not answered yet (see :mod:`identity`), persisting
+them to workflow state when ``--flow`` and ``--subject`` are given. Deterministic and
+offline; a URL job description is saved to a file first, then passed in.
 """
 
 from __future__ import annotations
@@ -154,6 +156,11 @@ def register(subparsers, common: argparse.ArgumentParser) -> None:
     parser.add_argument("--validate", action="store_true", help="validate a completed brief")
     parser.add_argument("--coverage", action="store_true",
                         help="report which of a brief's requirement keywords the profile lacks")
+    parser.add_argument("--alignment", action="store_true",
+                        help="list the role-alignment questions a completed brief has not answered")
+    parser.add_argument("--flow", choices=["apply", "resume", "cover_letter"],
+                        help="with --alignment: persist the questions under this flow")
+    parser.add_argument("--subject", help="with --alignment: the workflow subject (the role slug)")
     parser.set_defaults(func=cmd_brief)
 
 
@@ -179,6 +186,16 @@ def cmd_brief(args) -> int:
         if errors:
             raise CareerDocsError("role brief is invalid", exit_code=1)
         print(json.dumps({"valid": True}) if args.json else "role brief is valid")
+        return 0
+
+    if args.alignment:
+        from . import identity as identity_module
+
+        brief = json.loads(input_path.read_text(encoding="utf-8"))
+        report = identity_module.load_identity(args.workspace, cfg)
+        questions = identity_module.alignment_questions(brief, report["frontmatter"])
+        questions = identity_module.attach_state(args.workspace, cfg, args.flow, args.subject, questions)
+        identity_module.print_questions(questions, as_json=args.json, label="alignment")
         return 0
 
     if args.coverage:

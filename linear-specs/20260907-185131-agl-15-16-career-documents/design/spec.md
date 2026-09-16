@@ -105,6 +105,22 @@ The applicant adds a new role, achievement, credential, or correction. The flow 
 
 ---
 
+### User Story 6 - Ground the cover letter in the applicant's identity (Priority: P3)
+
+The applicant's letters read as formulaic: they answer the requirements one by one and could have been written by anyone with the same résumé. During onboarding the flow captures who the applicant is beyond the facts — values, personality, motivations, working style, career focus, interests, and their own stories — as an identity profile they approve. Per application, the apply flow (or the cover-letter flow on its own) settles the role alignment: why this role, which values and interests it engages, the focus it serves, the through-line the letter is organized around, and the story that carries it. The letter is drafted around that through-line; every fact still traces to the profile.
+
+**Why this priority**: The cover letter is where an application shows a person rather than a match score, and the résumé already carries the facts; identity is the missing input.
+
+**Independent Test**: With the example identity profile and an alignment on the example brief, plan and render the letter and confirm the plan and output record carry the identity and alignment, only unanswered alignment questions are asked, and every claim still traces to a profile ID.
+
+**Acceptance Scenarios**:
+
+1. **Given** an identity profile with some sections filled, **When** the onboard flow asks for identity, **Then** it asks one question per missing section only, each with a stable id, and never re-asks a recorded answer.
+2. **Given** a brief with a partial alignment, **When** the apply or cover-letter flow settles the alignment, **Then** it asks only the missing fields, offers the identity's own values, interests, and direction as options, and writes nothing to the brief itself.
+3. **Given** an identity profile and an aligned brief, **When** the letter is planned and rendered, **Then** the plan and the output record carry the identity path and the alignment, and the factual check still passes.
+
+---
+
 ### Edge Cases
 
 - Two sources disagree on the same fact: both provenance entries are kept, one conflict is recorded, one question is asked, and the fact is unusable in documents until resolved.
@@ -137,10 +153,12 @@ The applicant adds a new role, achievement, credential, or correction. The flow 
 - **FR-014**: Document generation MUST render into the applicant's approved template and voice profile, both applicant-owned and stored outside the repository, and MUST NOT introduce any qualification, date, employer, title, or metric absent from the profile.
 - **FR-015**: The cover-letter flow MUST reuse the role brief and map, produce a letter that complements rather than repeats the résumé, and handle gaps honestly or omit them.
 - **FR-016**: Every generated document MUST pass checks for factual traceability (each claim maps to profile IDs), link and date validity, text extraction, pagination within the template's page budget, and rendered-layout inspection before it is presented as complete.
-- **FR-017**: Every generated document MUST be accompanied by an output record naming its source IDs, role brief, template, voice profile, positioning, check results, and plugin version.
+- **FR-017**: Every generated document MUST be accompanied by an output record naming its source IDs, role brief, template, voice profile, identity profile, positioning, check results, and plugin version.
 - **FR-018**: The update flow MUST capture new or corrected facts with provenance, propose a diff, refresh derived exports on approval, and report which earlier outputs reference changed facts.
 - **FR-019**: Facts marked private MUST never appear in generated documents; facts marked restricted MUST require explicit approval per document.
 - **FR-020**: The repository MUST ship a sanitized, fictional example applicant (profile, sources, voice profile, template, configuration) that exercises every flow and is the fixture for the automated checks.
+- **FR-021**: The plugin MUST hold the applicant's identity — values, personality, motivations, working style, career focus, interests, and stories — as an applicant-owned profile separate from qualifications, captured by interview and written only after approval, and MUST never treat it as a source of facts.
+- **FR-022**: Each application MUST be able to record a role alignment (why this role, the values and interests it engages, the focus it serves, the letter's through-line and lead story), captured by asking only what is still unanswered, and the cover-letter flow MUST draft around it.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -149,6 +167,8 @@ The applicant adds a new role, achievement, credential, or correction. The flow 
 - **Provenance**: Where a fact came from: source reference, extraction method, timestamp, and the actor that recorded it.
 - **Conflict**: Two or more candidate values for one attribute of one entity, each with provenance, plus the resolution once chosen.
 - **VoiceProfile**: Applicant-owned rules for tone, vocabulary, sentence shape, and forbidden phrasing, with examples.
+- **IdentityProfile**: Applicant-owned durable identity (values, personality, motivations, working style) and current focus (career focus, interests), plus stories; never a source of qualifications.
+- **RoleAlignment**: For one role brief, how the role connects to the identity: why, values, interests, focus, through-line, lead story.
 - **DocumentTemplate**: An applicant-owned editable document plus a manifest naming its placeholders, sections, and page budget.
 - **RoleBrief**: The structured reading of one job description, including requirements, keywords, seniority, and recommended positioning.
 - **RequirementEvidenceMap**: For one role brief, each requirement's classification (direct, transferable, gap) and the cited profile IDs.

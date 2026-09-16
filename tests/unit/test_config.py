@@ -22,6 +22,7 @@ def test_resolve_missing_returns_defaults(tmp_path):
     resolved = config.resolve_config(tmp_path)
     assert resolved["providers"]["authoritative"] == "markdown"
     assert resolved["workflow"]["page_budget"]["resume"] == 2
+    assert resolved["identity"]["path"] == "identity/identity.md"
 
 
 def test_resolve_deep_merges_overrides(tmp_path):

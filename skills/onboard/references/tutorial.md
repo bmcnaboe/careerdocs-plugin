@@ -10,8 +10,9 @@ as much to learn how the plugin works as to import files.
 One authoritative profile of the applicant's real qualifications, built from their own
 documents with a source behind every fact. From it, résumés and cover letters tailored to a
 specific job, drafted in the applicant's own voice, rendered into their own template, and
-checked before they are called done. Four things are kept separate and never merged into
-one blob: the **profile** (facts), the **voice** (how they write), the **templates** (how
+checked before they are called done. Five things are kept separate and never merged into
+one blob: the **profile** (facts), the **voice** (how they write), the **identity** (who
+they are beyond the facts: values, motivations, focus, stories), the **templates** (how
 documents look), and the **target role** (one job at a time). Nothing changes in the
 profile without a diff they approve, and nothing about them leaves the machine.
 
@@ -70,8 +71,11 @@ never render, by construction rather than by check. It ends by naming what was c
 space and which requirements are honest gaps. Output lands in `applications/<role-slug>/`.
 
 **Cover letter.** Runs after a résumé for the same role and reuses its brief and map.
-Leads with the strongest evidence, complements the résumé instead of repeating it, and is
-checked so no résumé line is copied verbatim. Same folder.
+Before drafting it settles the role alignment, a few questions on why this role and which
+values, interests, and focus it engages, unless apply already did. The letter is then
+organized around that through-line in the applicant's identity and voice, complements
+the résumé instead of repeating it, and is checked so no résumé line is copied verbatim.
+Same folder.
 
 **Update.** For a new job, a new achievement, a certification, or a correction. The
 applicant states it; the flow records it with them as the source, proposes a diff, applies
@@ -81,7 +85,8 @@ it after a yes, and reports which earlier documents are now stale.
 and the keywords the profile lacks, asks which of those the applicant genuinely has (and
 records them through update, with a yes), agrees the approach in one exchange
 (positioning, lead evidence, what to compress, résumé length, letter length and tone,
-what to avoid), then produces both documents, checked, with the cuts and gaps reported.
+what to avoid) and the role alignment (why this role, in the applicant's words), then
+produces both documents, checked, with the cuts and gaps reported.
 
 **Doctor.** "Run careerdocs doctor" shows the workspace, config, profile size, templates,
 voice, PDF converter, and dependencies at any time.
@@ -96,6 +101,7 @@ voice, PDF converter, and dependencies at any time.
 | `sources/` | The applicant's own files, by convention |
 | `templates/resume/`, `templates/cover-letter/` | DOCX plus `template.json` per kind |
 | `voice/voice.md` | The voice profile |
+| `identity/identity.md` | The identity profile: values, personality, motivations, working style, career focus, interests, stories |
 | `applications/<role-slug>/` | Brief, map, plan, and rendered documents per role |
 | `baselines/` | Untargeted documents |
 | `.careerdocs/state/` | Resumable workflow state |
@@ -120,6 +126,8 @@ flow.
   the literal tool, method, and model names — when confirming candidates, and the
   résumé flow's keyword coverage will ask about any requirement keyword the profile
   still lacks; only a skill you confirm is added.
+- **"My focus or interests have changed."** Run onboard again; it revisits the identity
+  profile's career focus and interests and leaves the rest alone.
 - **"I want a different résumé design."** Restyle `templates/resume/template.docx`
   freely as long as the placeholders stay; `docs/templates-and-voice.md` in the plugin
   explains the placeholder loop, and the sanitized examples under `examples/applicant/`

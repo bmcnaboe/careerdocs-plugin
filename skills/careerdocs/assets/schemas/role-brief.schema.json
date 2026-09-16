@@ -41,6 +41,19 @@
         "avoid": { "type": "array", "items": { "type": "string" } },
         "notes": { "type": "string" }
       }
+    },
+    "alignment": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "why": { "type": "string" },
+        "values": { "type": "array", "items": { "type": "string" } },
+        "interests": { "type": "array", "items": { "type": "string" } },
+        "focus": { "type": "string" },
+        "through_line": { "type": "string" },
+        "lead_story": { "type": "string" },
+        "notes": { "type": "string" }
+      }
     }
   }
 }

@@ -72,6 +72,7 @@ def _register_feature_commands(subparsers, common: argparse.ArgumentParser) -> N
     from . import brief as brief_module
     from . import config as config_module
     from . import diff as diff_module
+    from . import identity as identity_module
     from . import inventory as inventory_module
     from . import mapping as mapping_module
     from . import organize as organize_module
@@ -88,6 +89,7 @@ def _register_feature_commands(subparsers, common: argparse.ArgumentParser) -> N
     plan_module.register(subparsers, common)
     render_module.register(subparsers, common)
     record_module.register(subparsers, common)
+    identity_module.register(subparsers, common)
     inventory_module.register(subparsers, common)
     organize_module.register(subparsers, common)
 
@@ -182,6 +184,10 @@ def cmd_doctor(args: argparse.Namespace) -> int:
         "path": cfg["voice"]["path"],
         "present": (workspace / cfg["voice"]["path"]).is_file(),
     }
+    identity = {
+        "path": cfg["identity"]["path"],
+        "present": (workspace / cfg["identity"]["path"]).is_file(),
+    }
 
     report = {
         "workspace": str(workspace.resolve()),
@@ -192,6 +198,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
         "provider": provider_status,
         "templates": templates,
         "voice": voice,
+        "identity": identity,
         "converter": {"soffice": shutil.which("soffice") is not None},
         "dependencies": dependency_status(),
         "python": platform.python_version(),
@@ -212,6 +219,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
         for advice in report["advisories"]:
             print(f"advice: {advice}")
         print(f"voice ({voice['path']}): {'present' if voice['present'] else 'missing'}")
+        print(f"identity ({identity['path']}): {'present' if identity['present'] else 'missing'}")
         print(f"PDF converter (soffice): {'found' if report['converter']['soffice'] else 'not found'}")
         for name, present in report["dependencies"].items():
             print(f"dependency {name}: {'ok' if present else 'missing'}")

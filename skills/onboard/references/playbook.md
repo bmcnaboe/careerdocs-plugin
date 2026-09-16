@@ -122,3 +122,28 @@ careerdocs profile validate --workspace <dir>
 
 The result is one authoritative profile, with both provenance entries on any reconciled
 role, and private facts absent from every export.
+
+## 10. Identity
+
+```sh
+careerdocs identity show --workspace <dir> --json
+careerdocs identity questions --flow onboard --subject <name> --workspace <dir> --json
+```
+
+`show` reports whether `identity/identity.md` exists, validates its frontmatter, and names
+the sections it lacks. `questions` emits one question per missing section —
+`identity:values`, `identity:personality`, `identity:motivations`,
+`identity:working_style`, `identity:career_focus`, `identity:interests` — persists them to
+the onboard state, and carries any answer already recorded, so nothing is asked twice.
+Record answers with `state answer onboard <name> --question <id> --answer "<text>"`.
+
+Draft the file from the answers: a JSON frontmatter block (`version`,
+`values[] { name, statement }`, `personality[] { trait, example }`, `motivations[]`,
+`working_style`, `career_focus { direction, roles[], settings[], avoid[] }`,
+`interests[]`) and a Markdown body holding the stories the applicant told and how to use
+them. `examples/applicant/identity/identity.md` shows the shape. Write it only after the
+applicant approves the draft, then:
+
+```sh
+careerdocs identity validate --workspace <dir>
+```

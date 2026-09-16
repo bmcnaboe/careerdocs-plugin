@@ -92,6 +92,7 @@ Validation rules: `end_date >= start_date` when both present; no date after toda
 | `providers` | `authoritative` (`markdown` / `basic_memory`), `markdown { path }`, `basic_memory { vault_path, project, folder }` |
 | `templates` | `dir`, `resume`, `cover_letter` (template directory names)                                 |
 | `voice`     | `path` to the voice profile                                                                |
+| `identity`  | `path` to the identity profile                                                             |
 | `outputs`   | `applications_dir`, `baselines_dir`                                                        |
 | `workflow`  | `state_dir`, `positioning_default`, `page_budget { resume, cover_letter }`, `approval_mode` (`explicit` only in MVP) |
 
@@ -101,6 +102,14 @@ Forbidden anywhere in the file: keys or values that look like credentials (`pass
 
 `version`, `person` (first or third), `tense_rules`, `tone` (adjectives with examples), `preferred_terms[]`, `banned_phrases[]`, `sentence_shape` (length, openers), `sample_sentences[]`. The renderer passes the voice profile to the drafting agent and the check verifies banned phrases are absent.
 
+## IdentityProfile (applicant-owned Markdown with frontmatter)
+
+`version`, `values[] { name, statement }`, `personality[] { trait, example }`, `motivations[]`, `working_style`, `career_focus { direction, roles[], settings[], avoid[] }`, `interests[]`; the Markdown body holds the applicant's stories. The first four sections are durable, the last two the baseline each application's `alignment` refines. Captured by interview (`identity questions` asks only for missing sections), written after approval, validated against `identity.schema.json`; never a source of qualifications.
+
+## RoleAlignment (`brief.json` → `alignment`)
+
+`why`, `values[]`, `interests[]`, `focus`, `through_line`, `lead_story`, `notes`: how one role connects to the identity, captured by `brief --alignment` (only unanswered fields are asked) and carried into the letter's ContentPlan.
+
 ## DocumentTemplate
 
 `template.json` next to the DOCX: `name`, `kind` (`resume` / `cover_letter`), `version`, `page_budget`, `sections[] { id, placeholder, entity_types[], max_items, required }`, `allowlist[]` (template-provided strings the traceability check ignores), `style_notes`.
@@ -109,8 +118,8 @@ Forbidden anywhere in the file: keys or values that look like credentials (`pass
 
 - **RoleBrief** (`brief.json`): `organization`, `role`, `seniority`, `location`, `source` (`Source`), `requirements[] { id, text, kind (must / nice), keywords[] }`, `keywords[]`, `recommended_positioning`, `notes`.
 - **RequirementEvidenceMap** (`map.json`): per requirement `{ requirement_id, classification (direct / transferable / gap), evidence[] { entity_id, why }, note }`.
-- **ContentPlan** (`plan.json`): `positioning`, `template`, `voice`, `page_budget`, `units[] { unit_id, section_id, kind (bullet / sentence / field), text, source_ids[], emphasis }`, `cuts[] { entity_id, reason }`.
-- **OutputRecord** (`outputs/<file>.record.json`): `document` (path), `kind`, `generated_at`, `plugin_version`, `schema_version`, `role_brief` (path), `map` (path), `content_plan` (path), `template { name, version }`, `voice { version }`, `positioning`, `source_ids[]`, `checks { factual, links_dates, extraction, pagination, layout } → { status (pass / fail / skipped), details }`, `stale` (boolean, set by the update flow), `stale_reason`.
+- **ContentPlan** (`plan.json`): `positioning`, `template`, `voice`, `identity`, `alignment`, `page_budget`, `units[] { unit_id, section_id, kind (bullet / sentence / field), text, source_ids[], emphasis }`, `cuts[] { entity_id, reason }`.
+- **OutputRecord** (`outputs/<file>.record.json`): `document` (path), `kind`, `generated_at`, `plugin_version`, `schema_version`, `role_brief` (path), `map` (path), `content_plan` (path), `template { name, version }`, `voice { version }`, `identity { path }`, `positioning`, `source_ids[]`, `checks { factual, links_dates, extraction, pagination, layout } → { status (pass / fail / skipped), details }`, `stale` (boolean, set by the update flow), `stale_reason`.
 
 ## WorkflowState (`workflow.state_dir/<flow>/<subject>.json`)
 

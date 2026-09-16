@@ -21,6 +21,6 @@ pages hold the manual steps, the desktop and web paths, verification, and remova
   structured-Markdown and Basic Memory providers implement it.
 - [checks.md](checks.md) — the five output checks and what each one enforces.
 - [templates-and-voice.md](templates-and-voice.md) — authoring a DOCX template and its
-  manifest, and capturing an applicant's voice.
+  manifest, and capturing an applicant's voice and identity.
 - [migration.md](migration.md) — the generic playbook for migrating an existing career
   folder into a `careerdocs` workspace.

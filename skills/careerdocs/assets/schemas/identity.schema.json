@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/bmcnaboe/careerdocs-plugin/schemas/identity.schema.json#1.0.0",
+  "title": "IdentityProfile",
+  "description": "Frontmatter of the applicant-owned identity profile: who the applicant is beyond the facts. Never a source of qualifications.",
+  "type": "object",
+  "required": ["version"],
+  "additionalProperties": false,
+  "properties": {
+    "version": { "const": "1" },
+    "values": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "statement": { "type": "string" }
+        }
+      }
+    },
+    "personality": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["trait"],
+        "additionalProperties": false,
+        "properties": {
+          "trait": { "type": "string", "minLength": 1 },
+          "example": { "type": "string" }
+        }
+      }
+    },
+    "motivations": { "type": "array", "items": { "type": "string" } },
+    "working_style": { "type": "string" },
+    "career_focus": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "direction": { "type": "string" },
+        "roles": { "type": "array", "items": { "type": "string" } },
+        "settings": { "type": "array", "items": { "type": "string" } },
+        "avoid": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "interests": { "type": "array", "items": { "type": "string" } }
+  }
+}

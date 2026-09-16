@@ -68,7 +68,8 @@ than inflating claims.
 
 Rewrite each unit's `text` in the applicant's voice (`voice.md`): verb-first, concrete,
 no banned phrases. Every claim must still trace to the unit's `source_ids`. Do not add a
-fact that is not in the profile. Keep a role line as `Title, Organization<tab>dates`, with
+fact that is not in the profile. A summary line, when the template has one, may name the
+career focus from the identity profile in terms the cited entities support. Keep a role line as `Title, Organization<tab>dates`, with
 any descriptor on the role's summary line (`role_summaries` in the manifest), never inside
 the role line: parsers read the whole line as the title and company.
 

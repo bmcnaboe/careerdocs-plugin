@@ -50,13 +50,15 @@ Reconcile by precedence (an applicant statement beats an imported résumé); lea
 conflict that precedence cannot settle open, and confirm the facts that must survive are
 present and `applicant_verified`.
 
-## 4. Capture voice and templates
+## 4. Capture voice, identity, and templates
 
 Draft `voice/voice.md` from the applicant's current documents and any brand or style
 guidance. Convert the current résumé DOCX into `templates/resume/template.docx` plus a
 `template.json` manifest — keep the styling, replace the content with the docxtpl
 placeholders (`{{ contact_name }}`, `{{ contact_details }}`, and the `sections`/`units` loop), and set the page budget —
-and derive a `templates/cover-letter/` template.
+and derive a `templates/cover-letter/` template. Then run the onboard skill's identity
+stage (`careerdocs identity questions`) to capture values, personality, motivations,
+working style, career focus, and interests into `identity/identity.md`.
 
 ## 5. Generate and verify baselines
 

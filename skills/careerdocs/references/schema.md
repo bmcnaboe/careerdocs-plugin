@@ -66,7 +66,7 @@ Every entity carries `id`, `type`, `visibility` (`public` / `restricted` / `priv
 
 ## careerdocs.json (`config.schema.json`)
 
-Locates the four authorities; stores no qualifications or credentials.
+Locates the five authorities; stores no qualifications or credentials.
 
 | Key         | Content                                                                    |
 | ----------- | ------------------------------------------------------------------------- |
@@ -74,6 +74,7 @@ Locates the four authorities; stores no qualifications or credentials.
 | `providers` | `authoritative` (`markdown` / `basic_memory`), `markdown { path }`, `basic_memory { vault_path, project, folder }` |
 | `templates` | `dir`, `resume`, `cover_letter`                                            |
 | `voice`     | `path`                                                                     |
+| `identity`  | `path`                                                                     |
 | `outputs`   | `applications_dir`, `baselines_dir`                                        |
 | `workflow`  | `state_dir`, `positioning_default`, `page_budget { resume, cover_letter }`, `approval_mode` |
 

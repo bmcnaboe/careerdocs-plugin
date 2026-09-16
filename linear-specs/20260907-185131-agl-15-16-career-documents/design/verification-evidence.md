@@ -28,3 +28,6 @@ Status values: `pending`, `pass`, `fail`, `skipped (reason)`.
 | US5-1    | integration         | `tests/integration/test_update.py::test_new_fact_provenance`; unit: `test_merge.py`, `test_diff.py` | pass    |
 | US5-2    | integration         | `tests/integration/test_update.py::test_exports_agree_and_stale`; unit: `test_diff.py::test_apply_marks_stale_outputs` | pass    |
 | US5-3    | integration         | `tests/integration/test_update.py::test_resume_pending_diff`; unit: `test_state.py`, `test_questions.py::test_no_question_repeats_after_resume` | pass    |
+| US6-1    | unit                | `tests/unit/test_identity.py::test_questions_only_for_missing_sections`, `::test_cli_questions_persist_to_state_and_carry_answers` | pass    |
+| US6-2    | unit + integration  | `tests/unit/test_identity.py::test_alignment_questions_skip_answered_fields`, `::test_brief_alignment_lists_open_questions_and_persists`; `tests/integration/test_cover_letter.py::test_letter_plan_carries_identity_and_alignment` | pass    |
+| US6-3    | integration         | `tests/integration/test_cover_letter.py::test_letter_plan_carries_identity_and_alignment`; unit: `test_plan.py::test_plan_carries_identity_and_alignment`, `test_identity.py::test_example_identity_is_complete_and_valid` | pass    |

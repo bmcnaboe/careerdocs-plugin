@@ -8,7 +8,7 @@ output on stdout). Human output goes to stdout; diagnostics to stderr. Exit code
 
 | Command                                      | Purpose                                                                                   | Reads                             | Writes                                        |
 | -------------------------------------------- | ----------------------------------------------------------------------------------------- | --------------------------------- | --------------------------------------------- |
-| `doctor`                                     | Report configuration, providers, template, voice, converter, and dependency status       | config, providers                 | nothing                                       |
+| `doctor`                                     | Report configuration, providers, template, voice, identity, converter, and dependencies  | config, providers                 | nothing                                       |
 | `config init`                                | Write a default `career-documents.json` if absent                                          | nothing                           | config                                        |
 | `config validate`                            | Validate the config; refuse forbidden keys                                                 | config                            | nothing                                       |
 | `profile validate`                           | Validate the authoritative profile against the schema and rules                           | provider                          | nothing                                       |
@@ -18,10 +18,12 @@ output on stdout). Human output goes to stdout; diagnostics to stderr. Exit code
 | `profile apply <diff_id>`                    | Apply an approved diff atomically; refresh derived exports; mark stale outputs             | provider, approval                | provider, exports, output records             |
 | `profile export --to markdown\|basic_memory` | Produce a derived copy                                                                     | provider                          | target                                        |
 | `brief <jd-file-or-url>`                     | Build the role brief skeleton (structured fields the agent completes)                     | JD                                | `applications/<slug>/brief.json`              |
+| `brief <brief.json> --alignment`             | List the role-alignment questions the brief has not answered; persist under a flow      | brief, identity                   | `state`                                       |
 | `map`                                        | Build the requirement-to-evidence map skeleton with candidate evidence per requirement    | brief, profile                    | `applications/<slug>/map.json`                |
 | `plan --positioning executive\|builder`      | Build the content plan from the map within the template's page budget; list cuts          | map, profile, template            | `applications/<slug>/plan.json`               |
 | `render --kind resume\|cover_letter [--pdf]` | Render the content plan into the template; convert to PDF when a converter exists         | plan, template, voice             | `outputs/<file>.docx`, `.pdf`, `.record.json` |
 | `check <document>`                           | Run the five checks; update the output record                                              | document, plan, profile           | `.record.json`, `layout/*.png`                |
+| `identity show\|validate\|questions`          | Report, validate, or interview for the identity profile (missing sections only)         | identity                          | `state` (questions)                           |
 | `state show\|answer\|resume <flow> <subject>` | Read or update workflow state                                                            | state                             | state                                         |
 | `version`                                    | Print plugin and schema versions                                                           | nothing                           | nothing                                       |
 

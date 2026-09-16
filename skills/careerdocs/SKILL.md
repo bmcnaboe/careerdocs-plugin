@@ -1,11 +1,11 @@
 ---
 name: careerdocs
-description: Core conventions and the careerdocs CLI shared by the careerdocs flows (onboard, update, resume, cover letter, apply). Consult this skill for how the four authorities (qualifications, voice, templates, target role) are modeled and located, how flow skills invoke the careerdocs CLI, the diff-then-approve rule for every profile change, visibility semantics, and where workflow state and generated outputs live. Load it before running any careerdocs command or when a flow skill references a convention it does not restate.
+description: Core conventions and the careerdocs CLI shared by the careerdocs flows (onboard, update, resume, cover letter, apply). Consult this skill for how the five authorities (qualifications, voice, identity, templates, target role) are modeled and located, how flow skills invoke the careerdocs CLI, the diff-then-approve rule for every profile change, visibility semantics, and where workflow state and generated outputs live. Load it before running any careerdocs command or when a flow skill references a convention it does not restate.
 license: MIT
 user-invocable: false
 compatibility: "Python 3.10+; uv recommended (uv run), python3 fallback. Offline except optional link checks. Optional LibreOffice (soffice) for PDF conversion."
 metadata:
-  version: "0.3.3"
+  version: "0.4.0"
   author: "careerdocs-plugin contributors"
 ---
 
@@ -17,7 +17,7 @@ guided interview. The flow skills own the conversation; this skill owns the rule
 obey and the deterministic commands they all call. Read it before running any
 `careerdocs` command.
 
-## The four authorities
+## The five authorities
 
 Kept separate, never folded into one opaque profile:
 
@@ -28,9 +28,13 @@ Kept separate, never folded into one opaque profile:
    also exists, but no flow uses its search, and making it authoritative implies a derived
    Markdown mirror at `providers.markdown.path`.
 2. **Voice** — how the applicant writes, in a `voice.md` with frontmatter (`voice.path`).
-3. **Document templates** — a DOCX plus a sidecar `template.json` manifest, one per kind
+3. **Identity** — who the applicant is beyond the facts: values, personality, motivations,
+   working style, career focus, interests, and the stories they tell about themselves, in
+   an `identity.md` with frontmatter (`identity.path`). Never a source of qualifications.
+   Per application, the brief's `alignment` records how the role connects to it.
+4. **Document templates** — a DOCX plus a sidecar `template.json` manifest, one per kind
    (`resume`, `cover_letter`), under `templates.dir`.
-4. **Target role** — the `RoleBrief` for one application, under
+5. **Target role** — the `RoleBrief` for one application, under
    `outputs.applications_dir/<role-slug>/`.
 
 An optional `careerdocs.json` only **locates** these; it stores no qualifications
@@ -65,7 +69,8 @@ uv run <skill-root>/careerdocs/scripts/careerdocs.py <command> --workspace <dir>
 
 Commands (full contract in `references/`): `doctor`, `config init|validate|workspace`,
 `profile validate|import|diff|approve|apply|export|status`, `brief`, `map`, `plan`,
-`render`, `check`, `state show|answer|resume`, `version`.
+`render`, `check`, `identity show|validate|questions`, `state show|answer|resume`,
+`version`.
 
 The CLI is deterministic; the judgement steps happen **between** commands. A command
 emits a JSON skeleton or candidate set, the agent fills it in, and the next command
@@ -107,9 +112,11 @@ Renderers and exports call `visible_for(document)`; nothing bypasses it.
 Relative to the workspace, under the configured directories (defaults shown):
 
 - Authoritative profile: `profile/` (markdown provider) or the Basic Memory vault folder.
+- Voice and identity profiles: `voice/voice.md` and `identity/identity.md` (`voice.path`,
+  `identity.path`).
 - Sources ledger: `sources.jsonl`; approvals: `approvals.jsonl`; diffs: `diffs/`.
-- Application artifacts: `applications/<role-slug>/` — `brief.json`, `map.json`,
-  `plan.json`.
+- Application artifacts: `applications/<role-slug>/` — `brief.json` (with the agreed
+  `approach` and the role `alignment`), `map.json`, `plan.json`.
 - Rendered documents and their records: `outputs/` (`<Name>-<Kind>.docx`, `.pdf`,
   `.record.json`; the pattern is `outputs.file_name`). The newest render carries the
   plain name; a replaced render moves to `outputs/archive/` under its generation stamp,
@@ -121,8 +128,8 @@ Relative to the workspace, under the configured directories (defaults shown):
 
 ## No applicant data in this repository
 
-This is the plugin source. Real qualifications, voice samples, personal templates, and
-generated documents live in the applicant's workspace, never here. Everything under
+This is the plugin source. Real qualifications, voice samples, identity profiles, personal
+templates, and generated documents live in the applicant's workspace, never here. Everything under
 `examples/` is a sanitized fictional applicant. The applicant-data guard fails the build
 on anything that looks like real personal data.
 

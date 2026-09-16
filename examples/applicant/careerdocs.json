@@ -6,6 +6,7 @@
   },
   "templates": { "dir": "templates", "resume": "resume", "cover_letter": "cover-letter" },
   "voice": { "path": "voice/voice.md" },
+  "identity": { "path": "identity/identity.md" },
   "outputs": { "applications_dir": "applications", "baselines_dir": "baselines" },
   "workflow": {
     "state_dir": ".careerdocs/state",

@@ -19,6 +19,7 @@
     "content_plan": { "type": ["string", "null"] },
     "template": { "type": "object" },
     "voice": { "type": ["object", "string", "null"] },
+    "identity": { "type": ["object", "string", "null"] },
     "positioning": { "enum": ["executive", "builder"] },
     "source_ids": { "type": "array", "items": { "type": "string" } },
     "checks": {

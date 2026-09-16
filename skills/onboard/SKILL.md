@@ -1,10 +1,10 @@
 ---
 name: onboard
-description: Guided setup and first-run tutorial for careerdocs, and the flow that reconciles an applicant's existing career materials into one authoritative profile. Use when the applicant runs the onboard skill, asks to set up or get started with careerdocs, or wants to import résumés, a LinkedIn data export, and notes into a single profile rather than scattered copies. Idempotent, so it first checks what already exists (workspace, profile, sources, templates, voice, pending state) and walks through only what is missing. It explains how to obtain each material (including the LinkedIn data export and the profile-PDF alternative), runs profile import, extracts candidates, builds a ProfileDiff, asks only the questions the CLI generates, records approval only after an explicit yes, applies the diff, sets up templates and voice, and ends with a short tour of the other flows. Resumable without re-asking answered questions.
+description: Guided setup and first-run tutorial for careerdocs, and the flow that reconciles an applicant's existing career materials into one authoritative profile. Use when the applicant runs the onboard skill, asks to set up or get started with careerdocs, or wants to import résumés, a LinkedIn data export, and notes into a single profile rather than scattered copies. Idempotent, so it first checks what already exists (workspace, profile, sources, templates, voice, identity, pending state) and walks through only what is missing. It explains how to obtain each material (including the LinkedIn data export), runs profile import, extracts candidates, builds a ProfileDiff, asks only the questions the CLI generates, records approval only after an explicit yes, applies the diff, sets up templates and voice, captures the applicant's identity by interview (values, personality, motivations, working style, career focus, interests), and ends with a short tour of the other flows. Resumable without re-asking answered questions.
 license: MIT
 compatibility: "Python 3.10+; uv recommended. Requires the careerdocs core skill and its careerdocs CLI."
 metadata:
-  version: "0.3.3"
+  version: "0.4.0"
   author: "careerdocs-plugin contributors"
 ---
 
@@ -12,7 +12,7 @@ metadata:
 
 The front door of careerdocs: part setup, part tutorial, and the flow that turns an
 applicant's scattered materials into **one** authoritative profile. Read the core
-`careerdocs` skill first for the conventions this flow obeys (the four authorities, the
+`careerdocs` skill first for the conventions this flow obeys (the five authorities, the
 diff-then-approve rule, visibility, where state lives). Command detail is in
 `references/playbook.md`.
 
@@ -49,13 +49,15 @@ Read the report and branch on it:
   LinkedIn export steps included (section 2), and where things live (section 4). Close
   by offering, not requiring, the next moves: add new sources (Stage 2 for those files
   only), record a single new fact (the `update` skill), set up whatever Stage 4 finds
-  missing, or run the résumé flow if they have a job description at hand.
+  missing, revisit their identity profile (career focus and interests change; values
+  rarely do), or run the résumé flow if they have a job description at hand.
 - **Pending onboard state** (`state resume onboard <subject>` lists a diff or open
   questions): resume there; answered questions are never asked again.
 - **Sources already registered** (the provider's `sources.jsonl`): list them; do not
   re-import a file whose sha256 is already recorded.
-- **Templates or voice missing**: note it now; Stage 4 handles it after the profile
-  exists, so the applicant sees value before doing setup chores.
+- **Templates, voice, or identity missing** (`doctor` reports each): note it now; Stage 4
+  handles them after the profile exists, so the applicant sees value before doing setup
+  chores.
 - **Dependencies missing or the CLI failing**: stop and fix that first; nothing below
   works without the CLI.
 
@@ -108,10 +110,10 @@ Run `profile validate` and `doctor` again, and tell the applicant in one paragra
 now exists and where: the profile folder, the source ledger with provenance for every
 fact, and that private facts stay out of every export.
 
-## Stage 4 — Templates and voice
+## Stage 4 — Templates, voice, and identity
 
-Both are applicant-owned files in the workspace; the résumé and cover-letter flows need
-them. Handle whichever `doctor` reported missing.
+All three are applicant-owned files in the workspace; the résumé and cover-letter flows
+need them. Handle whichever `doctor` reported missing.
 
 - **Templates**: a DOCX with Jinja placeholders plus a `template.json` manifest per
   kind, under `templates/resume/` and `templates/cover-letter/`. If the applicant has
@@ -125,6 +127,16 @@ them. Handle whichever `doctor` reported missing.
   questions; if there are no samples, propose a plain, concrete default and ask three
   short questions (first or third person, words they never want to see, two sentences
   they are proud of). Show the draft and write it only after a yes.
+- **Identity**: `identity/identity.md`, who the applicant is beyond the facts, so a cover
+  letter has a through-line of their own instead of a walk through the requirements.
+  Run `identity questions --flow onboard --subject <name>`; it lists one question per
+  section still missing (values, personality, motivations, working style, career focus,
+  interests) with a stable id, and marks the ones already answered. Ask them one at a
+  time, in plain language, with why each matters in a sentence; record each answer with
+  `state answer`. Listen for the stories they tell while answering and keep them for
+  the file's body. Draft the file from the answers, in their words, never inventing a
+  value or a story; show it; write it only after a yes. The durable sections change
+  rarely; career focus and interests are worth revisiting when they return.
 
 ## Stage 5 — The tutorial
 
@@ -142,3 +154,5 @@ a job description at hand.
 - One authoritative profile: never hand-edit provider files; every change is a diff.
 - Private facts stay private: they are in the profile but never in the export.
 - Idempotent: check before doing; never re-import, re-ask, or overwrite without a yes.
+- Identity is the applicant's own account: drafted from their answers, never inferred
+  from the profile or invented, and never a source of qualifications.

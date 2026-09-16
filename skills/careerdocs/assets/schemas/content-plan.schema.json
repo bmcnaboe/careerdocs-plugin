@@ -10,6 +10,8 @@
     "kind": { "enum": ["resume", "cover_letter"] },
     "template": { "type": "object" },
     "voice": { "type": ["object", "string", "null"] },
+    "identity": { "type": ["object", "string", "null"] },
+    "alignment": { "type": ["object", "null"] },
     "page_budget": { "type": "integer", "minimum": 1 },
     "units": {
       "type": "array",

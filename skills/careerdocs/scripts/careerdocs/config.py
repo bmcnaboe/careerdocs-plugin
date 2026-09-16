@@ -1,6 +1,6 @@
 """Workspace configuration (``careerdocs.json``).
 
-The config only *locates* the four authorities; it never stores qualifications or
+The config only *locates* the five authorities; it never stores qualifications or
 credentials. This module provides the defaults for every key, a deep-merged resolved
 view for the rest of the CLI, validation against ``config.schema.json``, refusal of
 credential-like or qualification-like content, and the ``config init`` / ``config
@@ -30,6 +30,7 @@ DEFAULT_CONFIG: dict = {
     },
     "templates": {"dir": "templates", "resume": "resume", "cover_letter": "cover-letter"},
     "voice": {"path": "voice/voice.md"},
+    "identity": {"path": "identity/identity.md"},
     "outputs": {"applications_dir": "applications", "baselines_dir": "baselines", "file_name": "{name}-{kind}"},
     "workflow": {
         "state_dir": ".careerdocs/state",

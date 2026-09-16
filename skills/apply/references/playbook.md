@@ -85,6 +85,29 @@ careerdocs brief applications/<slug>/brief.json --validate --workspace <dir>
 careerdocs state answer apply <slug> --question approach --text "Agreed approach" --answer "<one-line summary>" --workspace <dir>
 ```
 
+## 3b. The alignment
+
+```sh
+careerdocs brief applications/<slug>/brief.json --alignment --flow apply --subject <slug> --workspace <dir> --json
+```
+
+Lists the alignment questions the brief has not answered — `alignment:why`,
+`alignment:values`, `alignment:interests`, `alignment:focus`, `alignment:through_line`,
+`alignment:lead_story` — with the identity profile's values, interests, and direction as
+options where they apply, and any answer already recorded. Ask each with a suggested
+answer drawn from the identity profile and the posting; record answers with
+`state answer apply <slug> --question <id> --answer "<text>"`. Then write them to
+`brief.json` under `alignment` (`why`, `values[]`, `interests[]`, `focus`,
+`through_line`, `lead_story`, `notes`), validate the brief, and record the exchange:
+
+```sh
+careerdocs brief applications/<slug>/brief.json --validate --workspace <dir>
+careerdocs state answer apply <slug> --question alignment --text "Role alignment" --answer "<one-line summary>" --workspace <dir>
+```
+
+Without an identity profile the questions still run, with no options; suggest the
+onboard skill's identity stage afterwards so the next application starts from it.
+
 ## 4. The documents
 
 **Résumé** — the résumé playbook from its plan step. `plan` reads positioning and
@@ -102,7 +125,8 @@ careerdocs state answer apply <slug> --question resume --text "Résumé document
 ```
 
 **Cover letter** — the cover-letter playbook from its plan step, honoring
-`letter_length`, `tone`, and `avoid`; draft, review, render, and check as it directs.
+`letter_length`, `tone`, `avoid`, and the `alignment`; draft, review, render, and check
+as it directs.
 Record the path under question `letter`.
 
 ## 5. The report

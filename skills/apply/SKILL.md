@@ -1,10 +1,10 @@
 ---
 name: apply
-description: Produce a complete application for one job posting through a short guided interview that orchestrates the update, resume, and cover-letter skills. Use when the applicant has an onboarded profile and a posting in hand and wants the whole thing done in one sitting — the role brief and requirement map, a fit summary with the keywords the profile lacks, profile updates for qualifications they confirm they hold, an agreed approach (positioning, lead evidence, what to compress, résumé length, letter length and tone, what to avoid), then the tailored résumé and the complementary cover letter with every check passed and the cuts and gaps reported. Every question carries a suggested answer so the fast path is a yes; nothing enters the profile without an explicit approval; a gap is never claimed. Resumable — an interrupted run continues from its recorded answers.
+description: Produce a complete application for one job posting through a short guided interview that orchestrates the update, resume, and cover-letter skills. Use when the applicant has an onboarded profile and a posting in hand and wants the whole thing done in one sitting — the role brief and requirement map, a fit summary with the keywords the profile lacks, profile updates for qualifications they confirm they hold, an agreed approach (positioning, lead evidence, what to compress, résumé length, letter length and tone, what to avoid), the role alignment (why this role, which values, interests, and focus it engages, the letter's through-line), then the tailored résumé and the complementary cover letter with every check passed and the cuts and gaps reported. Every question carries a suggested answer so the fast path is a yes; nothing enters the profile without an explicit approval; a gap is never claimed. Resumable — an interrupted run continues from its recorded answers.
 license: MIT
 compatibility: "Python 3.10+; uv recommended. Requires the careerdocs core skill, an onboarded profile, templates, and voice; the update, resume, and cover-letter skills do the work. Optional LibreOffice for PDF checks."
 metadata:
-  version: "0.3.3"
+  version: "0.4.0"
   author: "careerdocs-plugin contributors"
 ---
 
@@ -40,9 +40,16 @@ fast path is a yes; never ask what the workflow state already answers.
    letter length (a brief note or a full page) and tone, and anything to avoid. Record
    the agreed approach on the brief (`approach`), where `plan` and the drafting steps
    read it.
-4. **The documents** — run the `resume` skill from its plan step, then the
-   `cover-letter` skill, each honoring the approach. Both end with every check passed.
-5. **The report** — what was cut for space, which requirements remain honest gaps, which
+4. **The alignment** — run `brief --alignment`; it lists the alignment questions the
+   brief has not answered (why this role, which values and interests it engages, the
+   focus it serves, the letter's through-line, the story that carries it), offering the
+   identity profile's own values, interests, and direction as options. Ask them one at a
+   time with a suggested answer, write the answers to the brief (`alignment`), and
+   record the exchange. No identity profile yet: ask anyway, and suggest onboard later.
+5. **The documents** — run the `resume` skill from its plan step, then the
+   `cover-letter` skill, each honoring the approach and the alignment. Both end with
+   every check passed.
+6. **The report** — what was cut for space, which requirements remain honest gaps, which
    qualifications were confirmed and added, and where the files are.
 
 ## Resuming
@@ -55,5 +62,7 @@ the step, any pending diff, and open questions; continue from there without re-a
 - Nothing enters the profile outside the diff-then-approve rule; a qualification the
   applicant has not confirmed is never added, and a synonym is reworded, not added.
 - The approach changes emphasis, order, length, and tone; never a fact. Gaps stay gaps.
+- The alignment is the applicant's account, in their words; it shapes the letter's
+  through-line and tone, never a fact.
 - Delegate, do not duplicate: the mechanics live in `update`, `resume`, and
   `cover-letter`; this skill decides and hands off.

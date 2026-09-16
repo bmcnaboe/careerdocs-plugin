@@ -130,19 +130,23 @@ in this repository.
 3. **Tailored resume** — turn a job description into a role brief, map each requirement
    to direct / transferable / gap evidence, plan the content, render it, and run the
    checks.
-4. **Complementary cover letter** — reuse the brief and map to draft a letter that
+4. **Complementary cover letter** — reuse the brief and map to draft a letter organized
+   around the applicant's own through-line (their identity and the role alignment) that
    complements the resume rather than repeating it.
 5. **Apply** — a short guided interview that runs the three flows above for one posting:
    fit and gaps, qualifications you confirm, an agreed approach (positioning, emphasis,
-   length, tone), then both documents checked and reported.
+   length, tone), the role alignment, then both documents checked and reported.
 
-## The four authorities
+## The five authorities
 
 Kept separate, never folded into one opaque profile:
 
 - **Qualifications** — the `CareerProfile`, held by a provider — structured Markdown under
   `profile/` in the workspace by default; a Basic Memory provider also exists.
 - **Voice** — how the applicant writes, in a `voice.md`.
+- **Identity** — who the applicant is beyond the facts (values, personality, motivations,
+  working style, career focus, interests, stories), in an `identity.md`; per application,
+  the brief's `alignment` records how the role connects to it.
 - **Document templates** — a DOCX template plus a sidecar `template.json` manifest.
 - **Target role** — the role brief for one application.
 
@@ -151,7 +155,8 @@ credentials.
 
 ## No applicant data, ever
 
-Qualifications, voice samples, personal templates, credentials, and generated documents
+Qualifications, voice samples, identity profiles, personal templates, credentials, and
+generated documents
 stay outside this repository. Everything under `examples/` and `templates/` here is
 sanitized and fictional. A repository guard fails the build on anything that looks like
 real personal data.
@@ -171,7 +176,7 @@ Start at [docs/README.md](docs/README.md). Guides:
 - [docs/profile-schema.md](docs/profile-schema.md) — the versioned `CareerProfile` model
 - [docs/provider-contract.md](docs/provider-contract.md) — the provider interface and the two providers
 - [docs/checks.md](docs/checks.md) — the five output checks
-- [docs/templates-and-voice.md](docs/templates-and-voice.md) — authoring templates and the voice profile
+- [docs/templates-and-voice.md](docs/templates-and-voice.md) — authoring templates, the voice profile, and the identity profile
 - [docs/migration.md](docs/migration.md) — migrating an existing career folder
 
 ## License

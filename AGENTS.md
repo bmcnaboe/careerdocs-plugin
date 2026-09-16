@@ -19,8 +19,8 @@ agent-layer may install it.
 - **No applicant data, ever.** Qualifications, voice samples, personal templates,
   credentials, and generated documents stay outside this repository. Everything
   under examples and templates here is sanitized and fictional.
-- **Four authorities stay separate**: qualifications, voice, document templates, and
-  target role. Nothing folds them into one opaque profile.
+- **Five authorities stay separate**: qualifications, voice, identity, document templates,
+  and target role. Nothing folds them into one opaque profile.
 - **Authoritative updates are proposals.** A change to an applicant's profile is a
   reviewable diff the applicant approves, never a silent write.
 - **Provider-neutral first.** Workflow logic lives once in the shared source; the

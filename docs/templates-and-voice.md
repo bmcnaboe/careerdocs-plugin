@@ -1,7 +1,8 @@
 # Templates and voice
 
-Two of the four authorities are applicant-owned files: the document **templates** and the
-**voice** profile. Both live in the workspace, never in this repository.
+Three of the five authorities are applicant-owned files: the document **templates**, the
+**voice** profile, and the **identity** profile. All live in the workspace, never in this
+repository.
 
 ## Document templates
 
@@ -103,3 +104,35 @@ body for document-specific guidance: résumé bullets can be verb-first while le
 sound conversational, warm, and enthusiastic. See `examples/applicant/voice/voice.md`
 for a sanitized example. The CLI checks do not evaluate voice; the cover-letter flow
 includes an editorial review before rendering.
+
+## Identity profile — `identity.md`
+
+An applicant-owned Markdown file (default `identity/identity.md`, `identity.path`) that
+holds who the applicant is beyond the facts, so a cover letter has a through-line of
+their own instead of a walk through the requirements. Frontmatter (JSON, validated by
+`careerdocs identity validate` against `identity.schema.json`):
+
+| Field | Meaning |
+| --- | --- |
+| `version` | `"1"` |
+| `values[]` | `{ name, statement }` — what they care about in work, each with what it looks like in practice |
+| `personality[]` | `{ trait, example }` — how colleagues experience them |
+| `motivations[]` | what energizes them, and what drains them |
+| `working_style` | how they like to work |
+| `career_focus` | `{ direction, roles[], settings[], avoid[] }` — where the career is heading |
+| `interests[]` | the problems, domains, or technologies they are drawn to now |
+
+The first four are durable; career focus and interests are the baseline each application
+refines. The Markdown body holds the stories the applicant tells about themselves and
+notes on how to use them. The onboard flow captures all of it by interview
+(`careerdocs identity questions` asks only for the sections still missing) and writes the
+file after the applicant approves the draft. It is never a source of qualifications: every
+fact a letter states still traces to a profile entity.
+
+Per application, the brief's `alignment` records how one role connects to the identity —
+`why`, `values[]`, `interests[]`, `focus`, `through_line`, `lead_story`, `notes` — captured
+by the apply flow (or the cover-letter flow on its own) through
+`careerdocs brief --alignment`, which asks only what the brief lacks. The letter plan
+carries the identity path and the alignment, and the output record names the identity
+profile beside the voice. See `examples/applicant/identity/identity.md` for a sanitized
+example.
