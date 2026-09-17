@@ -125,6 +125,9 @@ def test_five_checks(tmp_path):
 def test_default_two_page_target_rejects_short_resume(tmp_path):
     ws, app, rendered = run_pipeline(tmp_path)
     assert json.loads((app / "plan.json").read_text())["page_budget"] == 2
+    # Supply a known one-page PDF so this check also runs without LibreOffice.
+    shutil.copyfile(ROOT / "tests" / "fixtures" / "rendered" / "example-resume.pdf",
+                    Path(rendered["document"]).with_suffix(".pdf"))
     rc, out = run(["check", rendered["document"], "--workspace", ws, "--json"])
     assert rc == 1
     assert json.loads(out)["checks"]["pagination"]["status"] == "fail"
