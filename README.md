@@ -12,6 +12,9 @@ voice and template, and verifying every output before it is called done. Every
 deterministic step is a `careerdocs` CLI command; the agent-facing workflow lives in five
 Agent Skills that call it.
 
+Résumés target two pages by default. A one-page résumé is made only when the applicant
+expressly asks for one; the pagination check verifies the rendered page count.
+
 ## Install
 
 Every environment installs the plugin straight from this repository with its own plugin

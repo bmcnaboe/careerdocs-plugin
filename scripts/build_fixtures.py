@@ -121,10 +121,10 @@ RESUME_TEMPLATE_JSON = {
     "kind": "resume",
     "version": "1",
     "page_budget": 2,
-    "units_per_page": 12,
+    "units_per_page": 15,
     "sections": [
         {"id": "header", "title": "", "placeholder": "contact", "entity_types": ["contact"], "max_items": 1, "required": True},
-        {"id": "experience", "title": "Experience", "placeholder": "experience", "entity_types": ["experience", "achievement"], "max_items": 12, "required": True, "role_summaries": True},
+        {"id": "experience", "title": "Experience", "placeholder": "experience", "entity_types": ["experience", "achievement"], "max_items": 21, "required": True, "role_summaries": True},
         {"id": "projects", "title": "Projects", "placeholder": "projects", "entity_types": ["project"], "max_items": 6, "required": False},
         {"id": "skills", "title": "Skills", "placeholder": "skills", "entity_types": ["skill"], "max_items": 20, "required": False},
         {"id": "education", "title": "Education", "placeholder": "education", "entity_types": ["education"], "max_items": 5, "required": False},
@@ -150,7 +150,8 @@ COVER_LETTER_TEMPLATE_JSON = {
 
 _INK = "1F1F1F"
 _MARGIN_INCHES = 0.7
-_TEXT_WIDTH_INCHES = 8.5 - 2 * _MARGIN_INCHES
+_RESUME_MARGIN_INCHES = 1.0
+_RESUME_TEXT_WIDTH_INCHES = 8.5 - 2 * _RESUME_MARGIN_INCHES
 
 
 def _base_document():
@@ -240,18 +241,22 @@ def build_resume_template(directory: Path) -> None:
     from docx.shared import Inches, Pt
 
     document = _base_document()
+    section = document.sections[0]
+    section.left_margin = section.right_margin = Inches(_RESUME_MARGIN_INCHES)
+    section.top_margin = section.bottom_margin = Inches(0.9)
+    document.styles["Normal"].font.size = Pt(11)
     _header(document, after=3)
     _paragraph(document, "{%p for section in sections %}")
     _paragraph(document, "{%p if section.units %}")
-    _rule_below(_paragraph(document, "{{ section.title }}", size=11, bold=True, before=10, after=3.5, caps=True))
+    _rule_below(_paragraph(document, "{{ section.title }}", size=11.5, bold=True, before=10, after=3.5, caps=True))
     _paragraph(document, "{%p for unit in section.units %}")
     _paragraph(document, "{%p if unit.kind == 'bullet' %}")
     _paragraph(document, "{{ unit.text }}", style="List Bullet", after=2)
     _paragraph(document, "{%p elif section.id == 'experience' %}")
     role = _paragraph(document, before=6, after=1)
-    role.paragraph_format.tab_stops.add_tab_stop(Inches(_TEXT_WIDTH_INCHES), WD_TAB_ALIGNMENT.RIGHT)
+    role.paragraph_format.tab_stops.add_tab_stop(Inches(_RESUME_TEXT_WIDTH_INCHES), WD_TAB_ALIGNMENT.RIGHT)
     run = role.add_run("{{ unit.head }}")
-    run.bold, run.font.size = True, Pt(11)
+    run.bold, run.font.size = True, Pt(11.5)
     role.add_run().add_tab()
     role.add_run("{{ unit.tail }}")
     _paragraph(document, "{%p if unit.note %}")

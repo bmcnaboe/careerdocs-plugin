@@ -59,10 +59,11 @@ to avoid) is the applicant's decision already made; `plan` reads its positioning
 careerdocs plan --positioning <executive|builder> --kind resume --role-slug <slug> --workspace <dir> --json
 ```
 
-Selects and orders evidence within the page budget — `--page-budget` for this plan, else
-the brief's `approach.resume_pages`, else the template's — and lists cuts. Review the cut
-list; if something important was cut, adjust emphasis (positioning) or the budget rather
-than inflating claims.
+Selects and orders evidence for a two-page résumé by default — `--page-budget` for an
+express applicant request, else the brief's `approach.resume_pages`, else the configured
+two-page target — and lists cuts. Do not choose one page merely because the role or first
+draft seems suited to it. Review the cut list; if something important was cut, adjust
+emphasis rather than inflating claims.
 
 ## 5. Draft in voice
 
@@ -90,9 +91,13 @@ current documents and nothing is lost.
 careerdocs check applications/<slug>/outputs/<Name>-Resume.docx --workspace <dir>
 ```
 
-Runs factual, links/dates, extraction, pagination, and layout. Fix any failure at its
-source (the plan, the draft, the template) — never by weakening a check. The document is
-done only when the record shows every check passed or skipped with a reason.
+Runs factual, links/dates, extraction, pagination, and layout. Pagination requires the
+rendered résumé to match its target: two pages by default, or one only when expressly
+requested. If a two-page draft renders on one page, add relevant, verified evidence or
+improve the typography and spacing, then rerender and inspect both pages. Fix any
+failure at its source (the plan, the draft, the template) — never by weakening a check.
+The document is done only when the record shows every check passed or skipped with a
+reason.
 
 ## 8. Report cuts and gaps
 

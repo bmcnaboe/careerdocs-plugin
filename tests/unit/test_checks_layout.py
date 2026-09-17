@@ -31,6 +31,13 @@ def test_pagination_within_budget():
     assert pagination.page_count(PDF) == 1
 
 
+def test_resume_pagination_requires_exact_target():
+    short = pagination.check(PDF, page_budget=2, exact=True)
+    assert short["status"] == "fail"
+    assert "résumé target is 2" in short["details"]
+    assert pagination.check(PDF, page_budget=1, exact=True)["status"] == "pass"
+
+
 def test_pagination_over_budget():
     result = pagination.check(PDF, page_budget=0)
     assert result["status"] == "fail"

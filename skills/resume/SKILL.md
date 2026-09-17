@@ -4,7 +4,7 @@ description: Generate a tailored résumé for a specific job description from th
 license: MIT
 compatibility: "Python 3.10+; uv recommended. Requires the careerdocs core skill and an onboarded profile. Optional LibreOffice for PDF checks."
 metadata:
-  version: "0.4.1"
+  version: "0.4.2"
   author: "careerdocs-plugin contributors"
 ---
 
@@ -34,14 +34,16 @@ Full detail in `references/playbook.md`.
    applicant's yes; leave the rest.
 3. **Choose positioning** — executive or builder (default from config). This changes
    selection and emphasis, never the facts.
-4. **`plan --positioning <mode>`** — select, order, and emphasize evidence within the
-   template's page budget; anything over budget is cut and reported.
+4. **`plan --positioning <mode>`** — target two pages by default, selecting, ordering,
+   and emphasizing evidence accordingly. Use one page only when the applicant expressly
+   requests it. Anything over the target is cut and reported.
 5. **Draft units in voice** — rewrite each unit's text in the applicant's voice
    (`voice.md`), keeping every claim traceable to its `source_ids`.
 6. **`render --kind resume [--pdf]`** — fill the template; the document is written as
    `<Name>-Resume.docx`, and any previous render moves to `outputs/archive/`.
 7. **`check <document>`** — run the five checks (factual, links/dates, extraction,
-   pagination, layout) and write the output record.
+   pagination, layout) and write the output record. A résumé must reach its page target;
+   revise the content or layout and rerender when it comes up short.
 8. **Report cuts and gaps** — tell the applicant what was cut for space and which
    requirements are gaps, so they decide how to proceed.
 

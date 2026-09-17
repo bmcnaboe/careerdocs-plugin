@@ -12,7 +12,8 @@ output record. A document is "done" only when the record shows every check `pass
 2. **Links / dates** (always) — dates parse, are ordered, and are not in the future; links
    are well-formed. Link liveness is skipped offline.
 3. **Text extraction** (needs a PDF) — the PDF carries an extractable text layer.
-4. **Pagination** (needs a PDF) — page count fits the template's page budget.
+4. **Pagination** (needs a PDF) — a résumé matches its target of two pages by default
+   (one only on express request); other documents fit their page budget.
 5. **Rendered layout** (needs a PDF) — content within margins and a sane density; a PNG per
    page is rendered.
 

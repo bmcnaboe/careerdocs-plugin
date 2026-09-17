@@ -70,7 +70,8 @@ Propose, in one short list with a default for each item, and confirm in one exch
 - **lead_evidence** — the three entities with the highest value in the map (direct
   evidence for must requirements first), as ids with a one-line label each.
 - **compress** — roles, sections, or projects to compress or leave out for this role.
-- **resume_pages** — the template's budget, or 1 when a one-page résumé suits the role.
+- **resume_pages** — 2 by default; use 1 only when the applicant expressly asks for a
+  one-page résumé, never because a shorter draft seems sufficient.
 - **letter_length** — `note` (a brief note, roughly 150 to 200 words) or `page` (a full
   page, roughly 300 to 400 words); `note` when the posting asks for a note.
 - **tone** — the applicant's voice, with a conversational, warm, enthusiastic first-person

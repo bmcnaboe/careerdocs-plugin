@@ -37,10 +37,18 @@ def build(tmp_path):
 
 def test_run_checks_all_pass_with_pdf(tmp_path):
     p, profile, text = build(tmp_path)
+    p["page_budget"] = 1  # Explicit one-page request for the one-page fixture.
     results = record.run_checks(text, EXAMPLE_PDF, p, profile, TEMPLATE_JSON, layout_dir=tmp_path / "layout")
     assert set(results) == set(record.CHECK_NAMES)
     assert all(r["status"] == "pass" for r in results.values()), results
     assert record.overall_exit_code(results) == 0
+
+
+def test_default_resume_target_rejects_one_page_pdf(tmp_path):
+    p, profile, text = build(tmp_path)
+    results = record.run_checks(text, EXAMPLE_PDF, p, profile, TEMPLATE_JSON)
+    assert results["pagination"]["status"] == "fail"
+    assert record.overall_exit_code(results) == 1
 
 
 def test_run_checks_without_pdf_skips_pdf_checks(tmp_path):
@@ -82,6 +90,7 @@ def test_cli_render_then_check(tmp_path, capsys):
     shutil.copy(TEMPLATE_DIR / "template.docx", dest / "template.docx")
     shutil.copy(TEMPLATE_DIR / "template.json", dest / "template.json")
     p, _, _ = build(tmp_path)
+    p["page_budget"] = 1  # Explicit one-page request for the one-page fixture.
     app = tmp_path / "applications" / "example-role"
     app.mkdir(parents=True)
     (app / "plan.json").write_text(json.dumps(p), encoding="utf-8")

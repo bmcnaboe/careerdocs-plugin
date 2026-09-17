@@ -4,7 +4,7 @@ description: Write a cover letter with a through-line of the applicant's own. It
 license: MIT
 compatibility: "Python 3.10+; uv recommended. Requires the careerdocs core skill, an onboarded profile, and an existing brief and map for the role (from the resume skill)."
 metadata:
-  version: "0.4.1"
+  version: "0.4.2"
   author: "careerdocs-plugin contributors"
 ---
 

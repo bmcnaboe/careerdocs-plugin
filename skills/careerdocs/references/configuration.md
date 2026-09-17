@@ -22,7 +22,7 @@ checks it and refuses forbidden content. Validated against `assets/schemas/confi
 | `outputs.baselines_dir` | `baselines` | generated baselines |
 | `workflow.state_dir` | `.careerdocs/state` | resumable state |
 | `workflow.positioning_default` | `builder` | `executive` or `builder` |
-| `workflow.page_budget.resume` | `2` | résumé pages |
+| `workflow.page_budget.resume` | `2` | default résumé page target; one page only on express request |
 | `workflow.page_budget.cover_letter` | `1` | letter pages |
 | `workflow.approval_mode` | `explicit` | only `explicit` in this version |
 

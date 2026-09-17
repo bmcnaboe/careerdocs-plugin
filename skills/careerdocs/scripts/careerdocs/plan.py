@@ -279,7 +279,7 @@ def register(subparsers, common: argparse.ArgumentParser) -> None:
     parser.add_argument("--role-slug")
     parser.add_argument("--baseline", action="store_true", help="role-less baseline from all visible evidence")
     parser.add_argument("--page-budget", type=int, metavar="PAGES",
-                        help="pages for this plan (default: the brief's approach, then the template)")
+                        help="pages for this plan (default: the brief's approach, then the configured default)")
     parser.set_defaults(func=cmd_plan)
 
 
@@ -313,9 +313,10 @@ def cmd_plan(args) -> int:
     identity = {"path": cfg["identity"]["path"]}
     if args.baseline:
         positioning = args.positioning or cfg["workflow"]["positioning_default"]
+        page_budget = args.page_budget or (cfg["workflow"]["page_budget"]["resume"] if args.kind == "resume" else None)
         plan = generate_plan([], profile, template, positioning,
                              voice=voice, identity=identity, baseline=True,
-                             page_budget=args.page_budget)
+                             page_budget=page_budget)
         out_dir = Path(args.workspace) / cfg["outputs"]["baselines_dir"] / positioning
     else:
         slug = _resolve_slug(args, cfg)
@@ -326,7 +327,10 @@ def cmd_plan(args) -> int:
         # The agreed approach on the brief supplies the defaults; flags override it.
         approach = (brief or {}).get("approach") or {}
         positioning = args.positioning or approach.get("positioning") or cfg["workflow"]["positioning_default"]
-        page_budget = args.page_budget or (approach.get("resume_pages") if args.kind == "resume" else None)
+        page_budget = args.page_budget or (
+            approach.get("resume_pages") or cfg["workflow"]["page_budget"]["resume"]
+            if args.kind == "resume" else None
+        )
         plan = generate_plan(mapping, profile, template, positioning,
                              voice=voice, identity=identity, alignment=(brief or {}).get("alignment"),
                              brief=brief, page_budget=page_budget)

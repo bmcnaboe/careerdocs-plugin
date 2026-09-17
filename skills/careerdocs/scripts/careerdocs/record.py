@@ -54,7 +54,7 @@ def run_checks(text: str, pdf_path: Path | None, plan: dict, profile: dict, temp
 def pagination_check(pdf_path: Path, plan: dict) -> dict:
     from .checks import pagination
 
-    return pagination.check(pdf_path, plan.get("page_budget", 2))
+    return pagination.check(pdf_path, plan.get("page_budget", 2), exact=plan.get("kind") == "resume")
 
 
 def validate_record(record: dict) -> list[str]:

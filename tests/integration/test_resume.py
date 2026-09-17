@@ -49,11 +49,14 @@ def build_workspace(tmp_path):
     return ws, app
 
 
-def run_pipeline(tmp_path, positioning="builder"):
+def run_pipeline(tmp_path, positioning="builder", page_budget=None):
     ws, app = build_workspace(tmp_path)
     run(["brief", str(app / "job-description.md"), "--role-slug", SLUG, "--workspace", ws])
     run(["map", "--role-slug", SLUG, "--workspace", ws])
-    run(["plan", "--positioning", positioning, "--kind", "resume", "--role-slug", SLUG, "--workspace", ws])
+    plan_args = ["plan", "--positioning", positioning, "--kind", "resume", "--role-slug", SLUG, "--workspace", ws]
+    if page_budget is not None:
+        plan_args += ["--page-budget", str(page_budget)]
+    run(plan_args)
     rendered = run_json(["render", "--kind", "resume", "--pdf", "--role-slug", SLUG, "--workspace", ws, "--json"])
     return ws, app, rendered
 
@@ -108,7 +111,7 @@ def test_positioning_inverts(tmp_path):
 
 
 def test_five_checks(tmp_path):
-    ws, app, rendered = run_pipeline(tmp_path)
+    ws, app, rendered = run_pipeline(tmp_path, page_budget=1)
     result = run_json(["check", rendered["document"], "--workspace", ws, "--json"])
     checks = result["checks"]
     assert set(checks) == {"factual", "links_dates", "extraction", "pagination", "layout"}
@@ -117,6 +120,14 @@ def test_five_checks(tmp_path):
     for name in ("extraction", "pagination", "layout"):
         assert checks[name]["status"] in ("pass", "skipped")
     assert result["ok"] is True
+
+
+def test_default_two_page_target_rejects_short_resume(tmp_path):
+    ws, app, rendered = run_pipeline(tmp_path)
+    assert json.loads((app / "plan.json").read_text())["page_budget"] == 2
+    rc, out = run(["check", rendered["document"], "--workspace", ws, "--json"])
+    assert rc == 1
+    assert json.loads(out)["checks"]["pagination"]["status"] == "fail"
 
 
 def test_budget_cuts_reported(tmp_path):
