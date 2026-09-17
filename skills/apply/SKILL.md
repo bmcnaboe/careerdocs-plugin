@@ -4,7 +4,7 @@ description: Produce a complete application for one job posting through a short 
 license: MIT
 compatibility: "Python 3.10+; uv recommended. Requires the careerdocs core skill, an onboarded profile, templates, and voice; the update, resume, and cover-letter skills do the work. Optional LibreOffice for PDF checks."
 metadata:
-  version: "0.4.0"
+  version: "0.4.1"
   author: "careerdocs-plugin contributors"
 ---
 
@@ -42,7 +42,7 @@ fast path is a yes; never ask what the workflow state already answers.
    read it.
 4. **The alignment** — run `brief --alignment`; it lists the alignment questions the
    brief has not answered (why this role, which values and interests it engages, the
-   focus it serves, the letter's through-line, the story that carries it), offering the
+   focus it serves, the letter's through-line, the evidence that best supports it), offering the
    identity profile's own values, interests, and direction as options. Ask them one at a
    time with a suggested answer, write the answers to the brief (`alignment`), and
    record the exchange. No identity profile yet: ask anyway, and suggest onboard later.

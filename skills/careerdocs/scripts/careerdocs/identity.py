@@ -11,7 +11,7 @@ document states still traces to a profile entity.
 
 Per application, the brief's ``alignment`` records how one role connects to the identity:
 why this role, which values and interests it engages, the focus it serves, the through-line
-the letter is organized around, and the story that carries it.
+the letter is organized around, and the thread of evidence that best supports it.
 
 Both are captured by interview, one question at a time. ``identity questions`` and
 ``brief --alignment`` emit only the questions whose answers are still missing, each with a
@@ -51,7 +51,7 @@ ALIGNMENT_FIELDS = (
     ("interests", "Which of your interests does it serve, or what new one does it open?"),
     ("focus", "Which part of your career focus does it advance?"),
     ("through_line", "In one sentence, what is the one idea the letter should be organized around?"),
-    ("lead_story", "Which story or piece of evidence carries that idea best?"),
+    ("lead_story", "Which story or thread of evidence best supports that idea?"),
 )
 
 

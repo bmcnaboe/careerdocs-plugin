@@ -43,6 +43,8 @@ through-line and tone; every fact a letter states still traces to the profile.
 
 ## How to use this
 
-Open a letter on why the role fits the direction above, in Jordan's words, and let one
-story carry it. Candor shows in short, plain sentences; stewardship shows in what Jordan
-says about the people and systems left behind, never in self-praise.
+Open a letter with what is genuinely exciting about the role and the organization for
+Jordan, grounded in the direction above, then make the fit from the whole of Jordan: the
+pattern across the roles and the person beyond them. Candor shows in short, plain
+sentences; stewardship shows in what Jordan says about the people and systems left
+behind, never in self-praise.

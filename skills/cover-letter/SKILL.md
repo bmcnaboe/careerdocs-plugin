@@ -4,7 +4,7 @@ description: Write a cover letter with a through-line of the applicant's own. It
 license: MIT
 compatibility: "Python 3.10+; uv recommended. Requires the careerdocs core skill, an onboarded profile, and an existing brief and map for the role (from the resume skill)."
 metadata:
-  version: "0.4.0"
+  version: "0.4.1"
   author: "careerdocs-plugin contributors"
 ---
 
@@ -31,9 +31,10 @@ Full detail in `references/playbook.md`.
 2. **`plan --kind cover_letter --positioning <mode>`** — selects the highest-value
    evidence into a few paragraph units within the page budget and carries the identity
    path and the alignment into the plan.
-3. **Draft and review** — organize the letter around the alignment's through-line, let
-   the identity shape what is said and how, and follow the playbook's editorial review
-   before rendering.
+3. **Draft and review** — write a short, personal note about why this work matters to
+   the applicant and how they would help. Choose a few relevant facts and, when it fits,
+   a human detail that shows how they work. Let the role guide what belongs; follow the
+   applicant's natural train of thought rather than the posting's order. Read it aloud.
 4. **`render --kind cover_letter [--pdf]`** — fill the letter template.
 5. **`check <document>`** — run the standard checks and separately confirm that no résumé
    bullet appears verbatim.
@@ -42,5 +43,5 @@ Full detail in `references/playbook.md`.
 
 - The identity and alignment supply motive, emphasis, and tone; every fact still traces
   to a profile entity, and a gap requirement is never claimed.
-- A letter that walks the requirements list is not done. If it could have been written
-  by anyone with the same résumé, revise until it could not.
+- A letter that walks the requirements list or repeats the résumé is not done. If it
+  could have been written by anyone with the same résumé, revise until it could not.
