@@ -103,7 +103,7 @@ def test_positioning_inverts(tmp_path):
         return next(u["source_ids"][0] for u in plan["units"] if u["section_id"] == "skills")
 
     def skill_ids(plan):
-        return {u["source_ids"][0] for u in plan["units"] if u["section_id"] == "skills"}
+        return {sid for u in plan["units"] if u["section_id"] == "skills" for sid in u["source_ids"]}
 
     # Same facts, inverted emphasis: the leading skill differs, the set is identical.
     assert first_skill(builder_plan) != first_skill(executive_plan)

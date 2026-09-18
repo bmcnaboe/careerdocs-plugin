@@ -1,8 +1,9 @@
 """Rendered-layout check.
 
 pdfplumber inspects each page: content must stay inside the margins and not exceed a
-sane text density (a proxy for an overfull page). pypdfium2 renders one PNG per page so a
-human or the acceptance phase can eyeball the result.
+sane text density (a proxy for an overfull page), and any line the template expects on
+one line (the contact details) must not have wrapped. pypdfium2 renders one PNG per page
+so a human or the acceptance phase can eyeball the result.
 """
 
 from __future__ import annotations
@@ -30,12 +31,20 @@ def render_page_pngs(pdf_path, out_dir: Path, name: str, scale: float = 1.0) -> 
     return paths
 
 
-def check(pdf_path, out_dir: Path | None = None, name: str = "layout", margin: float = _DEFAULT_MARGIN_PTS) -> dict:
+def _squash(text: str) -> str:
+    return " ".join(text.split())
+
+
+def check(pdf_path, out_dir: Path | None = None, name: str = "layout", margin: float = _DEFAULT_MARGIN_PTS,
+          single_lines=()) -> dict:
+    """``single_lines`` are strings that must each render as one line of the PDF."""
     import pdfplumber
 
     findings: list[str] = []
+    rendered_lines: set[str] = set()
     with pdfplumber.open(str(Path(pdf_path))) as pdf:
         for page_no, page in enumerate(pdf.pages, start=1):
+            rendered_lines.update(_squash(line) for line in (page.extract_text() or "").splitlines())
             chars = page.chars
             if not chars:
                 continue
@@ -49,6 +58,9 @@ def check(pdf_path, out_dir: Path | None = None, name: str = "layout", margin: f
                 findings.append(f"page {page_no}: content below the bottom margin")
             if len(chars) > _MAX_CHARS_PER_PAGE:
                 findings.append(f"page {page_no}: text density too high ({len(chars)} chars)")
+    for line in single_lines:
+        if _squash(line) and _squash(line) not in rendered_lines:
+            findings.append(f"wrapped line: {line!r} does not fit on one line; shorten it")
 
     pngs: list[Path] = []
     if out_dir is not None:

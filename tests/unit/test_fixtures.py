@@ -53,3 +53,12 @@ def test_voice_frontmatter_parses():
 def test_job_description_has_gap_requirement():
     jd = (APPLICANT / "applications" / "example-role" / "job-description.md").read_text()
     assert "FDA-cleared medical device" in jd
+
+
+def test_example_resume_manifest_allowlists_every_section_title():
+    manifest = json.loads((APPLICANT / "templates" / "resume" / "template.json").read_text())
+    titles = {s["title"] for s in manifest["sections"] if s["title"]}
+    assert titles <= set(manifest["allowlist"])
+    assert {s["id"] for s in manifest["sections"]} >= {
+        "summary", "experience", "projects", "education", "credentials", "patents", "publications",
+        "awards", "affiliations", "volunteer", "skills", "interests"}

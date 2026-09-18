@@ -116,6 +116,12 @@ From then on, per application:
 | Add a new achievement or correction to your profile | `/careerdocs:update` | `$update` |
 | The whole application for one posting, guided | `/careerdocs:apply` | `$apply` |
 
+Documents land in `applications/<role-slug>/outputs/` as
+`<Name>-<Organization>-<Role>-Resume.docx` and `…-Cover.docx` (with a PDF when LibreOffice
+is installed). When the workspace is a git repository, every generation and revision round
+is committed there, so the history lives in git; otherwise a replaced render moves to
+`outputs/archive/`.
+
 Plain requests work too ("tailor my résumé to this job description: …"); the skill
 command is the reliable way to start a flow. "Run careerdocs doctor" shows what is
 configured, including which workspace resolved and how.

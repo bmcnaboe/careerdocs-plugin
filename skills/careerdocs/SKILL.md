@@ -5,7 +5,7 @@ license: MIT
 user-invocable: false
 compatibility: "Python 3.10+; uv recommended (uv run), python3 fallback. Offline except optional link checks. Optional LibreOffice (soffice) for PDF conversion."
 metadata:
-  version: "0.4.3"
+  version: "0.5.0"
   author: "careerdocs-plugin contributors"
 ---
 
@@ -22,7 +22,8 @@ obey and the deterministic commands they all call. Read it before running any
 Kept separate, never folded into one opaque profile:
 
 1. **Qualifications** — the `CareerProfile`: entities (contact, experience, achievement,
-   education, skill, project, credential, patent, publication) with stable IDs,
+   education, skill, project, credential, patent, publication, award, interest,
+   affiliation) with stable IDs,
    provenance, verification state, visibility, and conflict records. Held by a
    **provider** — structured Markdown under `profile/` by default. A Basic Memory provider
    also exists, but no flow uses its search, and making it authoritative implies a derived
@@ -69,8 +70,8 @@ uv run <skill-root>/careerdocs/scripts/careerdocs.py <command> --workspace <dir>
 
 Commands (full contract in `references/`): `doctor`, `config init|validate|workspace`,
 `profile validate|import|diff|approve|apply|export|status`, `brief`, `map`, `plan`,
-`render`, `check`, `identity show|validate|questions`, `state show|answer|resume`,
-`version`.
+`render`, `check`, `commit`, `identity show|validate|questions`,
+`state show|answer|resume`, `version`.
 
 The CLI is deterministic; the judgement steps happen **between** commands. A command
 emits a JSON skeleton or candidate set, the agent fills it in, and the next command
@@ -117,10 +118,15 @@ Relative to the workspace, under the configured directories (defaults shown):
 - Sources ledger: `sources.jsonl`; approvals: `approvals.jsonl`; diffs: `diffs/`.
 - Application artifacts: `applications/<role-slug>/` — `brief.json` (with the agreed
   `approach` and the role `alignment`), `map.json`, `plan.json`.
-- Rendered documents and their records: `outputs/` (`<Name>-<Kind>.docx`, `.pdf`,
-  `.record.json`; the pattern is `outputs.file_name`). The newest render carries the
-  plain name; a replaced render moves to `outputs/archive/` under its generation stamp,
-  never overwritten.
+- Rendered documents and their records: `outputs/` (`<Name>-<Org>-<Role>-Resume.docx`
+  and `-Cover.docx`, `.pdf`, `.record.json`; the pattern is `outputs.file_name`). The
+  newest render carries the plain name. When the workspace sits in a git repository
+  (`doctor` shows `history: git`), `render` commits an uncommitted previous render before
+  overwriting it, and every generation or revision round ends with
+  `careerdocs commit --role-slug <slug> -m "<Conventional Commit message>"`, which stages
+  only that round's paths (the application folder, its state, the profile). Otherwise a
+  replaced render moves to `outputs/archive/` under its generation stamp, never
+  overwritten, and `commit` is a no-op.
 - Generated baselines: `baselines/<positioning>/`.
 - Workflow state: `.careerdocs/state/<flow>/<subject>.json` — append-only
   questions, the pending diff, and artifact paths, so any flow resumes without repeating

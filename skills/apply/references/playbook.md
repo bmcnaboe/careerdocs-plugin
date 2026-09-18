@@ -70,10 +70,15 @@ Propose, in one short list with a default for each item, and confirm in one exch
 - **lead_evidence** — the three entities with the highest value in the map (direct
   evidence for must requirements first), as ids with a one-line label each.
 - **compress** — roles, sections, or projects to compress or leave out for this role.
+- **sections** — the template sections this résumé uses, by manifest id (the shipped
+  design offers summary, experience, projects, education, credentials, patents,
+  publications, awards, affiliations, volunteer, skills, interests); default every
+  section with evidence. A technical role keeps `skills` (Technical Focus); an executive
+  one may add `awards` or `interests` and drop `skills`.
 - **resume_pages** — 2 by default; use 1 only when the applicant expressly asks for a
   one-page résumé, never because a shorter draft seems sufficient.
-- **letter_length** — `note` (a brief note, roughly 150 to 200 words) or `page` (a full
-  page, roughly 300 to 400 words); `note` when the posting asks for a note.
+- **letter_length** — `note` (roughly 150 to 200 words) or `page` (roughly 250 to 350
+  words); `note` when the posting asks for a note.
 - **tone** — the applicant's voice, with a conversational, warm, enthusiastic first-person
   register for the letter; résumé style stays separate.
 - **avoid** — topics, phrases, or facts to keep out of both documents.
@@ -111,24 +116,29 @@ onboard skill's identity stage afterwards so the next application starts from it
 
 ## 4. The documents
 
-**Résumé** — the résumé playbook from its plan step. `plan` reads positioning and
-`resume_pages` from the brief's approach (`--positioning` and `--page-budget` override):
+**Résumé** — the résumé playbook from its plan step. `plan` reads positioning,
+`resume_pages`, and `sections` from the brief's approach (`--positioning`,
+`--page-budget`, and `--sections` override):
 
 ```sh
 careerdocs plan --kind resume --role-slug <slug> --workspace <dir> --json
 ```
 
 Draft in voice with the lead evidence first, compressing or omitting what `compress`
-names and keeping `avoid` out; render with `--pdf`; check. Record the document path:
+names and keeping `avoid` out; render with `--pdf`; check. Record the document path, then
+commit the round:
 
 ```sh
 careerdocs state answer apply <slug> --question resume --text "Résumé document" --answer "<path>" --workspace <dir>
+careerdocs commit --role-slug <slug> -m "feat(<slug>): tailored résumé" --workspace <dir>
 ```
 
 **Cover letter** — the cover-letter playbook from its plan step, honoring
 `letter_length`, `tone`, `avoid`, and the `alignment`; draft, review, render, and check
-as it directs.
-Record the path under question `letter`.
+as it directs. Record the path under question `letter`, then commit the round
+(`feat(<slug>): cover letter`). A revision to either document is its own round: revise,
+render, check, commit (`fix(<slug>): …`). Outside a git workspace `commit` is a no-op and
+the archive holds the history.
 
 ## 5. The report
 

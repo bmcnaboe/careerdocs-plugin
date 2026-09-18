@@ -104,8 +104,11 @@ def test_doctor_advises_on_non_standard_section_titles(tmp_path, capsys):
     manifest = tmp_path / "templates" / "resume" / "template.json"
     manifest.parent.mkdir(parents=True)
     manifest.write_text(json.dumps({"sections": [
-        {"id": "experience", "title": "Experience"}, {"id": "skills", "title": "Technical Focus"}]}), encoding="utf-8")
+        {"id": "experience", "title": "Experience"}, {"id": "skills", "title": "Technical Focus"},
+        {"id": "extras", "title": "Superpowers"}]}), encoding="utf-8")
     capsys.readouterr()
     assert cli.main(["doctor", "--workspace", str(tmp_path), "--json"]) == 0
     report = json.loads(capsys.readouterr().out)
-    assert len(report["advisories"]) == 1 and "Technical Focus" in report["advisories"][0]
+    # Technical Focus is a heading parsers key on; Superpowers is not.
+    assert len(report["advisories"]) == 1 and "Superpowers" in report["advisories"][0]
+    assert report["history"]["mode"] == "archive"

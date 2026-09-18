@@ -24,7 +24,8 @@ Validated against `assets/schemas/config.schema.json`.
 | `identity.path` | `identity/identity.md` | The applicant's identity profile: values, personality, motivations, working style, career focus, interests, stories. |
 | `outputs.applications_dir` | `applications` | Per-role application folders. |
 | `outputs.baselines_dir` | `baselines` | Generated baseline documents. |
-| `outputs.file_name` | `{name}-{kind}` | Rendered document name; placeholders `{name}` (the contact's name), `{kind}` (`Resume` / `Cover-Letter`), `{org}` (the brief's organization), `{slug}`. The newest render carries this name; a replaced render moves to `archive/` under its generation stamp. |
+| `outputs.file_name` | `{name}-{org}-{role}-{kind}` | Rendered document name. Placeholders: `{name}` (the contact's name), `{org}` (the brief's organization), `{role}` (the brief's role title), `{kind}` (`Resume` / `Cover`), `{slug}`; each is word-slugged and an empty one is dropped. `Jordan-Rivera-Wonka-Industries-Director-of-Engineering-Resume.docx`; a baseline has no organization or role, so `Jordan-Rivera-Resume.docx`. |
+| `outputs.history` | `auto` | How a replaced render is kept: `auto` commits to git when the workspace is inside a git work tree with a committer identity and moves it to `outputs/archive/` otherwise; `git` requires the repository; `archive` never uses git. See "Render history". |
 | `workflow.state_dir` | `.careerdocs/state` | Resumable workflow state. |
 | `workflow.positioning_default` | `builder` | Default positioning (`executive` or `builder`). |
 | `workflow.page_budget.resume` | `2` | Résumé page budget. |
@@ -52,6 +53,25 @@ with no argument shows what resolved and how; with `<dir>` it creates the direct
 needed, records it as the default, and writes its `careerdocs.json`. A recorded default
 that no longer exists is an error, not a silent fallback. `doctor` also names the source.
 
+## Render history
+
+The newest render always carries the plain name, so `outputs/` holds only the current
+documents. What happens to the render it replaces depends on `outputs.history`:
+
+- **git** — `render` first commits the previous render when it is not committed yet
+  (`chore(<slug>): keep the previous resume render`), then overwrites it in place. Each
+  generation or revision round ends with `careerdocs commit --role-slug <slug> -m "<message>"`,
+  which stages only that round's paths — the application folder, its workflow state, the
+  profile when the round changed it, and any `--path` — and commits them under a
+  Conventional Commit message; unrelated changes in the work tree stay untouched.
+  `--baseline --positioning <mode>` commits a baseline round, and `--path` alone commits
+  setup (the config, templates, voice, identity). Without a repository the command is a
+  no-op that says so, so the flows can always run it.
+- **archive** — the previous render moves to `outputs/archive/` under its generation
+  stamp, with its PDF, record, and layout renders.
+
+`doctor` reports which mode applies and, for git, the repository.
+
 ## Forbidden content
 
 `config validate` refuses the file if any key or string value looks like a credential
@@ -68,7 +88,7 @@ the config.
   "templates": { "dir": "templates", "resume": "resume", "cover_letter": "cover-letter" },
   "voice": { "path": "voice/voice.md" },
   "identity": { "path": "identity/identity.md" },
-  "outputs": { "applications_dir": "applications", "baselines_dir": "baselines", "file_name": "{name}-{kind}" },
+  "outputs": { "applications_dir": "applications", "baselines_dir": "baselines", "file_name": "{name}-{org}-{role}-{kind}", "history": "auto" },
   "workflow": { "positioning_default": "builder", "page_budget": { "resume": 2, "cover_letter": 1 } }
 }
 ```

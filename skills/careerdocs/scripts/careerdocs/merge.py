@@ -48,6 +48,12 @@ def match_key(candidate: dict):
         return (t,)
     if t == "achievement":
         return (t, candidate.get("parent_ref"), norm(candidate.get("statement")))
+    if t == "award":
+        return (t, norm(candidate.get("title")), norm(candidate.get("issuer")))
+    if t == "interest":
+        return (t, norm(candidate.get("name")))
+    if t == "affiliation":
+        return (t, norm(candidate.get("organization")), norm(candidate.get("role")))
     return (t, id(candidate))
 
 

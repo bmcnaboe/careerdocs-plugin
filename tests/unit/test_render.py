@@ -60,9 +60,12 @@ def test_document_stem_from_contact_and_kind(tmp_path):
     p = build_plan(tmp_path)
     assert render.slugify("Jordan Q. Rivera-Smith") == "Jordan-Q-Rivera-Smith"
     assert render.document_stem(p, TEMPLATE_JSON, "resume", "{name}-{kind}") == "Jordan-Rivera-Resume"
-    assert render.document_stem(p, TEMPLATE_JSON, "cover_letter", "{name}-{kind}-{org}", org="Globex Corp") == "Jordan-Rivera-Cover-Letter-Globex-Corp"
-    # An empty placeholder never leaves a dangling hyphen.
-    assert render.document_stem(p, TEMPLATE_JSON, "resume", "{name}-{kind}-{org}") == "Jordan-Rivera-Resume"
+    assert render.document_stem(p, TEMPLATE_JSON, "cover_letter", "{name}-{kind}-{org}", org="Globex Corp") == "Jordan-Rivera-Cover-Globex-Corp"
+    default = default_config()["outputs"]["file_name"]
+    assert render.document_stem(p, TEMPLATE_JSON, "cover_letter", default, org="Blitzy", role="Field CTO") == "Jordan-Rivera-Blitzy-Field-CTO-Cover"
+    assert render.document_stem(p, TEMPLATE_JSON, "resume", default, org="Longpoint Partners", role="Head of Data and AI") == "Jordan-Rivera-Longpoint-Partners-Head-of-Data-and-AI-Resume"
+    # An empty placeholder never leaves a dangling or doubled hyphen: a baseline has no role.
+    assert render.document_stem(p, TEMPLATE_JSON, "resume", default, slug="baseline-builder") == "Jordan-Rivera-Resume"
 
 
 def test_unit_context_splits_role_dates_and_note():
@@ -275,3 +278,137 @@ def test_linkify_makes_profile_links_clickable_without_changing_text(tmp_path):
     targets = {rel.target_ref for rel in document.part.rels.values() if rel.reltype.endswith("/hyperlink")}
     assert "mailto:jordan.rivera@example.com" in targets
     assert document.element.body.findall(".//{http://schemas.openxmlformats.org/wordprocessingml/2006/main}hyperlink")
+
+
+# --- naming, composed lines, and git history ---
+
+
+def _git(repo, *args):
+    import subprocess
+
+    return subprocess.run(["git", "-C", str(repo), *args], capture_output=True, text=True, check=True).stdout.strip()
+
+
+def _init_repo(path):
+    import subprocess
+
+    subprocess.run(["git", "init", "-q", str(path)], check=True)
+    _git(path, "config", "user.name", "Test")
+    _git(path, "config", "user.email", "test@example.com")
+
+
+def _provision(tmp_path, kinds=("resume",)):
+    from careerdocs import cli
+
+    ws = str(tmp_path)
+    cli.main(["config", "init", "--workspace", ws])
+    for kind in kinds:
+        source = ROOT / "examples" / "applicant" / "templates" / kind
+        dest = tmp_path / "templates" / kind
+        dest.mkdir(parents=True)
+        shutil.copy(source / "template.docx", dest / "template.docx")
+        shutil.copy(source / "template.json", dest / "template.json")
+    p = build_plan(tmp_path)
+    app = tmp_path / "applications" / "example-role"
+    app.mkdir(parents=True)
+    (app / "plan.json").write_text(json.dumps(p), encoding="utf-8")
+    return ws, app
+
+
+def test_unit_context_splits_the_lead_from_the_rest():
+    unit = {"text": "Founder — Oxford Heavy, Cambridge, MA\tJan 2025 – present\nA product studio.", "kind": "field"}
+    context = render._unit_context(unit)
+    assert (context["lead"], context["rest"]) == ("Founder", " — Oxford Heavy, Cambridge, MA")
+    assert (context["head"], context["tail"], context["note"]) == ("Founder — Oxford Heavy, Cambridge, MA", "Jan 2025 – present", "A product studio.")
+    plain = render._unit_context({"text": "Python, Go", "kind": "labeled"})
+    assert (plain["lead"], plain["rest"], plain["tail"]) == ("Python, Go", "", "")
+
+
+def test_role_and_date_lines():
+    from datetime import date
+
+    assert render.role_line({"role": "Field CTO", "organization": "Blitzy"}) == "Field CTO at Blitzy"
+    assert render.role_line({"role": "Field CTO"}) == "Field CTO"
+    assert render.role_line(None) == ""
+    assert render.date_line(date(2026, 9, 4)) == "September 4, 2026"
+
+
+def test_render_document_returns_only_the_composed_lines_the_template_places(tmp_path):
+    from datetime import date
+
+    p = build_plan(tmp_path)
+    brief = {"role": "Director of Engineering", "organization": "Wonka Industries"}
+    assert render.render_document(p, TEMPLATE_JSON, TEMPLATE_DOCX, tmp_path / "resume.docx", brief=brief) == []
+    letter_plan = plan.generate_plan(mapping.generate_map(brief_for(), load_provider(tmp_path, default_config()).read()),
+                                     load_provider(tmp_path, default_config()).read(), COVER_JSON, "builder")
+    lines = render.render_document(letter_plan, COVER_JSON, COVER_DIR / "template.docx", tmp_path / "letter.docx",
+                                   brief=brief, today=date(2026, 9, 18))
+    assert lines == ["Director of Engineering at Wonka Industries", "September 18, 2026"]
+    text = read_docx_text(tmp_path / "letter.docx")
+    assert "Director of Engineering at Wonka Industries" in text and "September 18, 2026" in text
+    assert text.rstrip().endswith("Sincerely,\nJordan Rivera")
+
+
+def brief_for():
+    return brief.generate_brief(JD)
+
+
+def test_cli_render_names_the_document_after_the_organization_and_role(tmp_path, capsys):
+    from careerdocs import cli
+
+    ws, app = _provision(tmp_path)
+    (app / "brief.json").write_text(json.dumps({"organization": "Wonka Industries", "role": "Director of Engineering",
+                                                "requirements": [], "recommended_positioning": "builder"}), encoding="utf-8")
+    capsys.readouterr()
+    assert cli.main(["render", "--kind", "resume", "--role-slug", "example-role", "--workspace", ws, "--json"]) == 0
+    out = json.loads(capsys.readouterr().out)
+    assert Path(out["document"]).name == "Jordan-Rivera-Wonka-Industries-Director-of-Engineering-Resume.docx"
+    assert out["history"] == "archive" and out["kept"] is None
+    record = json.loads(Path(out["record"]).read_text())
+    assert record["template_lines"] == []  # the résumé template places no composed line
+
+
+def test_render_in_git_keeps_the_previous_render_as_a_commit(tmp_path, capsys):
+    from careerdocs import cli
+
+    _init_repo(tmp_path)
+    ws, app = _provision(tmp_path)
+    outputs = app / "outputs"
+    argv = ["render", "--kind", "resume", "--role-slug", "example-role", "--workspace", ws, "--json"]
+
+    capsys.readouterr()
+    assert cli.main(argv) == 0
+    first = json.loads(capsys.readouterr().out)
+    assert first["history"] == "git" and first["kept"] is None  # nothing to keep yet
+    (outputs / "layout").mkdir()
+    (outputs / "layout" / "Jordan-Rivera-Resume-p1.png").write_bytes(b"png")
+
+    assert cli.main(argv) == 0
+    second = json.loads(capsys.readouterr().out)
+    # The uncommitted first render was committed — document, record, and layout render —
+    # before being overwritten; nothing went to an archive folder.
+    assert second["kept"]
+    assert _git(tmp_path, "log", "--format=%s") == "chore(example-role): keep the previous resume render"
+    assert "layout/Jordan-Rivera-Resume-p1.png" in _git(tmp_path, "show", "--stat", "--format=", "HEAD")
+    assert not (outputs / "archive").exists()
+    assert sorted(f.name for f in outputs.iterdir() if f.is_file()) == ["Jordan-Rivera-Resume.docx", "Jordan-Rivera-Resume.record.json"]
+
+    # A render the round already committed is not committed again.
+    assert cli.main(["commit", "--role-slug", "example-role", "-m", "feat(example-role): résumé", "--workspace", ws]) == 0
+    capsys.readouterr()
+    assert cli.main(argv) == 0
+    assert json.loads(capsys.readouterr().out)["kept"] is None
+    assert _git(tmp_path, "rev-list", "--count", "HEAD") == "2"
+
+
+def test_render_archives_when_history_is_archive_despite_git(tmp_path, capsys):
+    from careerdocs import cli
+
+    _init_repo(tmp_path)
+    ws, app = _provision(tmp_path)
+    (tmp_path / "careerdocs.json").write_text(json.dumps({"version": "1", "outputs": {"history": "archive"}}), encoding="utf-8")
+    argv = ["render", "--kind", "resume", "--role-slug", "example-role", "--workspace", ws, "--json"]
+    assert cli.main(argv) == 0 and cli.main(argv) == 0
+    assert json.loads(capsys.readouterr().out.splitlines()[-1])["history"] == "archive"
+    assert (app / "outputs" / "archive").is_dir()
+    assert _git(tmp_path, "rev-list", "--count", "--all") == "0"

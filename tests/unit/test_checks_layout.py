@@ -58,3 +58,10 @@ def test_layout_renders_page_pngs(tmp_path):
 def test_layout_flags_margin_violation():
     result = layout.check(PDF, margin=300)  # absurd margin the content cannot satisfy
     assert result["status"] == "fail"
+
+
+def test_layout_flags_a_line_that_wrapped():
+    # A line that exists renders on one line; text spanning two lines of the fixture does not.
+    assert layout.check(PDF, single_lines=["Jordan Rivera"])["status"] == "pass"
+    result = layout.check(PDF, single_lines=["Jordan Rivera Engineering Leader — Metropolis, USA"])
+    assert result["status"] == "fail" and "wrapped line" in result["details"]

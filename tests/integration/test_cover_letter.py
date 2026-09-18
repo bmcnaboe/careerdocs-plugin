@@ -51,8 +51,11 @@ def résumé_then_letter(tmp_path):
     app.mkdir(parents=True)
     shutil.copy(JD, app / "job-description.md")
 
-    # Résumé first: brief, map, plan, render.
+    # Résumé first: brief (the agent names the organization and role), map, plan, render.
     run(["brief", str(app / "job-description.md"), "--role-slug", SLUG, "--workspace", ws])
+    role = json.loads((app / "brief.json").read_text())
+    role.update({"organization": "Wonka Industries", "role": "Director of Engineering"})
+    (app / "brief.json").write_text(json.dumps(role), encoding="utf-8")
     run(["map", "--role-slug", SLUG, "--workspace", ws])
     run(["plan", "--positioning", "builder", "--kind", "resume", "--role-slug", SLUG, "--workspace", ws])
     resume = run_json(["render", "--kind", "resume", "--role-slug", SLUG, "--workspace", ws, "--json"])
@@ -111,10 +114,17 @@ def test_no_verbatim_bullets(tmp_path):
     assert resume_bullets  # the résumé has achievement bullets
     assert factual.verbatim_bullet_check(letter_text, resume_bullets)["status"] == "pass"
 
-    # Every letter claim still traces to a cited entity.
+    # Every letter claim still traces to a cited entity; the role line and the date the
+    # template placed are recorded with the render, not sourced from the profile.
     profile = load_provider(tmp_path).read()
-    result = factual.check(letter_text, letter_plan, profile, allowlist=COVER_JSON["allowlist"])
+    record = json.loads(Path(rendered["record"]).read_text())
+    assert record["template_lines"][0] == "Director of Engineering at Wonka Industries"
+    result = factual.check(letter_text, letter_plan, profile, allowlist=COVER_JSON["allowlist"],
+                           template_lines=record["template_lines"])
     assert result["status"] == "pass", result["details"]
+    without = factual.check(letter_text, letter_plan, profile, allowlist=COVER_JSON["allowlist"])
+    assert without["status"] == "fail" and "unsourced line" in without["details"]
+    assert Path(rendered["document"]).name == "Jordan-Rivera-Wonka-Industries-Director-of-Engineering-Cover.docx"
 
 
 def test_letter_plan_carries_identity_and_alignment(tmp_path):

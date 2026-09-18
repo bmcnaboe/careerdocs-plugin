@@ -4,7 +4,7 @@ description: Produce a complete application for one job posting through a short 
 license: MIT
 compatibility: "Python 3.10+; uv recommended. Requires the careerdocs core skill, an onboarded profile, templates, and voice; the update, resume, and cover-letter skills do the work. Optional LibreOffice for PDF checks."
 metadata:
-  version: "0.4.3"
+  version: "0.5.0"
   author: "careerdocs-plugin contributors"
 ---
 
@@ -36,9 +36,10 @@ fast path is a yes; never ask what the workflow state already answers.
    question: which of these do you genuinely have? Each confirmed qualification goes
    through the `update` skill (statement, diff, explicit yes, apply); then `map` again.
 3. **The approach** — propose and confirm in one pass: positioning with the reason, the
-   three pieces of evidence that lead, what to compress or leave out, the default
-   two-page résumé (one page only on the applicant's express request),
-   letter length (a brief note or a full page) and tone, and anything to avoid. Record
+   three pieces of evidence that lead, what to compress or leave out, which of the
+   template's sections the résumé uses, the default two-page résumé (one page only on
+   the applicant's express request), letter length (a brief note or a full page) and
+   tone, and anything to avoid. Record
    the agreed approach on the brief (`approach`), where `plan` and the drafting steps
    read it.
 4. **The alignment** — run `brief --alignment`; it lists the alignment questions the
@@ -49,7 +50,7 @@ fast path is a yes; never ask what the workflow state already answers.
    record the exchange. No identity profile yet: ask anyway, and suggest onboard later.
 5. **The documents** — run the `resume` skill from its plan step, then the
    `cover-letter` skill, each honoring the approach and the alignment. Both end with
-   every check passed.
+   every check passed and, in a git workspace, the round committed.
 6. **The report** — what was cut for space, which requirements remain honest gaps, which
    qualifications were confirmed and added, and where the files are.
 

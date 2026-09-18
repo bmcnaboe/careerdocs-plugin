@@ -62,17 +62,33 @@ careerdocs plan --positioning <executive|builder> --kind resume --role-slug <slu
 Selects and orders evidence for a two-page résumé by default — `--page-budget` for an
 express applicant request, else the brief's `approach.resume_pages`, else the configured
 two-page target — and lists cuts. Do not choose one page merely because the role or first
-draft seems suited to it. Review the cut list; if something important was cut, adjust
+draft seems suited to it. The manifest lists every section the design offers (Summary,
+Experience, Projects, Education, Certifications, Patents, Publications, Awards,
+Affiliations, Volunteer Experience, Technical Focus, Interests); `--sections`, else the
+approach's `sections`, names the ones this role uses, and a section with no evidence
+simply does not render. Review the cut list; if something important was cut, adjust
 emphasis rather than inflating claims.
 
 ## 5. Draft in voice
 
 Rewrite each unit's `text` in the applicant's voice (`voice.md`): verb-first, concrete,
 no banned phrases. Every claim must still trace to the unit's `source_ids`. Do not add a
-fact that is not in the profile. A summary line, when the template has one, may name the
-career focus from the identity profile in terms the cited entities support. Keep a role line as `Title, Organization<tab>dates`, with
-any descriptor on the role's summary line (`role_summaries` in the manifest), never inside
-the role line: parsers read the whole line as the title and company.
+fact that is not in the profile. The conventions the template relies on:
+
+- **Contact line** — one line: abbreviate the state or drop a link rather than let it
+  wrap (the layout check fails a wrapped contact line).
+- **Summary** — the plan's one `sentence` unit starts as the headline and cites the lead
+  evidence; write two or three sentences those entities support. It may name the career
+  focus from the identity profile in the same terms.
+- **Role line** — `Title — Organization, Location<tab>dates`, with any descriptor on the
+  role's summary line (`role_summaries` in the manifest), never inside the role line:
+  parsers read the whole line as the title and company.
+- **Project sub-head** — `Name — one-line descriptor` (kind `subhead`) under its role,
+  followed by the project's bullets.
+- **Skills** — labeled lines, `Label<tab>skill, skill, skill` (kind `labeled`), one per
+  group, each citing every skill it names; regroup the plan's lines for the role.
+- **Dated lines** — `Institution — Degree<tab>Year`, `Title — Issuer<tab>Year`; keep the
+  tab so the year lands on the right.
 
 ## 6. Render
 
@@ -80,15 +96,17 @@ the role line: parsers read the whole line as the title and company.
 careerdocs render --kind resume --pdf --role-slug <slug> --workspace <dir>
 ```
 
-Writes `<Name>-Resume.docx` (and `.pdf` when LibreOffice is present) and an output record
-skeleton. A previous render of that name moves to `outputs/archive/` under its generation
-stamp, with its PDF, record, and layout renders, so the output folder holds only the
-current documents and nothing is lost.
+Writes `<Name>-<Org>-<Role>-Resume.docx` (and `.pdf` when LibreOffice is present) and an
+output record skeleton. In a git workspace a previous render that is not committed yet is
+committed first (`chore(<slug>): keep the previous resume render`), then overwritten;
+otherwise it moves to `outputs/archive/` under its generation stamp, with its PDF, record,
+and layout renders. Either way the output folder holds only the current documents and
+nothing is lost.
 
 ## 7. Check
 
 ```sh
-careerdocs check applications/<slug>/outputs/<Name>-Resume.docx --workspace <dir>
+careerdocs check applications/<slug>/outputs/<Name>-<Org>-<Role>-Resume.docx --workspace <dir>
 ```
 
 Runs factual, links/dates, extraction, pagination, and layout. Pagination requires the
@@ -99,7 +117,19 @@ failure at its source (the plan, the draft, the template) — never by weakening
 The document is done only when the record shows every check passed or skipped with a
 reason.
 
-## 8. Report cuts and gaps
+## 8. Commit the round
+
+```sh
+careerdocs commit --role-slug <slug> -m "feat(<slug>): tailored résumé" --workspace <dir>
+```
+
+In a git workspace this commits the application folder, its workflow state, and the
+profile if the round changed it, and nothing else; write the message as a Conventional
+Commit that says what the round did (`fix(<slug>): tighten the platform bullets` for a
+revision). Without a repository the command reports that the archive holds the history.
+Run it after every generation and revision round.
+
+## 9. Report cuts and gaps
 
 Tell the applicant what was cut for space and which requirements are gaps, and let them
 decide whether to proceed, re-emphasize, or acquire the missing qualification.

@@ -167,3 +167,39 @@ def test_assert_valid_raises():
 
 def test_schema_version_is_semver():
     assert schema.profile_schema_version().count(".") == 2
+
+
+# --- award, interest, affiliation, and the experience kind ---
+
+
+def _entity(entity_type, **fields):
+    base = {"id": ids.new_id(entity_type), "type": entity_type, "visibility": "public", "verification": "imported",
+            "provenance": [{"source_id": ids.new_source_id(), "method": "import", "recorded_at": "2024-01-01T00:00:00Z", "actor": "a"}],
+            "created_at": "2024-01-01T00:00:00Z", "updated_at": "2024-01-01T00:00:00Z"}
+    return {**base, **fields}
+
+
+def _profile(entities):
+    return {"schema_version": "1.1.0", "applicant_ref": "a", "authoritative_provider": "markdown", "derived": False,
+            "updated_at": "2024-01-01T00:00:00Z", "entities": entities, "sources": []}
+
+
+def test_new_entity_types_validate():
+    entities = [
+        _entity("contact", name="A B"),
+        _entity("experience", organization="Lab", title="Advisor", kind="advising", start_date="2021-01"),
+        _entity("award", title="Founders' Award", issuer="Adobe", date="2004-06"),
+        _entity("interest", name="Backcountry skiing"),
+        _entity("affiliation", organization="ACM", role="Member", start_date="2016-01", end_date=None),
+    ]
+    assert schema.validate_profile(_profile(entities)) == []
+    assert schema.profile_schema_version() == "1.1.0"
+
+
+def test_new_entity_types_keep_the_date_rules():
+    bad_kind = _entity("experience", organization="Lab", title="Advisor", kind="hobby", start_date="2021-01")
+    assert any("kind" in e for e in schema.validate_profile(_profile([_entity("contact", name="A"), bad_kind])))
+    future = _entity("award", title="Prize", date="2999-01")
+    assert any("future" in e for e in schema.validate_profile(_profile([_entity("contact", name="A"), future])))
+    backwards = _entity("affiliation", organization="ACM", start_date="2020-01", end_date="2019-01")
+    assert any("before" in e for e in schema.validate_profile(_profile([_entity("contact", name="A"), backwards])))

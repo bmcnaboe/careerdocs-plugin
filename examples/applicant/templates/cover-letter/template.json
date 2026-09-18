@@ -1,7 +1,7 @@
 {
   "name": "example-cover-letter",
   "kind": "cover_letter",
-  "version": "1",
+  "version": "2",
   "page_budget": 1,
   "units_per_page": 6,
   "sections": [
@@ -31,5 +31,5 @@
   "allowlist": [
     "Sincerely,"
   ],
-  "style_notes": "One page; complements the resume; draft prose in voice, never paste resume bullets. The greeting is the first body unit; the template carries the sign-off."
+  "style_notes": "One page; complements the resume; draft prose in voice, never paste resume bullets. The greeting is the first body unit; the template places the role line and the date above it and carries the sign-off."
 }

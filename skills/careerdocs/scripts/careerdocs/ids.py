@@ -28,6 +28,9 @@ ENTITY_TYPES = (
     "credential",
     "patent",
     "publication",
+    "award",
+    "interest",
+    "affiliation",
 )
 SOURCE_PREFIX = "src"
 DIFF_PREFIX = "diff"

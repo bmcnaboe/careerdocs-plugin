@@ -72,6 +72,7 @@ def _register_feature_commands(subparsers, common: argparse.ArgumentParser) -> N
     from . import brief as brief_module
     from . import config as config_module
     from . import diff as diff_module
+    from . import history as history_module
     from . import identity as identity_module
     from . import inventory as inventory_module
     from . import mapping as mapping_module
@@ -89,6 +90,7 @@ def _register_feature_commands(subparsers, common: argparse.ArgumentParser) -> N
     plan_module.register(subparsers, common)
     render_module.register(subparsers, common)
     record_module.register(subparsers, common)
+    history_module.register(subparsers, common)
     identity_module.register(subparsers, common)
     inventory_module.register(subparsers, common)
     organize_module.register(subparsers, common)
@@ -119,8 +121,9 @@ def cmd_version(args: argparse.Namespace) -> int:
 
 # Headings résumé parsers recognise; anything else is reported by doctor as advice.
 STANDARD_SECTION_TITLES = frozenset({
-    "", "Summary", "Experience", "Projects", "Skills", "Technical Skills", "Education",
-    "Patents", "Publications", "Certifications", "Awards",
+    "", "Summary", "Experience", "Projects", "Skills", "Technical Skills", "Technical Focus",
+    "Education", "Patents", "Publications", "Certifications", "Licenses", "Awards", "Honors",
+    "Affiliations", "Volunteer Experience", "Interests", "Languages",
 })
 
 
@@ -148,6 +151,7 @@ def template_advisories(workspace: Path, cfg: dict) -> list[str]:
 
 def cmd_doctor(args: argparse.Namespace) -> int:
     from . import config as config_module
+    from . import history
     from .providers import load_provider
     from .workspace import SOURCE_LABELS
 
@@ -189,12 +193,17 @@ def cmd_doctor(args: argparse.Namespace) -> int:
         "present": (workspace / cfg["identity"]["path"]).is_file(),
     }
 
+    repository = history.repository(workspace)
     report = {
         "workspace": str(workspace.resolve()),
         "workspace_source": args.workspace_source,
         "config_present": config_present,
         "config_valid": config_valid,
         "config_error": config_error,
+        "history": {
+            "mode": "archive" if cfg["outputs"].get("history") == "archive" or repository is None else "git",
+            "repository": str(repository) if repository else None,
+        },
         "provider": provider_status,
         "templates": templates,
         "voice": voice,
@@ -214,6 +223,8 @@ def cmd_doctor(args: argparse.Namespace) -> int:
         prov = report["provider"]
         print(f"provider ({prov['authoritative']}): "
               + (f"reachable, {prov['entities']} entities" if prov["reachable"] else f"UNREACHABLE: {prov['error']}"))
+        mode = report["history"]["mode"]
+        print(f"history: {'git (' + report['history']['repository'] + ')' if mode == 'git' else 'archive (no git repository)'}")
         print(f"template (resume): {'present' if templates['resume'] else 'missing'}")
         print(f"template (cover letter): {'present' if templates['cover_letter'] else 'missing'}")
         for advice in report["advisories"]:

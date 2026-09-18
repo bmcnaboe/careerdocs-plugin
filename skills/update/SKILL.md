@@ -1,10 +1,10 @@
 ---
 name: update
-description: Update the authoritative profile with a new qualification the applicant states. Use when the applicant reports a new achievement, role, skill, credential, or a correction, and it should become part of their one authoritative profile. The flow captures the statement with provenance (the applicant's own statement is the highest-precedence source), turns it into candidates, proposes a ProfileDiff, gets an explicit approval, applies it (giving the new fact a fresh stable id and applicant-verified state), refreshes the derived export, and reports which previously generated documents are now stale. Resumable — an interrupted update resumes from its pending diff without re-asking.
+description: Update the authoritative profile with a new qualification the applicant states. Use when the applicant reports a new achievement, role, skill, credential, award, interest, affiliation, or a correction, and it should become part of their one authoritative profile. The flow captures the statement with provenance (the applicant's own statement is the highest-precedence source), turns it into candidates, proposes a ProfileDiff, gets an explicit approval, applies it (giving the new fact a fresh stable id and applicant-verified state), refreshes the derived export, and reports which previously generated documents are now stale. Resumable — an interrupted update resumes from its pending diff without re-asking.
 license: MIT
 compatibility: "Python 3.10+; uv recommended. Requires the careerdocs core skill and an onboarded profile."
 metadata:
-  version: "0.4.3"
+  version: "0.5.0"
   author: "careerdocs-plugin contributors"
 ---
 

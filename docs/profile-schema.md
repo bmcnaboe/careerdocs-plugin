@@ -27,7 +27,7 @@ timestamps are RFC 3339 UTC. Every id is `<type>_<ULID>`.
 ## Entity types
 
 - **contact** — `name` (required), `headline`, `location`, `email`, `phone`, `links[]`. One per profile.
-- **experience** — `organization`, `title`, `start_date` (required); `employment_type`, `location`, `end_date` (null = current), `summary`, `achievement_ids[]`, `skill_ids[]`.
+- **experience** — `organization`, `title`, `start_date` (required); `kind` (`employment` when absent, `advising`, `board`, `volunteer` — a template section selects roles by kind), `employment_type`, `location`, `end_date` (null = current), `summary`, `achievement_ids[]`, `skill_ids[]`.
 - **achievement** — `statement`, `parent_id` (required); `metrics[]`, `skill_ids[]`.
 - **education** — `institution` (required); `degree`, `field_of_study`, `start_date`, `end_date`, `honors[]`.
 - **skill** — `name` (required); `category`, `level` (`familiar` / `working` / `expert`), `evidence_ids[]`.
@@ -35,6 +35,9 @@ timestamps are RFC 3339 UTC. Every id is `<type>_<ULID>`.
 - **credential** — `name`, `issuer` (required); `issued_date`, `expires_date`, `url`.
 - **patent** — `title`, `status` (`pending` / `granted`) required; `number`, `filing_date`, `grant_date`, `url`.
 - **publication** — `title` (required); `venue`, `date`, `url`.
+- **award** — `title` (required); `issuer`, `date`, `description`, `url`.
+- **interest** — `name` (required); `description`. Personal interests, for a résumé that carries them.
+- **affiliation** — `organization` (required); `role`, `start_date`, `end_date` (null = current), `url`. Memberships and seats that are not roles.
 
 ## Provenance, conflict, source
 
@@ -52,7 +55,8 @@ timestamps are RFC 3339 UTC. Every id is `<type>_<ULID>`.
 ## Precedence and deduplication
 
 Match keys per type (experience `(org, title, start_year)`, education `(institution, degree)`,
-skill `name`, credential/patent/publication `title`/`number`, achievement `statement` within
+skill `name`, credential/patent/publication `title`/`number`, award `(title, issuer)`,
+interest `name`, affiliation `(organization, role)`, achievement `statement` within
 parent, contact singleton). When values differ, precedence is: an applicant **statement** >
 an **applicant-verified** import > the **newest** import. The loser becomes a conflict
 candidate; nothing is overwritten silently.

@@ -2,16 +2,24 @@
 
 ``render`` fills the template (docxtpl) from the content plan and writes the document under
 the application's ``outputs/`` (a baseline under ``baselines/<positioning>/``) as
-``<Name>-<Kind>.docx`` — ``outputs.file_name`` in the config, with ``{name}``, ``{kind}``,
-``{org}``, and ``{slug}`` placeholders — beside an output-record skeleton carrying the union
-of the plan's source ids and every check marked pending. The newest render always carries
-the plain name: a previous render of that name moves into ``archive/`` beside it, named
-with its generation stamp, together with its PDF, record, and layout renders, so
-``outputs/`` holds only the current documents and nothing is overwritten or lost. ``--pdf`` converts via LibreOffice (`soffice`) when it is on PATH, and
-records the conversion as skipped with a reason when it is not. Every link the profile
-holds (contact and project links, patent URLs, the contact email) appears in the text as
-its bare display form and is made a real hyperlink after rendering, so the DOCX and the
-PDF are clickable without any template placeholder.
+``<Name>-<Org>-<Role>-<Kind>.docx`` — ``outputs.file_name`` in the config, with
+``{name}``, ``{org}``, ``{role}``, ``{kind}``, and ``{slug}`` placeholders — beside an
+output-record skeleton carrying the union of the plan's source ids and every check marked
+pending. The newest render always carries the plain name. In a workspace versioned with
+git (see :mod:`history`) the previous render is committed if it was not already, then
+overwritten in place; otherwise it moves into ``archive/`` beside it, named with its
+generation stamp, together with its PDF, record, and layout renders, so ``outputs/``
+holds only the current documents and nothing is overwritten or lost. ``--pdf`` converts
+via LibreOffice (`soffice`) when it is on PATH, and records the conversion as skipped with
+a reason when it is not. Every link the profile holds (contact and project links, patent
+URLs, the contact email) appears in the text as its bare display form and is made a real
+hyperlink after rendering, so the DOCX and the PDF are clickable without any template
+placeholder.
+
+Beyond the plan's units, a template may place two lines the render composes from the role
+brief and the calendar — ``role_line`` (``<Role> at <Organization>``) and ``date_line``
+(today's date) — which the record lists as ``template_lines`` so the factual check can
+allow them.
 """
 
 from __future__ import annotations
@@ -22,11 +30,12 @@ import re
 import shutil
 import subprocess
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 
 from . import __version__
 from . import config as config_module
+from . import history
 from . import plan as plan_module
 from . import schema, util
 from .errors import CareerDocsError
@@ -36,9 +45,12 @@ _PDF_CHECKS = ("pagination", "layout")
 _ALL_CHECKS = ("factual", "links_dates", "extraction", "pagination", "layout")
 
 
-_KIND_LABELS = {"resume": "Resume", "cover_letter": "Cover-Letter"}
+_KIND_LABELS = {"resume": "Resume", "cover_letter": "Cover"}
 _SIDE_SUFFIXES = (".docx", ".pdf", ".record.json")
 _ARCHIVE_DIR = "archive"
+_TEMPLATE_LINE_FIELDS = ("role_line", "date_line")
+_MONTHS = ("January", "February", "March", "April", "May", "June", "July", "August",
+           "September", "October", "November", "December")
 
 
 def slugify(text: str) -> str:
@@ -46,23 +58,35 @@ def slugify(text: str) -> str:
     return "-".join(re.findall(r"[^\W_]+", text))
 
 
-def document_stem(plan: dict, template: dict, kind: str, pattern: str, *, slug: str = "", org: str = "") -> str:
+def document_stem(plan: dict, template: dict, kind: str, pattern: str, *, slug: str = "", org: str = "",
+                  role: str = "") -> str:
     """The file name (without suffix) from ``outputs.file_name``: ``{name}`` is the contact
-    unit's first line, ``{kind}`` Resume or Cover-Letter, ``{org}`` the brief's organization,
-    ``{slug}`` the application slug (``baseline-<positioning>`` for a baseline)."""
+    unit's first line, ``{kind}`` Resume or Cover, ``{org}`` the brief's organization,
+    ``{role}`` the brief's role title, ``{slug}`` the application slug
+    (``baseline-<positioning>`` for a baseline). An empty placeholder leaves no double or
+    trailing hyphen, so a baseline is ``<Name>-<Kind>``."""
     contact = ""
     for section in template["sections"]:
         if section.get("placeholder") == "contact" or "contact" in section.get("entity_types", []):
             units = [u for u in plan["units"] if u["section_id"] == section["id"]]
             contact = units[0]["text"] if units else ""
     values = {"name": slugify(contact.partition("\n")[0]), "kind": _KIND_LABELS.get(kind, kind),
-              "org": slugify(org), "slug": slugify(slug)}
+              "org": slugify(org), "role": slugify(role), "slug": slugify(slug)}
     try:
         stem = pattern.format(**values)
     except (KeyError, IndexError, ValueError) as exc:
         raise CareerDocsError(f"outputs.file_name {pattern!r} is not a valid pattern: {exc}", code="USAGE") from exc
     stem = re.sub(r"-{2,}", "-", stem).strip("-")
     return stem or values["kind"]
+
+
+def render_files(directory: Path, stem: str) -> list[Path]:
+    """The files one render of ``stem`` owns: document, PDF, record, and layout renders."""
+    files = [directory / f"{stem}{suffix}" for suffix in _SIDE_SUFFIXES]
+    layout = directory / "layout"
+    if layout.is_dir():
+        files += sorted(layout.glob(f"{stem}-p*.png"))
+    return files
 
 
 def _move_render(source_dir: Path, old_stem: str, target_dir: Path, new_stem: str) -> None:
@@ -113,6 +137,13 @@ def archive_previous(directory: Path, stem: str) -> Path | None:
         new_stem, counter = f"{stem}-{stamp}-{counter}", counter + 1
     _move_render(directory, stem, archive, new_stem)
     return archive / f"{new_stem}.docx"
+
+
+def keep_previous(workspace, directory: Path, stem: str, subject: str, kind: str) -> str | None:
+    """Git history: commit a previous render of ``stem`` that is not yet committed, so
+    overwriting it loses nothing. Returns the commit, or None when there was nothing to keep."""
+    label = _KIND_LABELS.get(kind, kind).lower()
+    return history.commit(workspace, render_files(directory, stem), f"chore({subject}): keep the previous {label} render")
 
 
 def link_map(profile: dict) -> dict[str, str]:
@@ -179,15 +210,32 @@ def linkify(docx_path: Path, links: dict[str, str]) -> int:
 
 
 def _unit_context(unit: dict) -> dict:
-    # The first line splits at a tab into a head and a tail (an experience unit's role and
-    # dates); any further lines are the note (a role's summary), so a template can style the
-    # three parts — a bold role, a right-aligned date, a plain descriptor line — separately.
+    # The first line splits at a tab into a head and a tail (a role and its dates, a label
+    # and its text); the head splits at the first " — " into a lead (the title, the
+    # institution) and the rest, which keeps the dash; any further lines are the note (a
+    # role's summary). A template styles each part separately: a bold lead, a muted rest, a
+    # right-aligned date, a plain descriptor line.
     first, _, note = unit["text"].partition("\n")
     head, _, tail = first.partition("\t")
-    return {"text": unit["text"], "kind": unit["kind"], "head": head, "tail": tail, "note": note}
+    lead, dash, after = head.partition(plan_module.DASH)
+    return {"text": unit["text"], "kind": unit["kind"], "head": head, "tail": tail, "note": note,
+            "lead": lead, "rest": dash + after if dash else ""}
 
 
-def build_context(plan: dict, template: dict) -> dict:
+def date_line(today: date | None = None) -> str:
+    """``September 18, 2026``: the calendar date a letter carries."""
+    today = today or date.today()
+    return f"{_MONTHS[today.month - 1]} {today.day}, {today.year}"
+
+
+def role_line(brief: dict | None) -> str:
+    """``<Role> at <Organization>`` from the brief; either alone when the other is missing."""
+    role = (brief or {}).get("role") or ""
+    organization = (brief or {}).get("organization") or ""
+    return f"{role} at {organization}" if role and organization else role or organization
+
+
+def build_context(plan: dict, template: dict, *, brief: dict | None = None, today: date | None = None) -> dict:
     by_section: dict[str, list] = defaultdict(list)
     for unit in plan["units"]:
         by_section[unit["section_id"]].append(unit)
@@ -211,17 +259,27 @@ def build_context(plan: dict, template: dict) -> dict:
         "contact_name": contact_name,
         "contact_details": contact_details,
         "positioning": plan["positioning"],
+        "organization": (brief or {}).get("organization") or "",
+        "role": (brief or {}).get("role") or "",
+        "role_line": role_line(brief),
+        "date_line": date_line(today),
         "sections": sections,
     }
 
 
-def render_document(plan: dict, template: dict, template_docx: Path, out_path: Path) -> None:
+def render_document(plan: dict, template: dict, template_docx: Path, out_path: Path, *,
+                    brief: dict | None = None, today: date | None = None) -> list[str]:
+    """Fill the template and save it. Returns the composed lines the template placed
+    (``role_line``, ``date_line``) so the record can allow them."""
     from docxtpl import DocxTemplate
 
     doc = DocxTemplate(str(template_docx))
-    doc.render(build_context(plan, template))
+    context = build_context(plan, template, brief=brief, today=today)
+    used = doc.get_undeclared_template_variables()
+    doc.render(context)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     doc.save(str(out_path))
+    return [context[field] for field in _TEMPLATE_LINE_FIELDS if field in used and context[field]]
 
 
 def convert_to_pdf(docx_path: Path) -> Path | None:
@@ -237,7 +295,7 @@ def convert_to_pdf(docx_path: Path) -> Path | None:
 
 def build_record(plan: dict, *, document: Path, kind: str, positioning: str,
                  plan_path: Path | None, brief_path: Path | None, map_path: Path | None,
-                 pdf_path: Path | None, pdf_available: bool) -> dict:
+                 pdf_path: Path | None, pdf_available: bool, template_lines=()) -> dict:
     source_ids = sorted({sid for unit in plan["units"] for sid in unit["source_ids"]})
     checks = {name: {"status": "pending", "details": ""} for name in _ALL_CHECKS}
     if not pdf_available:
@@ -260,6 +318,7 @@ def build_record(plan: dict, *, document: Path, kind: str, positioning: str,
         "checks": checks,
         "stale": False,
         "stale_reason": None,
+        "template_lines": list(template_lines),
     }
     if pdf_path:
         record["pdf"] = str(pdf_path)
@@ -285,6 +344,7 @@ def cmd_render(args) -> int:
         positioning = args.positioning or cfg["workflow"]["positioning_default"]
         app_dir = Path(args.workspace) / cfg["outputs"]["baselines_dir"] / positioning
         brief_path = map_path = None
+        slug = f"baseline-{positioning}"
     else:
         slug = plan_module._resolve_slug(args, cfg)
         app_dir = Path(args.workspace) / cfg["outputs"]["applications_dir"] / slug
@@ -302,15 +362,20 @@ def cmd_render(args) -> int:
 
     # Baselines land directly under baselines/<positioning>/; role outputs under outputs/.
     out_dir = app_dir if args.baseline else app_dir / "outputs"
-    org = ""
+    brief = None
     if brief_path and brief_path.is_file():
-        org = json.loads(brief_path.read_text(encoding="utf-8")).get("organization", "")
-    stem = document_stem(plan, template, args.kind, cfg["outputs"]["file_name"],
-                         slug=f"baseline-{positioning}" if args.baseline else slug, org=org)
+        brief = json.loads(brief_path.read_text(encoding="utf-8"))
+    stem = document_stem(plan, template, args.kind, cfg["outputs"]["file_name"], slug=slug,
+                         org=(brief or {}).get("organization", ""), role=(brief or {}).get("role", ""))
     out_dir.mkdir(parents=True, exist_ok=True)
-    archive_previous(out_dir, stem)
+    mode = history.mode(args.workspace, cfg)
+    kept = None
+    if mode == "git":
+        kept = keep_previous(args.workspace, out_dir, stem, slug, args.kind)
+    else:
+        archive_previous(out_dir, stem)
     out_docx = out_dir / f"{stem}.docx"
-    render_document(plan, template, template_docx, out_docx)
+    template_lines = render_document(plan, template, template_docx, out_docx, brief=brief)
     linkify(out_docx, link_map(load_provider(args.workspace, cfg).read()))
 
     pdf_path = None
@@ -322,9 +387,9 @@ def cmd_render(args) -> int:
     record = build_record(
         plan, document=out_docx, kind=args.kind, positioning=plan["positioning"],
         plan_path=plan_path,
-        brief_path=brief_path if (brief_path and brief_path.is_file()) else None,
+        brief_path=brief_path if brief else None,
         map_path=map_path if (map_path and map_path.is_file()) else None,
-        pdf_path=pdf_path, pdf_available=pdf_available,
+        pdf_path=pdf_path, pdf_available=pdf_available, template_lines=template_lines,
     )
     invalid = schema.validate_against("output-record", record)
     if invalid:
@@ -333,9 +398,12 @@ def cmd_render(args) -> int:
     record_path.write_text(json.dumps(record, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
     if args.json:
-        print(json.dumps({"document": str(out_docx), "pdf": str(pdf_path) if pdf_path else None, "record": str(record_path)}))
+        print(json.dumps({"document": str(out_docx), "pdf": str(pdf_path) if pdf_path else None,
+                          "record": str(record_path), "history": mode, "kept": kept}))
     else:
         print(f"rendered {out_docx}")
+        if kept:
+            print(f"history: git (previous render committed as {kept})")
         if args.pdf:
             print(f"pdf: {pdf_path}" if pdf_path else "pdf: skipped (soffice not available)")
     return 0

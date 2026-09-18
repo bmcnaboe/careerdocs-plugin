@@ -102,7 +102,8 @@ voice, PDF converter, and dependencies at any time.
 | `templates/resume/`, `templates/cover-letter/` | DOCX plus `template.json` per kind |
 | `voice/voice.md` | The voice profile |
 | `identity/identity.md` | The identity profile: values, personality, motivations, working style, career focus, interests, stories |
-| `applications/<role-slug>/` | Brief, map, plan, and rendered documents per role |
+| `applications/<role-slug>/` | Brief, map, plan, and rendered documents per role (`outputs/<Name>-<Org>-<Role>-Resume.docx`, `-Cover.docx`) |
+| the workspace as a git repository | Optional; when present, every generation and revision round is committed, otherwise a replaced render moves to `outputs/archive/` |
 | `baselines/` | Untargeted documents |
 | `.careerdocs/state/` | Resumable workflow state |
 

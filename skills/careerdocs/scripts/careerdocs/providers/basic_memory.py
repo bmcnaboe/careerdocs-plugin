@@ -23,7 +23,7 @@ _STATEMENT_MAX = 120
 
 # Entity types whose own ``title`` schema field doubles as the note title, so the note
 # title key must not be added or stripped for them (it would clobber real data).
-TITLE_FIELD_TYPES = {"experience", "patent", "publication"}
+TITLE_FIELD_TYPES = {"experience", "patent", "publication", "award"}
 
 
 def _truncate(text: str) -> str:
@@ -41,8 +41,10 @@ def entity_title(entity: dict) -> str:
         return _truncate(entity.get("statement", "Achievement"))
     if etype == "education":
         return entity.get("institution") or entity.get("degree") or "Education"
-    if etype in ("skill", "project", "credential"):
+    if etype in ("skill", "project", "credential", "interest"):
         return entity.get("name") or etype.capitalize()
+    if etype == "affiliation":
+        return entity.get("organization") or entity.get("role") or "Affiliation"
     return etype
 
 

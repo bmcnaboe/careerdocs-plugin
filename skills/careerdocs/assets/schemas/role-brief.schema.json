@@ -36,6 +36,7 @@
         "lead_evidence": { "type": "array", "items": { "type": "string" } },
         "compress": { "type": "array", "items": { "type": "string" } },
         "resume_pages": { "type": "integer", "minimum": 1 },
+        "sections": { "type": "array", "items": { "type": "string" } },
         "letter_length": { "enum": ["note", "page"] },
         "tone": { "type": "string" },
         "avoid": { "type": "array", "items": { "type": "string" } },

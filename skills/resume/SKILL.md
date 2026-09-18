@@ -4,7 +4,7 @@ description: Generate a tailored résumé for a specific job description from th
 license: MIT
 compatibility: "Python 3.10+; uv recommended. Requires the careerdocs core skill and an onboarded profile. Optional LibreOffice for PDF checks."
 metadata:
-  version: "0.4.3"
+  version: "0.5.0"
   author: "careerdocs-plugin contributors"
 ---
 
@@ -36,15 +36,25 @@ Full detail in `references/playbook.md`.
    selection and emphasis, never the facts.
 4. **`plan --positioning <mode>`** — target two pages by default, selecting, ordering,
    and emphasizing evidence accordingly. Use one page only when the applicant expressly
-   requests it. Anything over the target is cut and reported.
+   requests it. The template's sections are all available; the approach's `sections`
+   (or `--sections`) picks the ones this role uses — a Technical Focus for a technical
+   role, Awards or Interests for an executive one — and a one-page résumé is the same
+   design with fewer sections and units. Anything over the target is cut and reported.
 5. **Draft units in voice** — rewrite each unit's text in the applicant's voice
-   (`voice.md`), keeping every claim traceable to its `source_ids`.
+   (`voice.md`), keeping every claim traceable to its `source_ids`: the summary from its
+   cited lead evidence, skills as labeled lines, each role and project sub-head in the
+   conventions the playbook gives.
 6. **`render --kind resume [--pdf]`** — fill the template; the document is written as
-   `<Name>-Resume.docx`, and any previous render moves to `outputs/archive/`.
+   `<Name>-<Org>-<Role>-Resume.docx`. In a git workspace an uncommitted previous render
+   is committed first; otherwise it moves to `outputs/archive/`.
 7. **`check <document>`** — run the five checks (factual, links/dates, extraction,
    pagination, layout) and write the output record. A résumé must reach its page target;
    revise the content or layout and rerender when it comes up short.
-8. **Report cuts and gaps** — tell the applicant what was cut for space and which
+8. **`commit --role-slug <slug> -m "<message>"`** — end the round. In a git workspace
+   this commits the application folder and its state under a Conventional Commit
+   message; elsewhere it is a no-op and the archive holds the history. Repeat after
+   every revision round.
+9. **Report cuts and gaps** — tell the applicant what was cut for space and which
    requirements are gaps, so they decide how to proceed.
 
 ## Guardrails

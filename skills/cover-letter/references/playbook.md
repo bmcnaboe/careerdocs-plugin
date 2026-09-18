@@ -40,28 +40,31 @@ report cuts.
 
 ## 3. Draft in voice
 
-Write a brief note the applicant might send to a future colleague. Open with genuine
-enthusiasm for this role and organization. Use one or two grounded supporting examples
-to show how the applicant would help, letting identity shape the voice and details. The
-link to the role may be implicit or stated plainly when natural; do not turn the posting
-into a paragraph outline. Briefly identify an unfamiliar project at first mention; add
-more detail only when it helps this application.
+One idea carries the letter: the alignment's through-line. Tell it as a short story the
+applicant might tell a future colleague: each paragraph opens by picking up the last
+thought of the one before it, never with a fresh topic, and never in the posting's
+order. The résumé holds the facts, so the letter implies qualifications through one or
+two examples chosen for the idea; a detail earns its place only when the reader needs it
+for this role (a title or a headcount rarely does). Identify an unfamiliar project in a
+few words at first mention. A gap the reader will notice is named once and turned toward
+what the applicant brings to it, such as what they learn fast or where they do their best
+work; never an apology. Length: `note` is 150 to 200 words, `page` 250 to 350.
 
 If the facts are clear but the person is missing, ask for one concrete moment that shows
-how the applicant treats users or teammates. Ask one question at a time; use the answer
-only if it serves this role.
+how the applicant treats users or teammates, one question at a time.
 
 Trace qualifications to profile entities (`source_ids`), employer details to the supplied
 role material, and motives to the identity or recorded answers. Honor the brief's
 `approach`, including length and things to avoid. The greeting is the first body unit,
-cited to the contact entity; the template supplies the sign-off.
+cited to the contact entity; the template supplies the role line, the date, and the
+sign-off.
 
 ## 3b. Editorial review
 
-Read the draft aloud. Each supporting detail should help the reader see the applicant
-serving this role; clarify the connection naturally or cut the detail. Remove résumé
-repetition, generic praise, and unsupported claims. When revising, keep the lines that
-already work and change only what fails this review.
+Read the draft aloud. Cut any sentence a different applicant could have written, any
+detail the role does not need, and any paragraph whose first sentence does not follow
+from the one before it; cut until it reads as one argument. Keep the lines that already
+work.
 
 ## 4. Render
 
@@ -69,10 +72,25 @@ already work and change only what fails this review.
 careerdocs render --kind cover_letter --pdf --role-slug <slug> --workspace <dir>
 ```
 
+Writes `<Name>-<Org>-<Role>-Cover.docx`. The template places the role line
+(`<Role> at <Organization>`, from the brief) and today's date above the greeting and the
+sign-off below the body; the record lists those two lines so the factual check allows
+them. A previous render is kept the same way as a résumé's (committed in a git workspace,
+archived otherwise).
+
 ## 5. Check
 
 ```sh
-careerdocs check applications/<slug>/outputs/<Name>-Cover-Letter.docx --workspace <dir>
+careerdocs check applications/<slug>/outputs/<Name>-<Org>-<Role>-Cover.docx --workspace <dir>
 ```
 
 Run the standard checks and separately confirm no résumé bullet appears word-for-word.
+
+## 6. Commit the round
+
+```sh
+careerdocs commit --role-slug <slug> -m "feat(<slug>): cover letter" --workspace <dir>
+```
+
+Commits the application folder and its state in a git workspace; a no-op elsewhere. Run
+it after every generation and revision round.

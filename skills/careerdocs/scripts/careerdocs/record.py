@@ -35,20 +35,29 @@ def document_text(document: Path) -> str:
 
 
 def run_checks(text: str, pdf_path: Path | None, plan: dict, profile: dict, template: dict,
-               *, layout_dir: Path | None = None, layout_name: str = "layout") -> dict:
+               *, layout_dir: Path | None = None, layout_name: str = "layout", template_lines=()) -> dict:
     allowlist = template.get("allowlist", []) if template else []
     results = {
-        "factual": factual.check(text, plan, profile, allowlist=allowlist),
+        "factual": factual.check(text, plan, profile, allowlist=allowlist, template_lines=template_lines),
         "links_dates": links_dates.check(text),
     }
     if pdf_path is not None:
         results["extraction"] = extraction.check(pdf_path)
         results["pagination"] = pagination_check(pdf_path, plan)
-        results["layout"] = layout.check(pdf_path, out_dir=layout_dir, name=layout_name)
+        results["layout"] = layout.check(pdf_path, out_dir=layout_dir, name=layout_name,
+                                         single_lines=contact_lines(plan))
     else:
         for name in ("extraction", "pagination", "layout"):
             results[name] = {"status": "skipped", "details": "no PDF (soffice not available)"}
     return results
+
+
+def contact_lines(plan: dict) -> list[str]:
+    """The contact unit's details line: the template sets it as one line, so it must fit."""
+    for unit in plan["units"]:
+        if unit["section_id"] == "header":
+            return [line for line in unit["text"].splitlines()[1:] if line.strip()]
+    return []
 
 
 def pagination_check(pdf_path: Path, plan: dict) -> dict:
@@ -106,7 +115,8 @@ def cmd_check(args) -> int:
     text = document_text(document)
     layout_dir = document.parent / "layout"
     results = run_checks(text, pdf_path, plan, profile, template,
-                         layout_dir=layout_dir if pdf_path else None, layout_name=document.stem)
+                         layout_dir=layout_dir if pdf_path else None, layout_name=document.stem,
+                         template_lines=record.get("template_lines", []))
 
     apply_results(record, results)
     errors = validate_record(record)

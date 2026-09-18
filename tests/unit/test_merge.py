@@ -140,3 +140,20 @@ def test_achievement_on_existing_parent_links_both_directions(tmp_path):
     linked = next(e for e in after["entities"] if e["id"] == globex["id"])
     assert linked["achievement_ids"] == globex["achievement_ids"] + [achievement["id"]]
     assert schema.validate_profile(after) == []
+
+
+def test_awards_interests_and_affiliations_dedupe_on_their_match_keys():
+    prov = {"source_id": "src_AAAAAAAAAAAAAAAAAAAAAAAAAA", "method": "extraction", "recorded_at": "2024-01-01T00:00:00Z", "actor": "agent"}
+    candidates = [
+        {"type": "award", "provenance": prov, "title": "Founders' Award", "issuer": "Adobe", "date": "2004-06"},
+        {"type": "award", "provenance": prov, "title": "founders' award", "issuer": "ADOBE"},
+        {"type": "interest", "provenance": prov, "name": "Skiing"},
+        {"type": "interest", "provenance": prov, "name": "skiing"},
+        {"type": "affiliation", "provenance": prov, "organization": "ACM", "role": "Member"},
+        {"type": "affiliation", "provenance": prov, "organization": "ACM", "role": "Board Member"},
+    ]
+    profile = {"schema_version": "1.1.0", "applicant_ref": "a", "authoritative_provider": "markdown", "derived": False,
+               "updated_at": "2024-01-01T00:00:00Z", "entities": [], "sources": []}
+    added = [op["entity"] for op in merge.build_operations(profile, candidates) if op["op"] == "add_entity"]
+    assert [e["type"] for e in added] == ["award", "interest", "affiliation", "affiliation"]
+    assert added[0]["date"] == "2004-06" and added[0]["id"].startswith("award_")

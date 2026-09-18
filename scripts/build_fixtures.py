@@ -119,24 +119,32 @@ def build_resume_b_pdf(path: Path) -> None:
 RESUME_TEMPLATE_JSON = {
     "name": "example-resume",
     "kind": "resume",
-    "version": "1",
+    "version": "2",
     "page_budget": 2,
-    "units_per_page": 15,
+    "units_per_page": 22,
     "sections": [
         {"id": "header", "title": "", "placeholder": "contact", "entity_types": ["contact"], "max_items": 1, "required": True},
-        {"id": "experience", "title": "Experience", "placeholder": "experience", "entity_types": ["experience", "achievement"], "max_items": 21, "required": True, "role_summaries": True},
-        {"id": "projects", "title": "Projects", "placeholder": "projects", "entity_types": ["project"], "max_items": 6, "required": False},
-        {"id": "skills", "title": "Skills", "placeholder": "skills", "entity_types": ["skill"], "max_items": 20, "required": False},
+        {"id": "summary", "title": "Summary", "placeholder": "summary", "kind": "sentence", "entity_types": ["experience", "achievement", "project", "skill"], "max_items": 1, "required": False},
+        {"id": "experience", "title": "Experience", "placeholder": "experience", "entity_types": ["experience", "achievement", "project"], "experience_kinds": ["employment"], "max_items": 30, "required": True, "role_summaries": True},
+        {"id": "projects", "title": "Projects", "placeholder": "projects", "entity_types": ["project", "achievement"], "max_items": 8, "required": False},
         {"id": "education", "title": "Education", "placeholder": "education", "entity_types": ["education"], "max_items": 5, "required": False},
+        {"id": "credentials", "title": "Certifications", "placeholder": "credentials", "entity_types": ["credential"], "max_items": 6, "required": False},
+        {"id": "patents", "title": "Patents", "placeholder": "patents", "entity_types": ["patent"], "max_items": 6, "required": False},
+        {"id": "publications", "title": "Publications", "placeholder": "publications", "entity_types": ["publication"], "max_items": 6, "required": False},
+        {"id": "awards", "title": "Awards", "placeholder": "awards", "entity_types": ["award"], "max_items": 6, "required": False},
+        {"id": "affiliations", "title": "Affiliations", "placeholder": "affiliations", "entity_types": ["affiliation", "experience", "achievement"], "experience_kinds": ["advising", "board"], "max_items": 8, "required": False},
+        {"id": "volunteer", "title": "Volunteer Experience", "placeholder": "volunteer", "entity_types": ["experience", "achievement"], "experience_kinds": ["volunteer"], "max_items": 6, "required": False, "role_summaries": True},
+        {"id": "skills", "title": "Technical Focus", "placeholder": "skills", "kind": "labeled", "group_by": "category", "entity_types": ["skill"], "max_items": 24, "required": False},
+        {"id": "interests", "title": "Interests", "placeholder": "interests", "join": ", ", "entity_types": ["interest"], "max_items": 8, "required": False},
     ],
-    "allowlist": ["Experience", "Projects", "Skills", "Education"],
-    "style_notes": "Two-page budget; verb-first bullets; no buzzwords. Single column, centered name, ruled headings, right-tab dates.",
+    "allowlist": ["Summary", "Experience", "Projects", "Education", "Certifications", "Patents", "Publications", "Awards", "Affiliations", "Volunteer Experience", "Technical Focus", "Interests"],
+    "style_notes": "Two-page budget; verb-first bullets; no buzzwords. Single column, Calibri, 0.7-inch margins: centered name, ruled capitalized headings, bold role with the organization and location muted and the dates on a right tab, an italic descriptor under the role, projects as italic sub-heads under their role, bulleted achievements, bold-label skill lines, degrees and awards with the year on the right tab. Every section is optional except the header and Experience; the approach's `sections` picks the ones a role uses.",
 }
 
 COVER_LETTER_TEMPLATE_JSON = {
     "name": "example-cover-letter",
     "kind": "cover_letter",
-    "version": "1",
+    "version": "2",
     "page_budget": 1,
     "units_per_page": 6,
     "sections": [
@@ -144,18 +152,22 @@ COVER_LETTER_TEMPLATE_JSON = {
         {"id": "body", "title": "", "placeholder": "body", "kind": "sentence", "entity_types": ["experience", "skill"], "max_items": 6, "required": True},
     ],
     "allowlist": ["Sincerely,"],
-    "style_notes": "One page; complements the resume; draft prose in voice, never paste resume bullets. The greeting is the first body unit; the template carries the sign-off.",
+    "style_notes": "One page; complements the resume; draft prose in voice, never paste resume bullets. The greeting is the first body unit; the template places the role line and the date above it and carries the sign-off.",
 }
 
 
 _INK = "1F1F1F"
+_MUTED = "555555"
+_RULE = "999999"
 _MARGIN_INCHES = 0.7
-_RESUME_MARGIN_INCHES = 1.0
-_RESUME_TEXT_WIDTH_INCHES = 8.5 - 2 * _RESUME_MARGIN_INCHES
+_TEXT_WIDTH_INCHES = 8.5 - 2 * _MARGIN_INCHES
+_BODY_PT = 11
+_SMALL_PT = 10.5
+_LINE_SPACING = 1.05
 
 
 def _base_document():
-    """Letter page, 0.7-inch margins, Calibri 10.5 pt body in near-black."""
+    """Letter page, 0.7-inch margins, Calibri 11 pt body in near-black."""
     from docx import Document
     from docx.oxml.ns import qn
     from docx.shared import Inches, Pt, RGBColor
@@ -166,35 +178,59 @@ def _base_document():
     for margin in ("left_margin", "right_margin", "top_margin", "bottom_margin"):
         setattr(section, margin, Inches(_MARGIN_INCHES))
     normal = document.styles["Normal"]
-    normal.font.name, normal.font.size = "Calibri", Pt(10.5)
+    normal.font.name, normal.font.size = "Calibri", Pt(_BODY_PT)
     normal.font.color.rgb = RGBColor.from_string(_INK)
     normal.element.rPr.rFonts.set(qn("w:eastAsia"), "Calibri")
     normal.paragraph_format.space_before = Pt(0)
     normal.paragraph_format.space_after = Pt(0)
-    normal.paragraph_format.line_spacing = 1.0
+    normal.paragraph_format.line_spacing = _LINE_SPACING
+    bullets = document.styles["List Bullet"]
+    bullets.font.name, bullets.font.size = "Calibri", Pt(_BODY_PT)
+    bullets.font.color.rgb = RGBColor.from_string(_INK)
     return document
 
 
-def _paragraph(document, text=None, *, size=None, bold=None, center=False, before=None,
-               after=None, style=None, caps=False):
-    from docx.enum.text import WD_ALIGN_PARAGRAPH
-    from docx.shared import Pt
+def _run(paragraph, text, *, size=None, bold=None, italic=None, color=None, caps=False):
+    from docx.shared import Pt, RGBColor
+
+    run = paragraph.add_run(text)
+    if size:
+        run.font.size = Pt(size)
+    if bold is not None:
+        run.bold = bold
+    if italic is not None:
+        run.italic = italic
+    if color:
+        run.font.color.rgb = RGBColor.from_string(color)
+    if caps:
+        run.font.all_caps = True  # displayed in capitals; the text itself stays as written
+    return run
+
+
+def _paragraph(document, text=None, *, size=None, bold=None, italic=None, color=None, center=False,
+               before=None, after=None, style=None, caps=False, keep_next=False, indent=None,
+               right_tab=False, line_spacing=None):
+    from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_TAB_ALIGNMENT
+    from docx.shared import Inches, Pt
 
     paragraph = document.add_paragraph(style=style)
+    fmt = paragraph.paragraph_format
     if center:
         paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
     if before is not None:
-        paragraph.paragraph_format.space_before = Pt(before)
+        fmt.space_before = Pt(before)
     if after is not None:
-        paragraph.paragraph_format.space_after = Pt(after)
+        fmt.space_after = Pt(after)
+    if keep_next:
+        fmt.keep_with_next = True
+    if indent is not None:
+        fmt.left_indent = Inches(indent)
+    if line_spacing is not None:
+        fmt.line_spacing = line_spacing
+    if right_tab:
+        fmt.tab_stops.add_tab_stop(Inches(_TEXT_WIDTH_INCHES), WD_TAB_ALIGNMENT.RIGHT)
     if text is not None:
-        run = paragraph.add_run(text)
-        if size:
-            run.font.size = Pt(size)
-        if bold is not None:
-            run.bold = bold
-        if caps:
-            run.font.all_caps = True  # displayed in capitals; the text itself stays as written
+        _run(paragraph, text, size=size, bold=bold, italic=italic, color=color, caps=caps)
     return paragraph
 
 
@@ -203,7 +239,7 @@ def _rule_below(paragraph) -> None:
     from docx.oxml.ns import qn
 
     border = OxmlElement("w:bottom")
-    for attribute, value in (("w:val", "single"), ("w:sz", "6"), ("w:space", "1"), ("w:color", _INK)):
+    for attribute, value in (("w:val", "single"), ("w:sz", "6"), ("w:space", "2"), ("w:color", _RULE)):
         border.set(qn(attribute), value)
     borders = OxmlElement("w:pBdr")
     borders.append(border)
@@ -220,7 +256,11 @@ def _preserve_spaces(document) -> None:
 
 def _header(document, *, after: float) -> None:
     _paragraph(document, "{{ contact_name }}", size=20, bold=True, center=True, after=2)
-    _paragraph(document, "{{ contact_details }}", size=10, center=True, after=after)
+    _paragraph(document, "{{ contact_details }}", size=_SMALL_PT, center=True, after=after)
+
+
+def _tag(document, text: str) -> None:
+    _paragraph(document, text)
 
 
 def _finish(document, directory: Path, manifest: dict) -> None:
@@ -233,62 +273,81 @@ def _finish(document, directory: Path, manifest: dict) -> None:
     (directory / "template.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
 
 
-def build_resume_template(directory: Path) -> None:
-    """Single column: centered name and contact line, ruled uppercase section headings,
-    bold role lines with the dates on a right tab stop and the role's summary beneath,
-    bulleted achievements."""
-    from docx.enum.text import WD_TAB_ALIGNMENT
-    from docx.shared import Inches, Pt
+def _dated_line(document, *, before: float, after: float, lead_color=_INK, rest_color=_INK,
+                tail_color=_INK, keep_next=False):
+    """``lead`` bold, ``rest`` after it, ``tail`` on the right tab stop."""
+    paragraph = _paragraph(document, before=before, after=after, keep_next=keep_next, right_tab=True)
+    _run(paragraph, "{{ unit.lead }}", bold=True, color=lead_color)
+    _run(paragraph, "{{ unit.rest }}", color=rest_color)
+    paragraph.add_run().add_tab()
+    _run(paragraph, "{{ unit.tail }}", color=tail_color)
+    return paragraph
 
+
+def build_resume_template(directory: Path) -> None:
+    """Single column: centered name and contact line, ruled uppercase section headings, a
+    bold role with the organization muted and the dates on a right tab stop, the role's
+    summary beneath in italics, projects as italic sub-heads under their role, bulleted
+    achievements, bold-label skill lines, and dated lines for degrees, awards, and the like."""
     document = _base_document()
-    section = document.sections[0]
-    section.left_margin = section.right_margin = Inches(_RESUME_MARGIN_INCHES)
-    section.top_margin = section.bottom_margin = Inches(0.9)
-    document.styles["Normal"].font.size = Pt(11)
     _header(document, after=3)
-    _paragraph(document, "{%p for section in sections %}")
-    _paragraph(document, "{%p if section.units %}")
-    _rule_below(_paragraph(document, "{{ section.title }}", size=11.5, bold=True, before=10, after=3.5, caps=True))
-    _paragraph(document, "{%p for unit in section.units %}")
-    _paragraph(document, "{%p if unit.kind == 'bullet' %}")
-    _paragraph(document, "{{ unit.text }}", style="List Bullet", after=2)
-    _paragraph(document, "{%p elif section.id == 'experience' %}")
-    role = _paragraph(document, before=6, after=1)
-    role.paragraph_format.tab_stops.add_tab_stop(Inches(_RESUME_TEXT_WIDTH_INCHES), WD_TAB_ALIGNMENT.RIGHT)
-    run = role.add_run("{{ unit.head }}")
-    run.bold, run.font.size = True, Pt(11.5)
-    role.add_run().add_tab()
-    role.add_run("{{ unit.tail }}")
-    _paragraph(document, "{%p if unit.note %}")
-    _paragraph(document, "{{ unit.note }}", after=1)
-    _paragraph(document, "{%p endif %}")
-    _paragraph(document, "{%p else %}")
-    _paragraph(document, "{{ unit.text }}", after=2)
-    _paragraph(document, "{%p endif %}")
-    _paragraph(document, "{%p endfor %}")
-    _paragraph(document, "{%p endif %}")
-    _paragraph(document, "{%p endfor %}")
+    _tag(document, "{%p for section in sections %}")
+    _tag(document, "{%p if section.units %}")
+    _rule_below(_paragraph(document, "{{ section.title }}", size=_BODY_PT, bold=True, before=10, after=3.5,
+                           caps=True, keep_next=True))
+    _tag(document, "{%p for unit in section.units %}")
+    _tag(document, "{%p if unit.kind == 'bullet' %}")
+    _paragraph(document, "{{ unit.text }}", style="List Bullet", after=2, line_spacing=1.08)
+    _tag(document, "{%p elif unit.kind == 'subhead' %}")
+    subhead = _paragraph(document, before=3.5, after=1, keep_next=True, indent=0.1)
+    _run(subhead, "{{ unit.lead }}", bold=True, italic=True, color=_INK)
+    _run(subhead, "{{ unit.rest }}", italic=True, color=_MUTED)
+    _tag(document, "{%p elif unit.kind == 'labeled' and unit.tail %}")
+    labeled = _paragraph(document, before=2)
+    _run(labeled, "{{ unit.head }}", bold=True)
+    _run(labeled, "  {{ unit.tail }}")
+    _tag(document, "{%p elif unit.kind == 'field' and unit.tail and section.id == 'experience' %}")
+    _dated_line(document, before=5.5, after=0, rest_color=_MUTED, tail_color=_MUTED, keep_next=True)
+    _tag(document, "{%p if unit.note %}")
+    _paragraph(document, "{{ unit.note }}", size=_SMALL_PT, italic=True, color=_MUTED, after=1)
+    _tag(document, "{%p endif %}")
+    _tag(document, "{%p elif unit.kind == 'field' and unit.tail %}")
+    _dated_line(document, before=2, after=0, tail_color=_MUTED, keep_next=True)
+    _tag(document, "{%p if unit.note %}")
+    _paragraph(document, "{{ unit.note }}", size=_SMALL_PT, italic=True, color=_MUTED, after=1)
+    _tag(document, "{%p endif %}")
+    _tag(document, "{%p else %}")
+    _paragraph(document, "{{ unit.text }}", after=3.5)
+    _tag(document, "{%p endif %}")
+    _tag(document, "{%p endfor %}")
+    _tag(document, "{%p endif %}")
+    _tag(document, "{%p endfor %}")
     _finish(document, directory, RESUME_TEMPLATE_JSON)
 
 
 def build_cover_letter_template(directory: Path) -> None:
-    """The same header, body paragraphs, and a sign-off followed by the name."""
+    """The same header, then the role line and the date, the body paragraphs, and a
+    sign-off followed by the name."""
     document = _base_document()
-    _header(document, after=16)
-    _paragraph(document, "{%p for section in sections %}")
-    _paragraph(document, "{%p for unit in section.units %}")
-    _paragraph(document, "{{ unit.text }}", size=11, after=8)
-    _paragraph(document, "{%p endfor %}")
-    _paragraph(document, "{%p endfor %}")
-    _paragraph(document, "Sincerely,", size=11, before=2, after=14)
-    _paragraph(document, "{{ contact_name }}", size=11)
+    _header(document, after=5)
+    _tag(document, "{%p if role_line %}")
+    _paragraph(document, "{{ role_line }}", size=_BODY_PT, bold=True, center=True, after=22)
+    _tag(document, "{%p endif %}")
+    _paragraph(document, "{{ date_line }}", size=_BODY_PT, after=12)
+    _tag(document, "{%p for section in sections %}")
+    _tag(document, "{%p for unit in section.units %}")
+    _paragraph(document, "{{ unit.text }}", size=_BODY_PT, after=9)
+    _tag(document, "{%p endfor %}")
+    _tag(document, "{%p endfor %}")
+    _paragraph(document, "Sincerely,", size=_BODY_PT, before=7, after=16)
+    _paragraph(document, "{{ contact_name }}", size=_BODY_PT)
     _finish(document, directory, COVER_LETTER_TEMPLATE_JSON)
 
 
 _RESUME_LINES = [
     ("Jordan Rivera", 18, 26),
     ("Engineering Leader — Metropolis, USA", 11, 16),
-    ("jordan.rivera@example.com · (555) 555-0142", 11, 24),
+    ("Metropolis, USA · (555) 555-0142 · jordan.rivera@example.com", 11, 24),
     ("Experience", 14, 20),
     ("Engineering Manager, Globex Corporation (2018-03–2021-06)", 11, 16),
     ("Grew the platform engineering team from 4 to 15 engineers.", 11, 16),

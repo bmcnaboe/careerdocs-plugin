@@ -1,9 +1,9 @@
 {
   "name": "example-resume",
   "kind": "resume",
-  "version": "1",
+  "version": "2",
   "page_budget": 2,
-  "units_per_page": 15,
+  "units_per_page": 22,
   "sections": [
     {
       "id": "header",
@@ -16,14 +16,32 @@
       "required": true
     },
     {
+      "id": "summary",
+      "title": "Summary",
+      "placeholder": "summary",
+      "kind": "sentence",
+      "entity_types": [
+        "experience",
+        "achievement",
+        "project",
+        "skill"
+      ],
+      "max_items": 1,
+      "required": false
+    },
+    {
       "id": "experience",
       "title": "Experience",
       "placeholder": "experience",
       "entity_types": [
         "experience",
-        "achievement"
+        "achievement",
+        "project"
       ],
-      "max_items": 21,
+      "experience_kinds": [
+        "employment"
+      ],
+      "max_items": 30,
       "required": true,
       "role_summaries": true
     },
@@ -32,19 +50,10 @@
       "title": "Projects",
       "placeholder": "projects",
       "entity_types": [
-        "project"
+        "project",
+        "achievement"
       ],
-      "max_items": 6,
-      "required": false
-    },
-    {
-      "id": "skills",
-      "title": "Skills",
-      "placeholder": "skills",
-      "entity_types": [
-        "skill"
-      ],
-      "max_items": 20,
+      "max_items": 8,
       "required": false
     },
     {
@@ -56,13 +65,115 @@
       ],
       "max_items": 5,
       "required": false
+    },
+    {
+      "id": "credentials",
+      "title": "Certifications",
+      "placeholder": "credentials",
+      "entity_types": [
+        "credential"
+      ],
+      "max_items": 6,
+      "required": false
+    },
+    {
+      "id": "patents",
+      "title": "Patents",
+      "placeholder": "patents",
+      "entity_types": [
+        "patent"
+      ],
+      "max_items": 6,
+      "required": false
+    },
+    {
+      "id": "publications",
+      "title": "Publications",
+      "placeholder": "publications",
+      "entity_types": [
+        "publication"
+      ],
+      "max_items": 6,
+      "required": false
+    },
+    {
+      "id": "awards",
+      "title": "Awards",
+      "placeholder": "awards",
+      "entity_types": [
+        "award"
+      ],
+      "max_items": 6,
+      "required": false
+    },
+    {
+      "id": "affiliations",
+      "title": "Affiliations",
+      "placeholder": "affiliations",
+      "entity_types": [
+        "affiliation",
+        "experience",
+        "achievement"
+      ],
+      "experience_kinds": [
+        "advising",
+        "board"
+      ],
+      "max_items": 8,
+      "required": false
+    },
+    {
+      "id": "volunteer",
+      "title": "Volunteer Experience",
+      "placeholder": "volunteer",
+      "entity_types": [
+        "experience",
+        "achievement"
+      ],
+      "experience_kinds": [
+        "volunteer"
+      ],
+      "max_items": 6,
+      "required": false,
+      "role_summaries": true
+    },
+    {
+      "id": "skills",
+      "title": "Technical Focus",
+      "placeholder": "skills",
+      "kind": "labeled",
+      "group_by": "category",
+      "entity_types": [
+        "skill"
+      ],
+      "max_items": 24,
+      "required": false
+    },
+    {
+      "id": "interests",
+      "title": "Interests",
+      "placeholder": "interests",
+      "join": ", ",
+      "entity_types": [
+        "interest"
+      ],
+      "max_items": 8,
+      "required": false
     }
   ],
   "allowlist": [
+    "Summary",
     "Experience",
     "Projects",
-    "Skills",
-    "Education"
+    "Education",
+    "Certifications",
+    "Patents",
+    "Publications",
+    "Awards",
+    "Affiliations",
+    "Volunteer Experience",
+    "Technical Focus",
+    "Interests"
   ],
-  "style_notes": "Two-page budget; verb-first bullets; no buzzwords. Single column, centered name, ruled headings, right-tab dates."
+  "style_notes": "Two-page budget; verb-first bullets; no buzzwords. Single column, Calibri, 0.7-inch margins: centered name, ruled capitalized headings, bold role with the organization and location muted and the dates on a right tab, an italic descriptor under the role, projects as italic sub-heads under their role, bulleted achievements, bold-label skill lines, degrees and awards with the year on the right tab. Every section is optional except the header and Experience; the approach's `sections` picks the ones a role uses."
 }

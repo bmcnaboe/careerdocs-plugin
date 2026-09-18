@@ -30,8 +30,10 @@ Every entity carries `id`, `type`, `visibility` (`public` / `restricted` / `priv
 
 - **contact** — `name` (required), `headline`, `location`, `email`, `phone`, `links[]`.
   Exactly one contact per profile.
-- **experience** — `organization`, `title`, `start_date` (required); `employment_type`,
-  `location`, `end_date` (null = current), `summary`, `achievement_ids[]`, `skill_ids[]`.
+- **experience** — `organization`, `title`, `start_date` (required); `kind` (`employment`
+  when absent, `advising`, `board`, `volunteer`; a template section selects roles by kind),
+  `employment_type`, `location`, `end_date` (null = current), `summary`,
+  `achievement_ids[]`, `skill_ids[]`.
 - **achievement** — `statement`, `parent_id` (required, an experience or project);
   `metrics[] { value, unit, context }`, `skill_ids[]`.
 - **education** — `institution` (required); `degree`, `field_of_study`, `start_date`,
@@ -44,6 +46,10 @@ Every entity carries `id`, `type`, `visibility` (`public` / `restricted` / `priv
 - **patent** — `title`, `status` (`pending` / `granted`) required; `number`,
   `filing_date`, `grant_date`, `url`.
 - **publication** — `title` (required); `venue`, `date`, `url`.
+- **award** — `title` (required); `issuer`, `date`, `description`, `url`.
+- **interest** — `name` (required); `description`.
+- **affiliation** — `organization` (required); `role`, `start_date`, `end_date`
+  (null = current), `url`. Memberships and seats that are not roles.
 
 ### Provenance, conflict, source
 
@@ -75,7 +81,7 @@ Locates the five authorities; stores no qualifications or credentials.
 | `templates` | `dir`, `resume`, `cover_letter`                                            |
 | `voice`     | `path`                                                                     |
 | `identity`  | `path`                                                                     |
-| `outputs`   | `applications_dir`, `baselines_dir`                                        |
+| `outputs`   | `applications_dir`, `baselines_dir`, `file_name`, `history`                |
 | `workflow`  | `state_dir`, `positioning_default`, `page_budget { resume, cover_letter }`, `approval_mode` |
 
 Forbidden anywhere in the file: credential-like keys or values (`password`, `token`,

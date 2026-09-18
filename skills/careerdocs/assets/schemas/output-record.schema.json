@@ -40,6 +40,7 @@
     },
     "stale": { "type": "boolean" },
     "stale_reason": { "type": ["string", "null"] },
+    "template_lines": { "type": "array", "items": { "type": "string" } },
     "pdf": { "type": "string" }
   }
 }

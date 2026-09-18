@@ -124,3 +124,19 @@ def test_factual_allows_each_line_of_a_multiline_unit(tmp_path):
     assert result["status"] == "pass", result["details"]
     # A line that is not a unit, a line of a unit, or allowlisted still fails.
     assert factual.check(text + "\nJordan", p, profile, allowlist=TEMPLATE_JSON["allowlist"])["status"] == "fail"
+
+
+def test_factual_allows_template_lines_and_their_numbers(tmp_path):
+    p, profile, text = build(tmp_path)
+    lines = ["Director of Engineering at Wonka Industries", "September 18, 2026"]
+    placed = text + "\n" + "\n".join(lines)
+    assert factual.check(placed, p, profile, allowlist=TEMPLATE_JSON["allowlist"])["status"] == "fail"
+    result = factual.check(placed, p, profile, allowlist=TEMPLATE_JSON["allowlist"], template_lines=lines)
+    assert result["status"] == "pass", result["details"]
+
+
+def test_factual_compares_lines_with_whitespace_collapsed(tmp_path):
+    p, profile, text = build(tmp_path)
+    # A template may set a unit's tab as a gap, and PDF extraction respaces text.
+    respaced = "\n".join("  ".join(line.split()) for line in text.splitlines())
+    assert factual.check(respaced, p, profile, allowlist=TEMPLATE_JSON["allowlist"])["status"] == "pass"

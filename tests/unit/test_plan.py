@@ -185,9 +185,9 @@ def test_contact_unit_is_name_then_details():
 
 def test_experience_unit_separates_role_and_dates_with_a_tab():
     exp = entity("experience", organization="Acme", title="Eng", start_date="2018-03", end_date="2021-06-15")
-    assert plan._entity_text(exp) == "Eng, Acme\tMar 2018 – Jun 2021"
-    current = entity("experience", organization="Acme", title="Eng", start_date="2022")
-    assert plan._entity_text(current) == "Eng, Acme\t2022 – present"
+    assert plan._entity_text(exp) == "Eng — Acme\tMar 2018 – Jun 2021"
+    current = entity("experience", organization="Acme", title="Eng", start_date="2022", location="Metropolis, USA")
+    assert plan._entity_text(current) == "Eng — Acme, Metropolis, USA\t2022 – present"
 
 
 def test_experience_section_is_reverse_chronological_with_achievements_under_their_role():
@@ -222,9 +222,9 @@ def test_page_cap_never_cuts_the_contact_or_a_role_with_achievements():
 
 def test_role_summary_is_a_second_line_only_when_the_section_opts_in():
     exp = entity("experience", organization="Acme", title="Eng", start_date="2018-03", summary="A fintech startup.")
-    assert plan._entity_text(exp, {"id": "experience", "entity_types": ["experience"]}) == "Eng, Acme\tMar 2018 – present"
+    assert plan._entity_text(exp, {"id": "experience", "entity_types": ["experience"]}) == "Eng — Acme\tMar 2018 – present"
     with_summary = plan._entity_text(exp, {"id": "experience", "entity_types": ["experience"], "role_summaries": True})
-    assert with_summary == "Eng, Acme\tMar 2018 – present\nA fintech startup."
+    assert with_summary == "Eng — Acme\tMar 2018 – present\nA fintech startup."
 
 
 def test_page_budget_override_caps_the_plan():
@@ -233,3 +233,146 @@ def test_page_budget_override_caps_the_plan():
                 "sections": [{"id": "experience", "entity_types": ["experience"]}]}
     result = plan.generate_plan(map_all_direct(entities), profile_with(entities), template, "builder", page_budget=1)
     assert result["page_budget"] == 1 and len(result["units"]) == 2 and len(result["cuts"]) == 3
+
+
+# --- dated units, sub-heads, section options, and the summary ---
+
+
+def test_dated_units_put_the_lead_before_a_dash_and_the_dates_after_a_tab():
+    edu = entity("education", institution="State University", degree="B.S.", field_of_study="Computer Science",
+                 start_date="2011-09", end_date="2015-05")
+    assert plan._entity_text(edu) == "State University — B.S., Computer Science\t2015"
+    assert plan._entity_text(entity("education", institution="Night School", start_date="2020-01")) == "Night School\t2020 – present"
+    assert plan._entity_text(entity("award", title="Founders' Award", issuer="Adobe", date="2004-06")) == "Founders' Award — Adobe\t2004"
+    assert plan._entity_text(entity("credential", name="CKA", issuer="CNCF", issued_date="2019-06")) == "CKA — CNCF\t2019"
+    assert plan._entity_text(entity("publication", title="Paper", venue="Journal", date="2020-01")) == "Paper — Journal\t2020"
+    assert plan._entity_text(entity("patent", title="Widget", status="granted", grant_date="2025-06")) == "Widget\t2025"
+    assert plan._entity_text(entity("patent", title="Gadget", status="pending")) == "Gadget\tpending"
+    assert plan._entity_text(entity("affiliation", organization="ACM", role="Member", start_date="2016-01")) == "Member — ACM\tJan 2016 – present"
+    assert plan._entity_text(entity("affiliation", organization="ACM")) == "ACM"
+    assert plan._entity_text(entity("interest", name="Skiing")) == "Skiing"
+    assert plan._entity_text(entity("project", name="Mesh", summary="a service mesh")) == "Mesh — a service mesh"
+
+
+def test_projects_fold_under_their_role_as_subheads_with_their_achievements():
+    role = entity("experience", organization="Globex", title="Eng", start_date="2018-03")
+    role_win = entity("achievement", statement="Did role thing", parent_id=role["id"])
+    project = entity("project", name="Mesh", organization="Globex", summary="a mesh", start_date="2019-01")
+    project_win = entity("achievement", statement="Did mesh thing", parent_id=project["id"])
+    orphan = entity("project", name="Side", summary="a side project")
+    orphan_win = entity("achievement", statement="Did side thing", parent_id=orphan["id"])
+    entities = [orphan_win, orphan, project_win, project, role_win, role]
+    template = {"name": "t", "version": "1", "page_budget": 2, "sections": [
+        {"id": "experience", "entity_types": ["experience", "achievement", "project"], "max_items": 20},
+        {"id": "projects", "entity_types": ["project", "achievement"], "max_items": 10}]}
+    result = plan.generate_plan(map_all_direct(entities), profile_with(entities), template, "builder")
+    experience = [(u["kind"], u["source_ids"][0]) for u in result["units"] if u["section_id"] == "experience"]
+    assert experience == [("field", role["id"]), ("bullet", role_win["id"]), ("subhead", project["id"]), ("bullet", project_win["id"])]
+    # A project at no held role is left for the projects section, with its achievements.
+    projects = [(u["kind"], u["source_ids"][0]) for u in result["units"] if u["section_id"] == "projects"]
+    assert projects == [("field", orphan["id"]), ("bullet", orphan_win["id"])]
+    assert result["cuts"] == []
+    assert plan.validate_plan(result, template) == []
+
+
+def test_experience_kinds_route_roles_to_their_sections():
+    job = entity("experience", organization="Acme", title="Eng", start_date="2020-01")
+    advising = entity("experience", organization="Lab", title="Advisor", kind="advising", start_date="2021-01")
+    entities = [job, advising]
+    template = {"name": "t", "version": "1", "page_budget": 2, "sections": [
+        {"id": "experience", "entity_types": ["experience"], "experience_kinds": ["employment"]},
+        {"id": "affiliations", "entity_types": ["affiliation", "experience"], "experience_kinds": ["advising", "board"]}]}
+    result = plan.generate_plan(map_all_direct(entities), profile_with(entities), template, "builder")
+    assert [(u["section_id"], u["source_ids"][0]) for u in result["units"]] == [("experience", job["id"]), ("affiliations", advising["id"])]
+    # A section without experience_kinds takes every kind.
+    result = plan.generate_plan(map_all_direct(entities), profile_with(entities),
+                                {"name": "t", "version": "1", "page_budget": 2, "sections": [EXPERIENCE_SECTION]}, "builder")
+    assert len(result["units"]) == 2
+
+
+def test_join_and_group_by_merge_units():
+    skiing = entity("interest", name="Skiing")
+    guitar = entity("interest", name="Guitar")
+    python = entity("skill", name="Python", category="Languages", positioning=["builder"])
+    go = entity("skill", name="Go", category="Languages")
+    lead = entity("skill", name="Leadership")
+    entities = [skiing, guitar, python, go, lead]
+    template = {"name": "t", "version": "1", "page_budget": 2, "sections": [
+        {"id": "skills", "kind": "labeled", "group_by": "category", "entity_types": ["skill"]},
+        {"id": "interests", "join": ", ", "entity_types": ["interest"]}]}
+    result = plan.generate_plan(map_all_direct(entities), profile_with(entities), template, "builder")
+    skills = [u for u in result["units"] if u["section_id"] == "skills"]
+    assert [(u["kind"], u["text"]) for u in skills] == [("labeled", "Languages\tPython, Go"), ("labeled", "Leadership")]
+    assert skills[0]["source_ids"] == [python["id"], go["id"]] and skills[0]["emphasis"] == "high"
+    interests = [u for u in result["units"] if u["section_id"] == "interests"]
+    assert len(interests) == 1 and interests[0]["text"] == "Skiing, Guitar"
+    assert set(interests[0]["source_ids"]) == {skiing["id"], guitar["id"]}
+    assert plan.validate_plan(result, template) == []
+
+
+SUMMARY_TEMPLATE = {"name": "t", "version": "1", "page_budget": 2, "sections": [
+    {"id": "header", "entity_types": ["contact"], "max_items": 1},
+    {"id": "summary", "placeholder": "summary", "kind": "sentence", "entity_types": ["experience", "achievement", "skill"], "max_items": 1},
+    {"id": "experience", "entity_types": ["experience", "achievement"]},
+    {"id": "skills", "entity_types": ["skill"]}]}
+
+
+def test_summary_unit_starts_from_the_headline_and_cites_the_lead_evidence():
+    contact = entity("contact", name="A B", headline="Engineering Leader")
+    role = entity("experience", organization="Acme", title="Eng", start_date="2020-01")
+    win = entity("achievement", statement="Did", parent_id=role["id"], positioning=["builder"])
+    skill = entity("skill", name="Python")
+    entities = [contact, role, win, skill]
+    result = plan.generate_plan(map_all_direct(entities), profile_with(entities), SUMMARY_TEMPLATE, "builder")
+    summary = next(u for u in result["units"] if u["section_id"] == "summary")
+    assert summary["kind"] == "sentence" and summary["text"] == "Engineering Leader"
+    assert summary["source_ids"][0] == contact["id"] and summary["source_ids"][1] == win["id"]
+    assert plan.validate_plan(result, SUMMARY_TEMPLATE) == []
+    # The approach's lead evidence wins when the brief names it; without a headline the
+    # text starts from the most recent role.
+    brief = {"requirements": [], "recommended_positioning": "builder", "approach": {"lead_evidence": [skill["id"]]}}
+    contact["headline"] = ""
+    result = plan.generate_plan(map_all_direct(entities), profile_with(entities), SUMMARY_TEMPLATE, "builder", brief=brief)
+    summary = next(u for u in result["units"] if u["section_id"] == "summary")
+    assert summary["source_ids"] == [contact["id"], skill["id"]] and summary["text"] == "Eng, Acme"
+
+
+def test_sections_limit_the_plan_to_the_named_sections():
+    contact = entity("contact", name="A B")
+    role = entity("experience", organization="Acme", title="Eng", start_date="2020-01")
+    skill = entity("skill", name="Python")
+    entities = [contact, role, skill]
+    result = plan.generate_plan(map_all_direct(entities), profile_with(entities), SUMMARY_TEMPLATE, "builder",
+                                sections=["experience"])
+    assert {u["section_id"] for u in result["units"]} == {"header", "experience"}
+    assert result["cuts"] == []
+
+
+def test_a_cited_achievement_brings_its_role_and_project_into_the_section():
+    role = entity("experience", organization="Globex", title="Eng", start_date="2018-03")
+    project = entity("project", name="Mesh", organization="Globex", summary="a mesh")
+    role_win = entity("achievement", statement="Did role thing", parent_id=role["id"])
+    project_win = entity("achievement", statement="Did mesh thing", parent_id=project["id"])
+    advising = entity("experience", organization="Lab", title="Advisor", kind="advising", start_date="2021-01")
+    advising_win = entity("achievement", statement="Advised", parent_id=advising["id"])
+    entities = [role, project, role_win, project_win, advising, advising_win]
+    template = {"name": "t", "version": "1", "page_budget": 2, "sections": [
+        {"id": "experience", "entity_types": ["experience", "achievement", "project"], "experience_kinds": ["employment"], "max_items": 20},
+        {"id": "affiliations", "entity_types": ["affiliation", "experience", "achievement"], "experience_kinds": ["advising"], "max_items": 8}]}
+    # The map cites only achievements, as a real map does.
+    result = plan.generate_plan(map_all_direct([role_win, project_win, advising_win]), profile_with(entities), template, "builder")
+    experience = [(u["kind"], u["source_ids"][0]) for u in result["units"] if u["section_id"] == "experience"]
+    assert experience == [("field", role["id"]), ("bullet", role_win["id"]), ("subhead", project["id"]), ("bullet", project_win["id"])]
+    affiliations = [(u["kind"], u["source_ids"][0]) for u in result["units"] if u["section_id"] == "affiliations"]
+    assert affiliations == [("field", advising["id"]), ("bullet", advising_win["id"])]
+    assert plan.validate_plan(result, template) == []
+
+
+def test_max_items_trims_evidence_before_structure():
+    role = entity("experience", organization="Globex", title="Eng", start_date="2018-03")
+    wins = [entity("achievement", statement=f"Win {i}", parent_id=role["id"]) for i in range(4)]
+    template = {"name": "t", "version": "1", "page_budget": 2, "sections": [
+        {"id": "experience", "entity_types": ["experience", "achievement"], "max_items": 3}]}
+    result = plan.generate_plan(map_all_direct(wins), profile_with([role, *wins]), template, "builder")
+    kept = [u["source_ids"][0] for u in result["units"]]
+    assert kept[0] == role["id"] and len(kept) == 3 and len(result["cuts"]) == 2

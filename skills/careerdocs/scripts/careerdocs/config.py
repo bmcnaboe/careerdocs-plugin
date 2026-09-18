@@ -31,7 +31,8 @@ DEFAULT_CONFIG: dict = {
     "templates": {"dir": "templates", "resume": "resume", "cover_letter": "cover-letter"},
     "voice": {"path": "voice/voice.md"},
     "identity": {"path": "identity/identity.md"},
-    "outputs": {"applications_dir": "applications", "baselines_dir": "baselines", "file_name": "{name}-{kind}"},
+    "outputs": {"applications_dir": "applications", "baselines_dir": "baselines",
+                "file_name": "{name}-{org}-{role}-{kind}", "history": "auto"},
     "workflow": {
         "state_dir": ".careerdocs/state",
         "positioning_default": "builder",

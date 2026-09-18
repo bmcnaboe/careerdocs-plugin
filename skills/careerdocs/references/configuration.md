@@ -20,11 +20,19 @@ checks it and refuses forbidden content. Validated against `assets/schemas/confi
 | `identity.path` | `identity/identity.md` | identity profile (values, personality, motivations, working style, career focus, interests, stories) |
 | `outputs.applications_dir` | `applications` | per-role folders |
 | `outputs.baselines_dir` | `baselines` | generated baselines |
+| `outputs.file_name` | `{name}-{org}-{role}-{kind}` | document name; `{kind}` is `Resume` or `Cover`; empty placeholders drop out, so a baseline is `<Name>-<Kind>` |
+| `outputs.history` | `auto` | replaced renders: `auto` (git when the workspace is in a git work tree with a committer identity, else `outputs/archive/`), `git`, or `archive` |
 | `workflow.state_dir` | `.careerdocs/state` | resumable state |
 | `workflow.positioning_default` | `builder` | `executive` or `builder` |
 | `workflow.page_budget.resume` | `2` | default résumé page target; one page only on express request |
 | `workflow.page_budget.cover_letter` | `1` | letter pages |
 | `workflow.approval_mode` | `explicit` | only `explicit` in this version |
+
+**Render history.** In git mode `render` commits an uncommitted previous render before
+overwriting it, and `careerdocs commit --role-slug <slug> -m "<message>"` (or
+`--baseline --positioning <mode>`, or `--path <p>` alone for setup) records a round:
+only the application folder, its state, the profile, and named paths are staged. Without
+a repository `commit` is a no-op and the archive holds the history.
 
 **Forbidden anywhere in the file**: credential-like keys/values (`password`, `token`,
 `api_key`, `secret`) and qualification content (`entities`, `experience`, `skills`,

@@ -64,9 +64,12 @@ Read the `text_blocks` and write `candidates.json`:
 }
 ```
 
-Rules: type every candidate; give each a single `provenance` naming its `source_id` and an
-`excerpt`; give experiences/skills/education a `ref`, and achievements a `parent_ref`
-matching their parent's `ref`. **Never invent a fact** — if the sources do not state it, do
+Rules: type every candidate (`contact`, `experience`, `achievement`, `education`,
+`skill`, `project`, `credential`, `patent`, `publication`, `award`, `interest`,
+`affiliation`; an experience that is advising, a board seat, or volunteer work carries
+`kind`); give each a single `provenance` naming its `source_id` and an `excerpt`; give
+experiences/skills/education a `ref`, and achievements a `parent_ref` matching their
+parent's `ref`. **Never invent a fact** — if the sources do not state it, do
 not write it. When two sources disagree on a field, include both candidates; the merge
 records the disagreement as a conflict.
 
@@ -147,3 +150,14 @@ applicant approves the draft, then:
 ```sh
 careerdocs identity validate --workspace <dir>
 ```
+
+## 11. Commit the setup
+
+```sh
+careerdocs commit -m "feat: onboard the profile" --path careerdocs.json --path templates --path voice --path identity --path sources --workspace <dir>
+```
+
+In a git workspace this commits the profile and the named setup paths; without a
+repository it reports that the archive holds the history. Offer `git init` in the
+workspace first if `doctor` shows `history: archive` and the applicant wants the history
+in git.

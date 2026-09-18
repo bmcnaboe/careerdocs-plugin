@@ -25,6 +25,8 @@ DATE_FIELDS: dict[str, tuple[str, ...]] = {
     "credential": ("issued_date", "expires_date"),
     "patent": ("filing_date", "grant_date"),
     "publication": ("date",),
+    "award": ("date",),
+    "affiliation": ("start_date", "end_date"),
 }
 ORDER_PAIRS: dict[str, tuple[tuple[str, str], ...]] = {
     "experience": (("start_date", "end_date"),),
@@ -32,6 +34,7 @@ ORDER_PAIRS: dict[str, tuple[tuple[str, str], ...]] = {
     "project": (("start_date", "end_date"),),
     "credential": (("issued_date", "expires_date"),),
     "patent": (("filing_date", "grant_date"),),
+    "affiliation": (("start_date", "end_date"),),
 }
 # id-reference fields; a value of None means "any entity type is acceptable".
 REF_FIELDS: dict[str, dict[str, set[str] | None]] = {

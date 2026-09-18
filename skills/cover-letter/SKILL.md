@@ -4,7 +4,7 @@ description: Write a cover letter with a through-line of the applicant's own. It
 license: MIT
 compatibility: "Python 3.10+; uv recommended. Requires the careerdocs core skill, an onboarded profile, and an existing brief and map for the role (from the resume skill)."
 metadata:
-  version: "0.4.3"
+  version: "0.5.0"
   author: "careerdocs-plugin contributors"
 ---
 
@@ -31,17 +31,22 @@ Full detail in `references/playbook.md`.
 2. **`plan --kind cover_letter --positioning <mode>`** — selects the highest-value
    evidence into a few paragraph units within the page budget and carries the identity
    path and the alignment into the plan.
-3. **Draft and review** — write a short, personal note about why this work matters to
-   the applicant and how they would help. Choose a few relevant facts and, when it fits,
-   a human detail that shows how they work. Let the role guide what belongs; follow the
-   applicant's natural train of thought rather than the posting's order. Read it aloud.
-4. **`render --kind cover_letter [--pdf]`** — fill the letter template.
+3. **Draft and review** — one idea, the through-line, told as a short story where each
+   paragraph opens on the last thought of the one before it. The résumé holds the facts,
+   so the letter implies qualifications through one or two examples chosen for that
+   idea, with no detail the role does not need. A gap the reader will notice is named
+   once and turned toward what the applicant brings to it. Read it aloud.
+4. **`render --kind cover_letter [--pdf]`** — fill the letter template, written as
+   `<Name>-<Org>-<Role>-Cover.docx`; the template places `<Role> at <Organization>` and
+   the date above the greeting.
 5. **`check <document>`** — run the standard checks and separately confirm that no résumé
    bullet appears verbatim.
+6. **`commit --role-slug <slug> -m "<message>"`** — end the round; a no-op outside git.
 
 ## Guardrails
 
 - The identity and alignment supply motive, emphasis, and tone; every fact still traces
   to a profile entity, and a gap requirement is never claimed.
-- A letter that walks the requirements list or repeats the résumé is not done. If it
-  could have been written by anyone with the same résumé, revise until it could not.
+- A letter that walks the requirements list, repeats the résumé, runs long, or
+  apologizes for a gap is not done. If it could have been written by anyone with the
+  same résumé, revise until it could not.

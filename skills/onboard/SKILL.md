@@ -4,7 +4,7 @@ description: Guided setup and first-run tutorial for careerdocs, and the flow th
 license: MIT
 compatibility: "Python 3.10+; uv recommended. Requires the careerdocs core skill and its careerdocs CLI."
 metadata:
-  version: "0.4.3"
+  version: "0.5.0"
   author: "careerdocs-plugin contributors"
 ---
 
@@ -58,6 +58,10 @@ Read the report and branch on it:
 - **Templates, voice, or identity missing** (`doctor` reports each): note it now; Stage 4
   handles them after the profile exists, so the applicant sees value before doing setup
   chores.
+- **No git repository** (`doctor` shows `history: archive`): explain in a sentence that a
+  git repository in the workspace keeps every generation and revision round as a commit
+  instead of an archive folder, and offer to run `git init` there (never a remote, never a
+  push). The applicant decides; the archive works without it.
 - **Dependencies missing or the CLI failing**: stop and fix that first; nothing below
   works without the CLI.
 
@@ -90,10 +94,13 @@ more first, stop here; the next run resumes at Stage 0 with nothing lost.
 
 1. **`profile import <path>...`** registers each source with its sha256 and returns text
    blocks (and, for a CSV, draft candidates).
-2. **Extract candidates** into `candidates.json`: every candidate typed, with provenance
-   naming its `source_id` and an excerpt; experiences carry a `ref`, achievements a
-   `parent_ref`. Never invent a fact. When two sources disagree, include both; the merge
-   records the disagreement as a conflict.
+2. **Extract candidates** into `candidates.json`: every candidate typed — contact,
+   experience (with `kind` `advising`, `board`, or `volunteer` when it is not
+   employment), achievement, education, skill (with a `category` when the résumé groups
+   them), project, credential, patent, publication, award, interest, affiliation — with
+   provenance naming its `source_id` and an excerpt; experiences carry a `ref`,
+   achievements a `parent_ref`. Never invent a fact. When two sources disagree, include
+   both; the merge records the disagreement as a conflict.
 3. **`profile diff candidates.json --flow onboard --subject <name>`** merges, applies
    precedence, and generates the material questions.
 4. **Ask only the generated questions**, one at a time, in plain language, and record
@@ -117,10 +124,14 @@ need them. Handle whichever `doctor` reported missing.
 
 - **Templates**: a DOCX with Jinja placeholders plus a `template.json` manifest per
   kind, under `templates/resume/` and `templates/cover-letter/`. If the applicant has
-  none, offer to copy the plugin's sanitized examples from `examples/applicant/templates/`
-  (next to `skills/` in the plugin) as a starting point, and say they can restyle the
-  DOCX freely as long as the placeholders stay. If they have a favourite résumé layout,
-  explain the placeholder loop from `docs/templates-and-voice.md` and offer to convert it.
+  none, offer to copy the plugin's default design from `examples/applicant/templates/`
+  (next to `skills/` in the plugin): a single-column résumé whose manifest offers every
+  common section (Summary, Experience with projects folded under their roles, Projects,
+  Education, Certifications, Patents, Publications, Awards, Affiliations, Volunteer
+  Experience, Technical Focus, Interests), each optional and picked per role, and a
+  matching letter with the role line and date. Say they can restyle the DOCX freely as
+  long as the placeholders stay. If they have a favourite résumé layout, explain the
+  placeholder loop from `docs/templates-and-voice.md` and offer to convert it.
 - **Voice**: `voice/voice.md`, a frontmatter block with `person`, `tense_rules`, `tone`,
   `preferred_terms`, `banned_phrases`, `sentence_shape`, and `sample_sentences`. Draft it
   from the writing samples gathered in Stage 1 and from how the applicant answered
@@ -137,6 +148,10 @@ need them. Handle whichever `doctor` reported missing.
   the file's body. Draft the file from the answers, in their words, never inventing a
   value or a story; show it; write it only after a yes. The durable sections change
   rarely; career focus and interests are worth revisiting when they return.
+
+In a git workspace, close the stage by committing the setup:
+`careerdocs commit -m "feat: onboard the profile" --path careerdocs.json --path templates --path voice --path identity --path sources`
+(the profile is always included; the command is a no-op without a repository).
 
 ## Stage 5 — The tutorial
 

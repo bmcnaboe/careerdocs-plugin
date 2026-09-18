@@ -2,8 +2,10 @@
 
 Every content line of the rendered document must be a plan unit — or one line of a
 multi-line unit, such as the contact unit's name and details lines — or a
-template-provided string on the allowlist, and every number and date in the document must
-trace to one of the entities the plan cites. This is what stops invented qualifications
+template-provided string on the allowlist, or a line the render composed from the role
+brief and the calendar (recorded as the output's ``template_lines``), and every number
+and date in the document must trace to one of the entities the plan cites or to one of
+those lines. This is what stops invented qualifications
 and altered metrics from reaching a document.
 """
 
@@ -31,22 +33,36 @@ def _blob(entity: dict) -> str:
     return " ".join(parts)
 
 
+def _squash(text: str) -> str:
+    return " ".join(text.split())
+
+
 def cited_entity_ids(plan: dict) -> set[str]:
     return {sid for unit in plan["units"] for sid in unit["source_ids"]}
 
 
-def check(document_text: str, plan: dict, profile: dict, allowlist=()) -> dict:
+def digits_of(lines) -> set[str]:
+    """The digit groups in ``lines``, in the form the number check compares against."""
+    return set(re.sub(r"\D", " ", " ".join(lines)).split())
+
+
+def check(document_text: str, plan: dict, profile: dict, allowlist=(), template_lines=()) -> dict:
+    """``allowlist`` holds the template's fixed strings; ``template_lines`` the lines the
+    render composed from the role brief and the calendar (a letter's role line and date),
+    whose numbers need no entity behind them."""
     by_id = {e["id"]: e for e in profile["entities"]}
     cited = cited_entity_ids(plan)
     blob = " ".join(_blob(by_id[i]) for i in cited if i in by_id)
-    blob_digits = set(re.sub(r"\D", " ", blob).split())
-    allowed_lines = set(allowlist)
+    blob_digits = digits_of([blob]) | digits_of(template_lines)
+    # Lines compare with their whitespace collapsed: a template may set a unit's tab as a
+    # gap or a tab stop, and PDF extraction respaces text.
+    allowed_lines = {_squash(line) for line in (*allowlist, *template_lines)}
     for unit in plan["units"]:
-        allowed_lines.add(unit["text"])
-        allowed_lines.update(line.strip() for line in unit["text"].splitlines())
+        allowed_lines.add(_squash(unit["text"]))
+        allowed_lines.update(_squash(line) for line in unit["text"].splitlines())
 
     findings: list[str] = []
-    for line in (line.strip() for line in document_text.splitlines()):
+    for line in (_squash(line) for line in document_text.splitlines()):
         if not line or line in allowed_lines:
             continue
         findings.append(f"unsourced line: {line!r}")
