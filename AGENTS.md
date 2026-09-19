@@ -11,8 +11,9 @@ ChatGPT/Codex and Claude Code/Cowork. The repository root is the plugin for all 
 Claude Code and Cowork read `.claude-plugin/`, Codex reads `.codex-plugin/plugin.json`
 and `.agents/plugins/marketplace.json` (`.agents` links to `.claude`, so that file lives
 at `.claude/plugins/marketplace.json`), and every platform installs it from GitHub with
-its own plugin manager and loads the same `skills/`. It works without agent-layer;
-agent-layer may install it.
+its own plugin manager and loads the same `skills/`: a hidden core (conventions, the CLI
+reference, the CLI itself) and three flows, `onboard`, `update`, and `apply`. It works
+without agent-layer; agent-layer may install it.
 
 ## Hard rules
 
@@ -39,14 +40,14 @@ agent-layer may install it.
 ## Runs
 
 Work is planned as Linear runs: `linear-specs/<stamp>-<slug>/plan.md` is the run plan
-the Ralph loop executes (tasks, tranches, ticket snapshots), and `design/` beside it
-holds the design of record (spec, implementation plan, research, data model,
-contracts, quickstart, verification evidence). Spec Kit stays available for a future
+the Ralph loop executes (tasks, tranches, ticket snapshots), with the design of record in
+`design/` beside it. A finished run's folder is removed once it ships, since everything
+tracked here is cloned into every install. Spec Kit stays available for a future
 spec-first feature; it expects its current-plan pointer in `CLAUDE.md`, which is a pure
 pointer here, so the markers live in this imported file instead.
 
 <!-- SPECKIT START -->
-No active Spec Kit feature. Current run: `linear-specs/20260907-185131-agl-15-16-career-documents/plan.md`.
+No active Spec Kit feature. No active run.
 <!-- SPECKIT END -->
 
 ## Commands
@@ -56,11 +57,11 @@ No active Spec Kit feature. Current run: `linear-specs/20260907-185131-agl-15-16
 ```
 
 `basic` runs the unit tests and skills lint; `full` adds the integration runs and the
-inventory, version, and evidence checks; `final` adds shellcheck, gitleaks, the
-applicant-data guard, and the agent-layer conformance check. A component that does not
-exist yet reports `SKIP`; `--strict` makes that a failure. `final --strict` must be green
-before a commit lands on `main`. `.ralph/command-policy` pins the three tiers for
-autonomous runs.
+inventory and version checks; `final` adds shellcheck, gitleaks, the applicant-data
+guard, and the agent-layer conformance check. A component that does not exist yet
+reports `SKIP`; `--strict` makes that a failure. `final --strict` must be green before a
+commit lands on `main`. `.ralph/command-policy` pins the three tiers for autonomous runs.
+`DEVELOPMENT.md` describes the layout, tests, fixtures, versioning, and the release steps.
 
 ## Tickets
 

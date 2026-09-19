@@ -14,9 +14,8 @@ ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = ROOT / "skills" / "careerdocs" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
-from careerdocs import cli, questions  # noqa: E402
+from careerdocs import cli, questions, visibility  # noqa: E402
 from careerdocs.providers import load_provider  # noqa: E402
-from careerdocs.providers.markdown import MarkdownProvider  # noqa: E402
 
 SOURCES = ROOT / "examples" / "applicant" / "sources"
 CANDIDATES = ROOT / "tests" / "fixtures" / "candidates.json"
@@ -125,10 +124,8 @@ def test_private_excluded(tmp_path):
     run(["profile", "approve", d2["diff_id"], "--workspace", ws])
     run(["profile", "apply", d2["diff_id"], "--workspace", ws])
 
-    # The private fact is in the authoritative profile but absent from the export.
+    # The private fact stays in the authoritative profile and out of every document.
     authoritative_names = {e.get("name") for e in provider.read()["entities"]}
     assert "Python" in authoritative_names
-    export_dir = tmp_path / "derived"
-    provider.export({"provider": "markdown", "path": str(export_dir)})
-    exported_names = {e.get("name") for e in MarkdownProvider.at(export_dir).read()["entities"]}
-    assert "Python" not in exported_names
+    visible_names = {e.get("name") for e in visibility.visible_entities(provider.read())}
+    assert "Python" not in visible_names

@@ -17,7 +17,7 @@ from . import config as config_module
 from . import util
 from .errors import CareerDocsError
 
-FLOWS = ("onboard", "update", "resume", "cover_letter", "apply")
+FLOWS = ("onboard", "update", "apply")
 
 
 def state_path(workspace, cfg: dict, flow: str, subject: str) -> Path:

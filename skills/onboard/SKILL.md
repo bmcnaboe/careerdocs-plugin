@@ -1,173 +1,107 @@
 ---
 name: onboard
-description: Guided setup and first-run tutorial for careerdocs, and the flow that reconciles an applicant's existing career materials into one authoritative profile. Use when the applicant runs the onboard skill, asks to set up or get started with careerdocs, or wants to import résumés, a LinkedIn data export, and notes into a single profile rather than scattered copies. Idempotent, so it first checks what already exists (workspace, profile, sources, templates, voice, identity, pending state) and walks through only what is missing. It explains how to obtain each material (including the LinkedIn data export), runs profile import, extracts candidates, builds a ProfileDiff, asks only the questions the CLI generates, records approval only after an explicit yes, applies the diff, sets up templates and voice, captures the applicant's identity by interview (values, personality, motivations, working style, career focus, interests), and ends with a short tour of the other flows. Resumable without re-asking answered questions.
+description: Set up careerdocs and build the applicant's one authoritative profile from their existing materials (résumés, a LinkedIn data export, notes), then teach them how the plugin works. Use when the applicant wants to set up, get started, onboard, import a résumé or LinkedIn export, or revisit their voice or identity profile. Idempotent and resumable, so it checks what exists and does only what is missing.
 license: MIT
-compatibility: "Python 3.10+; uv recommended. Requires the careerdocs core skill and its careerdocs CLI."
+compatibility: "Python 3.10+; uv recommended. Requires the careerdocs core skill."
 metadata:
-  version: "0.5.0"
+  version: "0.6.0"
   author: "careerdocs-plugin contributors"
 ---
 
 # onboard
 
-The front door of careerdocs: part setup, part tutorial, and the flow that turns an
-applicant's scattered materials into **one** authoritative profile. Read the core
-`careerdocs` skill first for the conventions this flow obeys (the five authorities, the
-diff-then-approve rule, visibility, where state lives). Command detail is in
-`references/playbook.md`.
+Setup, import, and a short tutorial, as one conversation. Read the core `careerdocs`
+skill first; commands and file shapes are in its `references/cli.md`. Ask one thing at a
+time, say why in a sentence, accept "skip" or "later" for anything optional, and never
+ask what the CLI or the workflow state already answers.
 
-The whole run is a conversation. Ask one thing at a time, explain why it is needed in a
-sentence, and accept "skip" or "later" for anything optional. Never make the applicant
-read this file.
+## 1. Check what exists
 
-**This skill teaches, whatever the state.** Every run ends with the applicant knowing
-what exists, how to get more material in (the LinkedIn export steps included), and how
-to run the other flows. That content is `references/tutorial.md`; deliver it in your own
-words, adapted to their state and environment, without waiting to be asked. A status
-line followed by "give me paths" is not an acceptable outcome.
+Run `doctor --json` and branch on it:
 
-## Stage 0 — Check what is already there
+- **No workspace resolved**: the workspace is the one folder for the profile, templates,
+  voice, and documents. Ask which folder (default `~/career-workspace`) and run
+  `config workspace <dir>`. In Cowork use the attached folder without asking.
+- **The profile already has entities**: say what it holds (roles, date range, counts,
+  what is set up), give the tour (section 5), then offer: new sources, one new fact (the
+  `update` skill), missing setup, a revisit of career focus and interests, or an
+  application (the `apply` skill).
+- **Pending onboard state** (`state resume onboard <subject>`): continue from it.
+- **No git repository** (`history: archive`): offer `git init` in the workspace, never a
+  remote or a push; it keeps every round as a commit. Ignore `.careerdocs/layout/`.
+- **Dependencies missing**: fix that first.
 
-Run first, every time; it makes the skill idempotent.
+## 2. Gather materials
 
-```sh
-careerdocs doctor --json
-```
+At least one résumé; everything else is optional.
 
-Read the report and branch on it:
+- **Résumés**, current and older, DOCX or PDF. Older ones carry roles the current one
+  dropped.
+- **The LinkedIn data export**: on LinkedIn, Settings & Privacy, Data privacy, Get a copy
+  of your data; tick Positions, Education, Skills, and Certifications, or the full
+  archive. The zip arrives by email in about ten minutes; unzip it into `sources/`. A
+  profile URL cannot be used (login wall, terms of use). The nearest shortcut is Save to
+  PDF on their own profile page, which imports like a résumé.
+- **Notes**: reviews, brag documents, write-ups, a bio.
+- **Writing samples** for the voice profile; not imported as facts.
 
-- **Workspace unresolved** (`workspace_source` is `cwd`): explain that the workspace is
-  the one folder that holds the profile, templates, voice, and generated documents, ask
-  which folder should be it (the installer suggests `~/career-workspace`), and run
-  `config workspace <dir>`. In Cowork, the folder attached to the session is the
-  workspace: run `config init --workspace <that folder>` if it lacks `careerdocs.json`,
-  pass `--workspace <that folder>` on every command, and do not ask.
-- **Profile already has entities**: onboarding was done before. Say so and summarize
-  what the profile holds (roles, date range, counts, templates and voice present or
-  not). Then give the returning-applicant briefing before asking for anything: how the
-  plugin is used from here (tutorial section 3), how to get more material in, the
-  LinkedIn export steps included (section 2), and where things live (section 4). Close
-  by offering, not requiring, the next moves: add new sources (Stage 2 for those files
-  only), record a single new fact (the `update` skill), set up whatever Stage 4 finds
-  missing, revisit their identity profile (career focus and interests change; values
-  rarely do), or run the résumé flow if they have a job description at hand.
-- **Pending onboard state** (`state resume onboard <subject>` lists a diff or open
-  questions): resume there; answered questions are never asked again.
-- **Sources already registered** (the provider's `sources.jsonl`): list them; do not
-  re-import a file whose sha256 is already recorded.
-- **Templates, voice, or identity missing** (`doctor` reports each): note it now; Stage 4
-  handles them after the profile exists, so the applicant sees value before doing setup
-  chores.
-- **No git repository** (`doctor` shows `history: archive`): explain in a sentence that a
-  git repository in the workspace keeps every generation and revision round as a commit
-  instead of an archive folder, and offer to run `git init` there (never a remote, never a
-  push). The applicant decides; the archive works without it.
-- **Dependencies missing or the CLI failing**: stop and fix that first; nothing below
-  works without the CLI.
+Confirm the list with paths before importing. Never re-import a file whose sha256 is
+already in `sources.jsonl`.
 
-## Stage 1 — Gather the materials
+## 3. Build the profile
 
-Ask what the applicant has, in this order, and where each file lives. Everything is
-optional except at least one résumé or export; the flow works with a single résumé.
+1. `profile import <path>...` registers each source and returns its text blocks (and
+   draft candidates from a CSV).
+2. Write `candidates.json` from the text. Type every candidate; an experience that is
+   advising, a board seat, or volunteer work carries `kind`; a skill carries a
+   `category`; name skills the way postings do (the literal tool, method, and model
+   names). Each candidate cites its `source_id` with an `excerpt`. Never invent a fact.
+   When sources disagree, include both; the merge records the conflict.
+3. `profile diff candidates.json --flow onboard --subject <name>` merges, applies
+   precedence (applicant statement, then verified import, then newest import), and
+   generates the material questions. Ask only those, one at a time, in plain words, and
+   record each with `state answer`. Turn the answers into `resolve_conflict`,
+   `update_field`, and `set_visibility` operations and re-diff.
+4. Show the summary in a few lines (roles, resolved conflicts, what is private). After
+   an explicit yes: `profile approve`, `profile apply`, `profile validate`. Tell them in a
+   paragraph what now exists and where.
 
-1. **Résumés**, current and older, DOCX or PDF. Older versions matter: they carry roles
-   and details the current one dropped.
-2. **LinkedIn data export**. This is a set of CSV files LinkedIn generates, not the
-   profile page. If the applicant does not have it, give these steps: on LinkedIn open
-   **Settings & Privacy → Data privacy → Get a copy of your data**, choose
-   **Want something in particular?** and tick **Positions**, **Education**, **Skills**,
-   and **Certifications** (or request the full archive), then download the zip from the
-   email that arrives in about ten minutes and put the CSVs in the workspace, `sources/`
-   works well. `Positions.csv` becomes experience candidates with exact dates; the other
-   files are read as text. A profile URL cannot be used: the page sits behind a login
-   and LinkedIn's terms forbid fetching it. The nearest shortcut is the **Save to PDF**
-   option on the applicant's own profile, which imports like any résumé.
-3. **Notes and other records**: performance reviews, brag documents, project write-ups,
-   a bio, Markdown or text. Anything that states a fact about the applicant's work.
-4. **Writing samples** for the voice profile: cover letters, emails, posts the applicant
-   wrote and likes. Used in Stage 4, so ask now and set aside.
+## 4. Templates, voice, identity
 
-Confirm the list back, with paths, before importing. If the applicant wants to gather
-more first, stop here; the next run resumes at Stage 0 with nothing lost.
+Whatever `doctor` reports missing, once the profile exists:
 
-## Stage 2 — Build the profile
+- **Templates**: offer to copy the plugin's default design from
+  `examples/applicant/templates/` (beside `skills/`) into `templates/resume/` and
+  `templates/cover-letter/`. The DOCX can be restyled freely as long as the placeholders
+  stay (`docs/templates-and-voice.md`).
+- **Voice**, `voice/voice.md`: JSON frontmatter with `person`, `tense_rules`, `tone`,
+  `preferred_terms`, `banned_phrases`, `sentence_shape`, `sample_sentences`, and a body
+  for document-specific guidance. Draft it from the writing samples and how they
+  answered; with no samples, ask three short questions (first or third person, words
+  they never want to see, two sentences they are proud of). Write it after a yes.
+- **Identity**, `identity/identity.md`: `identity questions --flow onboard --subject
+  <name>` lists one question per missing section (values, personality, motivations,
+  working style, career focus, interests). Ask them one at a time, saying why each
+  matters; record each with `state answer`; keep the stories they tell for the body.
+  Draft it in their words, never inferred from the profile, write it after a yes, and
+  run `identity validate`. Values rarely change; career focus and interests are worth
+  revisiting when they return.
 
-1. **`profile import <path>...`** registers each source with its sha256 and returns text
-   blocks (and, for a CSV, draft candidates).
-2. **Extract candidates** into `candidates.json`: every candidate typed — contact,
-   experience (with `kind` `advising`, `board`, or `volunteer` when it is not
-   employment), achievement, education, skill (with a `category` when the résumé groups
-   them), project, credential, patent, publication, award, interest, affiliation — with
-   provenance naming its `source_id` and an excerpt; experiences carry a `ref`,
-   achievements a `parent_ref`. Never invent a fact. When two sources disagree, include
-   both; the merge records the disagreement as a conflict.
-3. **`profile diff candidates.json --flow onboard --subject <name>`** merges, applies
-   precedence, and generates the material questions.
-4. **Ask only the generated questions**, one at a time, in plain language, and record
-   each with `state answer onboard <subject> --question <id> --answer <text>`. Never ask
-   a question the CLI did not generate; never re-ask an answered one.
-5. **Resolve and re-diff**, then show the rendered diff and explain it in a few lines:
-   how many roles, which conflicts were resolved and how, what is marked private.
-6. **`profile approve <diff_id>`** only after an explicit yes. **`profile apply`** writes
-   the profile atomically and refreshes the derived export.
+Close with `commit -m "feat: onboard the profile" --path careerdocs.json --path templates
+--path voice --path identity --path sources` (a no-op without git).
 
-## Stage 3 — Confirm
+## 5. The tour
 
-Run `profile validate` and `doctor` again, and tell the applicant in one paragraph what
-now exists and where: the profile folder, the source ledger with provenance for every
-fact, and that private facts stay out of every export.
-
-## Stage 4 — Templates, voice, and identity
-
-All three are applicant-owned files in the workspace; the résumé and cover-letter flows
-need them. Handle whichever `doctor` reported missing.
-
-- **Templates**: a DOCX with Jinja placeholders plus a `template.json` manifest per
-  kind, under `templates/resume/` and `templates/cover-letter/`. If the applicant has
-  none, offer to copy the plugin's default design from `examples/applicant/templates/`
-  (next to `skills/` in the plugin): a single-column résumé whose manifest offers every
-  common section (Summary, Experience with projects folded under their roles, Projects,
-  Education, Certifications, Patents, Publications, Awards, Affiliations, Volunteer
-  Experience, Technical Focus, Interests), each optional and picked per role, and a
-  matching letter with the role line and date. Say they can restyle the DOCX freely as
-  long as the placeholders stay. If they have a favourite résumé layout, explain the
-  placeholder loop from `docs/templates-and-voice.md` and offer to convert it.
-- **Voice**: `voice/voice.md`, a frontmatter block with `person`, `tense_rules`, `tone`,
-  `preferred_terms`, `banned_phrases`, `sentence_shape`, and `sample_sentences`. Draft it
-  from the writing samples gathered in Stage 1 and from how the applicant answered
-  questions; if there are no samples, propose a plain, concrete default and ask three
-  short questions (first or third person, words they never want to see, two sentences
-  they are proud of). Show the draft and write it only after a yes.
-- **Identity**: `identity/identity.md`, who the applicant is beyond the facts, so a cover
-  letter has a through-line of their own instead of a walk through the requirements.
-  Run `identity questions --flow onboard --subject <name>`; it lists one question per
-  section still missing (values, personality, motivations, working style, career focus,
-  interests) with a stable id, and marks the ones already answered. Ask them one at a
-  time, in plain language, with why each matters in a sentence; record each answer with
-  `state answer`. Listen for the stories they tell while answering and keep them for
-  the file's body. Draft the file from the answers, in their words, never inventing a
-  value or a story; show it; write it only after a yes. The durable sections change
-  rarely; career focus and interests are worth revisiting when they return.
-
-In a git workspace, close the stage by committing the setup:
-`careerdocs commit -m "feat: onboard the profile" --path careerdocs.json --path templates --path voice --path identity --path sources`
-(the profile is always included; the command is a no-op without a repository).
-
-## Stage 5 — The tutorial
-
-End every run, first or returning, with the tutorial in `references/tutorial.md`:
-what careerdocs is, how to get materials in (LinkedIn export steps and the profile-PDF
-alternative), how each flow is invoked in this environment and what it needs at hand,
-where things live in the workspace, privacy, and the common situations. Adapt it: a
-first-run applicant gets the whole arc; a returning one gets the parts that match what
-they have and what is missing. Then offer to run the apply flow right away if they have
-a job description at hand.
+End every run, first or returning, by explaining in your own words, adapted to what they
+have: one profile with a source behind every fact; nothing changes without a diff they
+approve; nothing leaves their machine; how to get more material in; and the flows in this
+environment. `apply` takes a posting and produces the résumé, the letter, or both;
+`update` records a new fact or a correction; `onboard` again revisits focus and
+interests; "run careerdocs doctor" shows the setup at any time. Then offer to start
+`apply` if they have a posting at hand.
 
 ## Guardrails
 
-- No invented qualifications: a candidate with no source is not written.
-- One authoritative profile: never hand-edit provider files; every change is a diff.
-- Private facts stay private: they are in the profile but never in the export.
-- Idempotent: check before doing; never re-import, re-ask, or overwrite without a yes.
-- Identity is the applicant's own account: drafted from their answers, never inferred
-  from the profile or invented, and never a source of qualifications.
+- A candidate with no source is not written. Private facts never leave the profile.
+- Check before doing: never re-import, re-ask, or overwrite without a yes.
+- The identity is the applicant's own account, never inferred, never a source of facts.

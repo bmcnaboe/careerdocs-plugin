@@ -1,8 +1,7 @@
-"""Profile storage providers.
+"""Profile storage: the structured-Markdown provider.
 
-Exactly one provider is authoritative, selected by ``providers.authoritative`` in the
-workspace config. The structured-Markdown provider is the reference implementation; the
-Basic Memory provider writes the same entities as vault notes.
+``providers.authoritative`` in the workspace config names the provider; ``markdown`` is
+the only one.
 """
 
 from __future__ import annotations
@@ -23,8 +22,4 @@ def load_provider(workspace: str | Path, config: dict | None = None) -> Provider
     name = cfg["providers"]["authoritative"]
     if name == "markdown":
         return MarkdownProvider(workspace, cfg)
-    if name == "basic_memory":
-        from .basic_memory import BasicMemoryProvider
-
-        return BasicMemoryProvider(workspace, cfg)
     raise NotAuthoritative(f"unknown authoritative provider {name!r}")

@@ -1,10 +1,9 @@
 """Provider interface, canonical hashing, and the typed provider-contract errors.
 
-A provider stores the authoritative ``CareerProfile`` or a derived copy. This module
-defines the abstract interface every provider implements — reading and writing the
-profile, a content hash stable across file order, the source/approval/diff ledgers, an
-export to another provider, and a capabilities report — plus the shared canonical hash so
-every provider hashes identical content identically.
+A provider stores the authoritative ``CareerProfile``. This module defines the abstract
+interface every provider implements — reading and writing the profile, a content hash
+stable across file order, and the source/approval/diff ledgers — plus the shared canonical
+hash so every provider hashes identical content identically.
 
 The diff → approve → apply orchestration (the contract's ``propose``/``apply``) lives in
 ``careerdocs.diff`` over these primitives; providers own storage, not the approval logic.
@@ -58,7 +57,7 @@ def hash_profile(profile: dict) -> str:
 
 
 class Provider(ABC):
-    """Storage for one ``CareerProfile`` (authoritative or derived)."""
+    """Storage for one ``CareerProfile``."""
 
     @abstractmethod
     def read(self) -> dict:
@@ -70,14 +69,6 @@ class Provider(ABC):
 
     def hash(self) -> str:
         return hash_profile(self.read())
-
-    @abstractmethod
-    def capabilities(self) -> dict:
-        """Return ``{authoritative_ok, search, context}``."""
-
-    @abstractmethod
-    def export(self, target: dict) -> dict:
-        """Write a derived copy to ``target`` and return a summary."""
 
     # --- ledgers ---
 

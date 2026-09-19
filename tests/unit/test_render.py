@@ -78,7 +78,7 @@ def test_build_record_shape(tmp_path):
     p = build_plan(tmp_path)
     record = render.build_record(
         p, document=Path("out.docx"), kind="resume", positioning="builder",
-        plan_path=Path("plan.json"), brief_path=Path("brief.json"), map_path=Path("map.json"),
+        plan_path=Path("plan.resume.json"), brief_path=Path("brief.json"), map_path=Path("map.json"),
         pdf_path=None, pdf_available=False,
     )
     expected_sources = {sid for u in p["units"] for sid in u["source_ids"]}
@@ -104,7 +104,7 @@ def test_cli_render_writes_docx_and_record(tmp_path, capsys):
     p = build_plan(tmp_path)
     app = tmp_path / "applications" / "example-role"
     app.mkdir(parents=True)
-    (app / "plan.json").write_text(json.dumps(p), encoding="utf-8")
+    (app / "plan.resume.json").write_text(json.dumps(p), encoding="utf-8")
 
     capsys.readouterr()
     rc = cli.main(["render", "--kind", "resume", "--role-slug", "example-role", "--workspace", ws, "--json"])
@@ -128,31 +128,34 @@ def test_render_archives_the_previous_render(tmp_path, capsys):
     p = build_plan(tmp_path)
     app = tmp_path / "applications" / "example-role"
     app.mkdir(parents=True)
-    (app / "plan.json").write_text(json.dumps(p), encoding="utf-8")
-    outputs = app / "outputs"
+    (app / "plan.resume.json").write_text(json.dumps(p), encoding="utf-8")
     argv = ["render", "--kind", "resume", "--role-slug", "example-role", "--workspace", ws, "--json"]
 
     assert cli.main(argv) == 0
-    (outputs / "layout").mkdir()
-    (outputs / "layout" / "Jordan-Rivera-Resume-p1.png").write_bytes(b"png")
-    first = (outputs / "Jordan-Rivera-Resume.docx").read_bytes()
+    first = (app / "Jordan-Rivera-Resume.docx").read_bytes()
     capsys.readouterr()
     assert cli.main(argv) == 0
     assert cli.main(argv) == 0
 
-    # The output folder holds only the current render; earlier ones sit in archive/ under
-    # their generation stamp, layout renders and records (paths rewritten) moved with them.
-    current = sorted(f.name for f in outputs.iterdir() if f.is_file())
-    assert current == ["Jordan-Rivera-Resume.docx", "Jordan-Rivera-Resume.record.json"]
-    archive = outputs / "archive"
+    # The application folder holds only the current render beside the plan; earlier ones
+    # sit in archive/ under their generation stamp, their records' paths rewritten.
+    current = sorted(f.name for f in app.iterdir() if f.is_file())
+    assert current == ["Jordan-Rivera-Resume.docx", "Jordan-Rivera-Resume.record.json", "plan.resume.json"]
+    archive = app / "archive"
     archived = sorted(f for f in archive.iterdir() if f.suffix == ".docx")
     assert len(archived) == 2 and all(f.name.startswith("Jordan-Rivera-Resume-20") for f in archived)
     assert any(f.read_bytes() == first for f in archived)
     for document in archived:
         record = json.loads((archive / f"{document.stem}.record.json").read_text())
         assert record["document"] == str(document)
-    pngs = list((archive / "layout").glob("*-p1.png"))
-    assert len(pngs) == 1 and (archive / (pngs[0].name[: -len("-p1.png")] + ".docx")).exists()
+
+
+def test_render_needs_the_plan_for_its_kind(tmp_path, capsys):
+    from careerdocs import cli
+
+    ws, app = _provision(tmp_path)
+    assert cli.main(["render", "--kind", "cover_letter", "--role-slug", "example-role", "--workspace", ws]) == 2
+    assert "plan.cover_letter.json" in capsys.readouterr().err
 
 
 COVER_DIR = ROOT / "examples" / "applicant" / "templates" / "cover-letter"
@@ -193,7 +196,7 @@ def test_cli_baseline_plan_render_check(tmp_path, capsys):
     diff.apply(provider, d["diff_id"], cfg=default_config(), workspace=tmp_path)
 
     assert cli.main(["plan", "--baseline", "--positioning", "builder", "--workspace", ws]) == 0
-    assert (tmp_path / "baselines" / "builder" / "plan.json").exists()
+    assert (tmp_path / "baselines" / "builder" / "plan.resume.json").exists()
 
     capsys.readouterr()
     assert cli.main(["render", "--baseline", "--positioning", "builder", "--workspace", ws, "--json"]) == 0
@@ -221,13 +224,13 @@ def test_cli_render_pdf_branch(tmp_path):
     p = build_plan(tmp_path)
     app = tmp_path / "applications" / "example-role"
     app.mkdir(parents=True)
-    (app / "plan.json").write_text(json.dumps(p), encoding="utf-8")
+    (app / "plan.resume.json").write_text(json.dumps(p), encoding="utf-8")
 
     rc = cli.main(["render", "--kind", "resume", "--role-slug", "example-role", "--pdf", "--workspace", ws])
     assert rc == 0
-    assert (app / "outputs" / "Jordan-Rivera-Resume.docx").exists()
+    assert (app / "Jordan-Rivera-Resume.docx").exists()
     if shutil.which("soffice"):
-        assert (app / "outputs" / "Jordan-Rivera-Resume.pdf").exists()
+        assert (app / "Jordan-Rivera-Resume.pdf").exists()
 
 
 def test_build_context_exposes_contact_lines_and_unit_halves(tmp_path):
@@ -311,7 +314,7 @@ def _provision(tmp_path, kinds=("resume",)):
     p = build_plan(tmp_path)
     app = tmp_path / "applications" / "example-role"
     app.mkdir(parents=True)
-    (app / "plan.json").write_text(json.dumps(p), encoding="utf-8")
+    (app / "plan.resume.json").write_text(json.dumps(p), encoding="utf-8")
     return ws, app
 
 
@@ -373,25 +376,23 @@ def test_render_in_git_keeps_the_previous_render_as_a_commit(tmp_path, capsys):
 
     _init_repo(tmp_path)
     ws, app = _provision(tmp_path)
-    outputs = app / "outputs"
     argv = ["render", "--kind", "resume", "--role-slug", "example-role", "--workspace", ws, "--json"]
 
     capsys.readouterr()
     assert cli.main(argv) == 0
     first = json.loads(capsys.readouterr().out)
     assert first["history"] == "git" and first["kept"] is None  # nothing to keep yet
-    (outputs / "layout").mkdir()
-    (outputs / "layout" / "Jordan-Rivera-Resume-p1.png").write_bytes(b"png")
 
     assert cli.main(argv) == 0
     second = json.loads(capsys.readouterr().out)
-    # The uncommitted first render was committed — document, record, and layout render —
+    # The uncommitted first render was committed — document and record, not the plan —
     # before being overwritten; nothing went to an archive folder.
     assert second["kept"]
     assert _git(tmp_path, "log", "--format=%s") == "chore(example-role): keep the previous resume render"
-    assert "layout/Jordan-Rivera-Resume-p1.png" in _git(tmp_path, "show", "--stat", "--format=", "HEAD")
-    assert not (outputs / "archive").exists()
-    assert sorted(f.name for f in outputs.iterdir() if f.is_file()) == ["Jordan-Rivera-Resume.docx", "Jordan-Rivera-Resume.record.json"]
+    shown = _git(tmp_path, "show", "--stat", "--format=", "HEAD")
+    assert "Jordan-Rivera-Resume.record.json" in shown and "plan.resume.json" not in shown
+    assert not (app / "archive").exists()
+    assert sorted(f.name for f in app.iterdir() if f.is_file()) == ["Jordan-Rivera-Resume.docx", "Jordan-Rivera-Resume.record.json", "plan.resume.json"]
 
     # A render the round already committed is not committed again.
     assert cli.main(["commit", "--role-slug", "example-role", "-m", "feat(example-role): résumé", "--workspace", ws]) == 0
@@ -410,5 +411,5 @@ def test_render_archives_when_history_is_archive_despite_git(tmp_path, capsys):
     argv = ["render", "--kind", "resume", "--role-slug", "example-role", "--workspace", ws, "--json"]
     assert cli.main(argv) == 0 and cli.main(argv) == 0
     assert json.loads(capsys.readouterr().out.splitlines()[-1])["history"] == "archive"
-    assert (app / "outputs" / "archive").is_dir()
+    assert (app / "archive").is_dir()
     assert _git(tmp_path, "rev-list", "--count", "--all") == "0"

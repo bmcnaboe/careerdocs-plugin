@@ -1,4 +1,4 @@
-"""Tests for visibility filtering, per-document approvals, and derived exports."""
+"""Tests for visibility filtering and per-document approvals."""
 
 import sys
 from pathlib import Path
@@ -10,7 +10,6 @@ sys.path.insert(0, str(SCRIPTS))
 from careerdocs import ids, schema, util, visibility  # noqa: E402
 from careerdocs.config import default_config  # noqa: E402
 from careerdocs.providers import load_provider  # noqa: E402
-from careerdocs.providers.markdown import MarkdownProvider  # noqa: E402
 
 NOW = util.now()
 SRC = ids.new_source_id()
@@ -50,10 +49,6 @@ def test_is_visible_rules():
     assert not visibility.is_visible(unverified)
     assert not visibility.is_visible(restricted)  # no document approval
     assert visibility.is_visible(restricted, document="resume.docx", approved_docs={"resume.docx"})
-    # private excluded even for export; restricted kept for a mirror export.
-    assert not visibility.is_visible(private, for_export=True)
-    assert visibility.is_visible(restricted, for_export=True)
-    assert visibility.is_visible(unverified, for_export=True)
 
 
 def test_filter_removes_private_and_cleans_references():
@@ -61,7 +56,7 @@ def test_filter_removes_private_and_cleans_references():
     exp = common("experience", organization="Acme", title="Eng", start_date="2020-01-01")
     private_ach = common("achievement", statement="secret", parent_id=exp["id"], visibility="private")
     exp["achievement_ids"] = [private_ach["id"]]
-    filtered = visibility.filter_visible(profile_with([contact, exp, private_ach]), for_export=True)
+    filtered = visibility.filter_visible(profile_with([contact, exp, private_ach]))
     ids_kept = {e["id"] for e in filtered["entities"]}
     assert private_ach["id"] not in ids_kept
     kept_exp = next(e for e in filtered["entities"] if e["id"] == exp["id"])
@@ -73,28 +68,11 @@ def test_cascade_drops_achievement_when_parent_private():
     contact = common("contact", name="Jordan")
     private_exp = common("experience", organization="Acme", title="Eng", start_date="2020-01-01", visibility="private")
     ach = common("achievement", statement="did a thing", parent_id=private_exp["id"])
-    filtered = visibility.filter_visible(profile_with([contact, private_exp, ach]), for_export=True)
+    filtered = visibility.filter_visible(profile_with([contact, private_exp, ach]))
     ids_kept = {e["id"] for e in filtered["entities"]}
     assert private_exp["id"] not in ids_kept
     assert ach["id"] not in ids_kept  # cascaded out
     assert schema.validate_profile(filtered) == []
-
-
-def test_export_excludes_private_and_is_derived(tmp_path):
-    provider = load_provider(tmp_path, default_config())
-    contact = common("contact", name="Jordan")
-    public_skill = common("skill", name="Python")
-    private_skill = common("skill", name="Clearance", visibility="private")
-    provider.write(profile_with([contact, public_skill, private_skill]))
-
-    dest = tmp_path / "derived"
-    summary = provider.export({"provider": "markdown", "path": str(dest)})
-    assert summary["derived"] is True
-    exported = MarkdownProvider.at(dest).read()
-    assert exported["derived"] is True
-    names = {e.get("name") for e in exported["entities"]}
-    assert "Python" in names
-    assert "Clearance" not in names
 
 
 def test_approved_documents_from_approvals():

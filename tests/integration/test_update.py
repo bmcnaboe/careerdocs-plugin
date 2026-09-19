@@ -1,7 +1,7 @@
 """US5 verification: updating qualifications propagates and reports staleness.
 
-Runs the real CLI with Basic Memory authoritative (so a derived Markdown export exists)
-over the example profile, then applies an update and checks the effects.
+Runs the real CLI over the example profile, renders a résumé, then applies an update and
+checks the effects.
 """
 
 import contextlib
@@ -17,7 +17,6 @@ sys.path.insert(0, str(SCRIPTS))
 
 from careerdocs import cli  # noqa: E402
 from careerdocs.providers import load_provider  # noqa: E402
-from careerdocs.providers.markdown import MarkdownProvider  # noqa: E402
 
 CANDIDATES = ROOT / "tests" / "fixtures" / "candidates.json"
 JD = ROOT / "examples" / "applicant" / "applications" / "example-role" / "job-description.md"
@@ -55,20 +54,9 @@ def run_json(argv):
     return json.loads(out)
 
 
-def bm_config(tmp_path):
-    return {
-        "version": "1",
-        "providers": {
-            "authoritative": "basic_memory",
-            "markdown": {"path": "profile"},
-            "basic_memory": {"vault_path": str(tmp_path / "vault"), "project": "test", "folder": "career"},
-        },
-    }
-
-
 def setup(tmp_path):
     ws = str(tmp_path)
-    (tmp_path / "careerdocs.json").write_text(json.dumps(bm_config(tmp_path)), encoding="utf-8")
+    run(["config", "init", "--workspace", ws])
     dest = tmp_path / "templates" / "resume"
     dest.mkdir(parents=True)
     shutil.copy(TEMPLATES / "resume" / "template.docx", dest / "template.docx")
@@ -112,14 +100,9 @@ def test_new_fact_provenance(tmp_path):
     assert new_achievement["verification"] == "applicant_verified"
 
 
-def test_exports_agree_and_stale(tmp_path):
+def test_update_changes_the_fact_and_marks_the_resume_stale(tmp_path):
     ws, app, resume = setup(tmp_path)
     apply_update(tmp_path, ws)
-
-    # Authoritative Basic Memory notes and the derived Markdown export agree.
-    note_ids = {e["id"] for e in load_provider(tmp_path).read()["entities"]}
-    export_ids = {e["id"] for e in MarkdownProvider.at(tmp_path / "profile").read()["entities"]}
-    assert note_ids == export_ids
 
     # The Globex end date actually changed.
     globex = next(e for e in load_provider(tmp_path).read()["entities"] if e.get("organization") == "Globex Corporation")
@@ -128,10 +111,7 @@ def test_exports_agree_and_stale(tmp_path):
     # The earlier résumé's output record is reported stale.
     status = run_json(["profile", "status", "--workspace", ws, "--json"])
     stale_docs = {item["document"] for item in status["stale_outputs"]}
-    assert resume["record"] in {str(Path(d)) for d in stale_docs} or any(
-        Path(resume["document"]).name in d for d in stale_docs
-    )
-    assert status["derived_export"]["fresh"] is True
+    assert str(Path(resume["document"])) in stale_docs
 
 
 def test_resume_pending_diff(tmp_path):

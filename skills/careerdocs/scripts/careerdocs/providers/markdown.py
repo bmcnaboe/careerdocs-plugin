@@ -22,7 +22,7 @@ from pathlib import Path
 from .. import schema, util
 from ..errors import CareerDocsError, ProfileInvalid, SchemaTooNew
 from ..ids import ENTITY_TYPES
-from .base import INDEX_FIELDS, NotAuthoritative, Provider, hash_profile
+from .base import INDEX_FIELDS, Provider, hash_profile
 
 # Which entity field is stored as the Markdown body rather than in the frontmatter.
 BODY_FIELD = {"achievement": "statement", "experience": "summary", "project": "summary"}
@@ -38,9 +38,9 @@ def _write_frontmatter_file(path: Path, frontmatter: dict, body: str = "") -> No
 def _parse_flat_frontmatter(block: str) -> dict:
     """Parse a flat ``key: value`` YAML frontmatter block (scalars only).
 
-    A live Basic Memory service may normalize a note's JSON frontmatter into flat YAML and
-    add its own keys (``permalink``); this reads that back. Nested structures are not
-    expected in the index note, which carries only scalar fields.
+    A note editor may rewrite the index note's JSON frontmatter as flat YAML and add keys
+    of its own; this reads that back. Nested structures are not expected in the index
+    note, which carries only scalar fields.
     """
     data: dict = {}
     for line in block.splitlines():
@@ -149,7 +149,7 @@ class MarkdownProvider(Provider):
         if not self.index_file.exists():
             return self._empty_profile()
         index_raw, _ = _read_frontmatter_file(self.index_file)
-        # Keep only the known index fields; a provider (e.g. Basic Memory) may add its own.
+        # Keep only the known index fields; a note editor may add its own.
         index = {field: index_raw[field] for field in INDEX_FIELDS if field in index_raw}
         stored_version = index.get("schema_version", "0.0.0")
         if self._too_new(stored_version):
@@ -181,39 +181,6 @@ class MarkdownProvider(Provider):
 
         self._write_sources(profile.get("sources", []))
         return hash_profile(profile)
-
-    def capabilities(self) -> dict:
-        return {"authoritative_ok": True, "search": False, "context": False}
-
-    def export(self, target: dict) -> dict:
-        from .. import visibility
-
-        profile = visibility.filter_visible(self.read(), for_export=True)
-        profile = {**profile, "derived": True}
-        provider_name = target.get("provider", "markdown")
-        if provider_name == "markdown":
-            dest = MarkdownProvider.at(target["path"])
-            dest.write(profile)
-            return {
-                "provider": "markdown",
-                "location": str(dest.base_dir),
-                "derived": True,
-                "entities": len(profile["entities"]),
-            }
-        if provider_name == "basic_memory":
-            from .basic_memory import BasicMemoryProvider
-
-            dest = BasicMemoryProvider.at(
-                target["vault_path"], target["project"], target.get("folder", "career")
-            )
-            dest.write(profile)
-            return {
-                "provider": "basic_memory",
-                "location": str(dest.base_dir),
-                "derived": True,
-                "entities": len(profile["entities"]),
-            }
-        raise NotAuthoritative(f"cannot export to provider {provider_name!r}")
 
     # --- ledgers ---
 

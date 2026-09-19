@@ -1,193 +1,115 @@
-# careerdocs-plugin
+# careerdocs
 
-Tailored résumés and cover letters from one authoritative profile, for AI coding agents.
-One provider-neutral workflow source, packaged for Claude Code and ChatGPT/Codex.
+Tailored résumés and cover letters, written from one trustworthy record of your career,
+by the AI coding agent you already use: Claude Code, Codex, or Cowork.
 
-## What it is
+You hand it your existing résumés, a LinkedIn export, and your notes once. It builds one
+profile with a source behind every fact. Then, for each job posting, it maps the
+requirements to your real experience, agrees an approach with you, drafts in your voice,
+fills your template, and checks the result before calling it done. Nothing about you
+leaves your machine, and nothing is added to your profile without your yes.
 
-`careerdocs-plugin` turns an applicant's scattered career materials into a single
-authoritative profile, then generates tailored résumés and cover letters from it —
-mapping a job description to the applicant's real evidence, drafting in their approved
-voice and template, and verifying every output before it is called done. Every
-deterministic step is a `careerdocs` CLI command; the agent-facing workflow lives in five
-Agent Skills that call it.
+## What you get
 
-Résumés target two pages by default. A one-page résumé is made only when the applicant
-expressly asks for one; the pagination check verifies the rendered page count.
+- **One profile.** Your roles, achievements, skills, education, projects, and more, each
+  traced to the document it came from. Where old résumés disagree, you get a question,
+  not a guess.
+- **A résumé per posting.** Two pages by default, in your own template, with the evidence
+  that matters for that role first. Requirements you do not meet are named as gaps and
+  never claimed.
+- **A cover letter only you could have written.** Built around why this role fits you,
+  in your voice, complementing the résumé instead of repeating it.
+- **Checks before "done".** Every line traces to your profile, dates and links are sane,
+  and the PDF fits its page target and margins.
+- **Your files in one folder**, ready to send.
 
 ## Install
 
-Every environment installs the plugin straight from this repository with its own plugin
-manager and keeps its own versioned copy; nothing is copied by hand, and every update
-comes from the same source. `bmcnaboe/careerdocs-plugin` is the short GitHub form all of
-them accept.
+You need Claude Code or Codex on macOS or Linux (on Windows, use WSL), plus Python 3.10
+or [uv](https://docs.astral.sh/uv/). LibreOffice is optional and enables PDF output.
 
-### One command: Claude Code and Codex
-
-```sh
+```bash
 curl -fsSL https://raw.githubusercontent.com/bmcnaboe/careerdocs-plugin/main/install.sh | bash
 ```
 
-Prefer to read it first?
+The installer finds Claude Code and Codex, installs the plugin into each, and asks which
+folder should be your **workspace**: the one place for your profile, templates, voice,
+and generated documents (default `~/career-workspace`). Running it again updates.
 
-```sh
-curl -fsSLO https://raw.githubusercontent.com/bmcnaboe/careerdocs-plugin/main/install.sh && less install.sh && bash install.sh
-```
+Cowork, claude.ai, ChatGPT, and other agents: see [docs/install.md](docs/install.md).
 
-The script detects Claude Code and Codex and runs the commands below for each, asks which
-folder should be your workspace and records it, and ends with the Cowork and onboarding
-steps. It needs Python 3.10+ or [uv](https://docs.astral.sh/uv/) (uv recommended), writes
-only under `~/.claude`, `~/.codex`, `~/.config/careerdocs`, and the workspace folder,
-never asks for sudo, and is safe to re-run — re-running updates. Pass options after
-`bash -s --`: `--dry-run` previews, `--uninstall` removes, `--only claude` or
-`--only codex` limits it to one agent, `--workspace <dir>` answers the workspace prompt up
-front. LibreOffice is optional and enables PDF output and the PDF checks. macOS and Linux;
-on Windows use WSL.
+## First run: onboard
 
-### By environment
-
-**Claude Code** (CLI, desktop app, IDE extensions):
-
-```sh
-claude plugin marketplace add bmcnaboe/careerdocs-plugin
-claude plugin install careerdocs@careerdocs-plugin
-```
-
-Update with `claude plugin update careerdocs@careerdocs-plugin`.
-
-**Codex** (CLI or app, with plugin support):
-
-```sh
-codex plugin marketplace add bmcnaboe/careerdocs-plugin
-codex plugin add careerdocs@careerdocs-plugin
-```
-
-Update with `codex plugin marketplace upgrade careerdocs-plugin` followed by the same
-`codex plugin add`.
-
-**Cowork** (Claude desktop app): nothing to install on your machine. In the Cowork tab
-open **Customize → Plugins**, select **Add marketplace**, enter
-`bmcnaboe/careerdocs-plugin`, and install **careerdocs**. **Update** on the marketplace
-pulls new versions. Cowork keeps its own plugin list, so the commands above do not reach
-it.
-
-**No terminal — ChatGPT or claude.ai:** download the per-skill zips from the
-[latest release](https://github.com/bmcnaboe/careerdocs-plugin/releases/latest) and upload
-each one (ChatGPT: Skills → Create → Upload from your computer; claude.ai: Customize →
-Skills → Add). The skills then guide the conversation, but generating documents needs an
-agent that can run the `careerdocs` CLI, so use a terminal install for that.
-
-**Other agents** — Cursor, GitHub Copilot, Gemini CLI, OpenCode, and the rest of the
-[Agent Skills](https://agentskills.io) ecosystem — get the skills without the plugin
-wrapper:
-
-```sh
-npx skills add bmcnaboe/careerdocs-plugin -g
-```
-
-Verification, updates, and removal per platform:
-[docs/setup-claude.md](docs/setup-claude.md) and [docs/setup-codex.md](docs/setup-codex.md).
-
-## First run
-
-The installer asks for a **workspace**: the one folder that holds your profile, templates,
-voice, and generated documents (default `~/career-workspace`). It records the choice in
-`~/.config/careerdocs/workspace`, so the skills find it from any folder. Per command,
-`--workspace <dir>` overrides it; `careerdocs config workspace <dir>` changes the default.
-In Cowork, the folder you attach to the session is the workspace.
-
-Then open a new agent session and run the onboard skill. It checks what is already set
-up, walks you through gathering your materials (résumés, the LinkedIn data export, notes,
-writing samples), builds your profile as a diff you approve, sets up templates and voice,
-and ends with a short tour:
+Open a new session and run the onboard skill.
 
 | Agent | Run |
 | --- | --- |
 | Claude Code | `/careerdocs:onboard` |
-| Cowork | `/careerdocs:onboard` in a session with the workspace folder attached; if `/` does not offer it, say "onboard my career documents" |
 | Codex | `$onboard` |
+| Cowork | `/careerdocs:onboard`, with your workspace folder attached to the session |
 
-From then on, per application:
+It asks for your materials one at a time (résumés old and new, the LinkedIn data export,
+notes, writing samples), explains how to get each, imports them, asks only the questions
+your documents raise, and shows you the proposed profile before writing anything. Then it
+sets up your résumé and letter templates, captures how you write, and asks a few questions
+about who you are beyond the facts, so your letters have a through-line of your own. It
+ends with a short tour.
 
-| | Claude Code and Cowork | Codex |
-| --- | --- | --- |
-| Tailor a résumé to a job description | `/careerdocs:resume` | `$resume` |
-| Write the matching cover letter | `/careerdocs:cover-letter` | `$cover-letter` |
-| Add a new achievement or correction to your profile | `/careerdocs:update` | `$update` |
-| The whole application for one posting, guided | `/careerdocs:apply` | `$apply` |
+Run it again any time. It only does what is missing.
 
-Documents land in `applications/<role-slug>/outputs/` as
-`<Name>-<Organization>-<Role>-Resume.docx` and `…-Cover.docx` (with a PDF when LibreOffice
-is installed). When the workspace is a git repository, every generation and revision round
-is committed there, so the history lives in git; otherwise a replaced render moves to
-`outputs/archive/`.
+## Applying to a job: apply
 
-Plain requests work too ("tailor my résumé to this job description: …"); the skill
-command is the reliable way to start a flow. "Run careerdocs doctor" shows what is
-configured, including which workspace resolved and how.
+Paste a posting into a new session and run the apply skill: `/careerdocs:apply` or
+`$apply`. Say whether you want the résumé, the letter, or both. In one short conversation
+it:
 
-Everything it writes stays in your workspace; nothing about you is sent anywhere or stored
-in this repository.
+1. Reads the posting and confirms the organization, the role, and what you want.
+2. Shows the fit: which requirements you meet directly, which transfer, which are gaps,
+   and which of the posting's keywords your profile lacks. It asks which of those you
+   genuinely have and records only those, with your approval.
+3. Proposes an approach and confirms it in one exchange: positioning (leadership first or
+   hands-on first), the three pieces of evidence that lead, what to compress, résumé
+   length, letter length and tone, and anything to avoid.
+4. For the letter, asks why this role, in your words.
+5. Drafts, renders, and checks each document, then reports what was cut for space and
+   which requirements remain gaps.
 
-## The five flows
+Interrupted? Run it again for the same posting; it continues where it stopped.
 
-1. **Onboard / import** — inventory existing sources (resumes, exports, notes), extract
-   candidate facts, reconcile them into one profile, and ask only the questions that
-   matter.
-2. **Update qualifications** — capture a new fact with provenance, propose it as a
-   reviewable diff, and report which past outputs it makes stale.
-3. **Tailored resume** — turn a job description into a role brief, map each requirement
-   to direct / transferable / gap evidence, plan the content, render it, and run the
-   checks.
-4. **Complementary cover letter** — reuse the brief and map to draft a letter organized
-   around the applicant's own through-line (their identity and the role alignment) that
-   complements the resume rather than repeating it.
-5. **Apply** — a short guided interview that runs the three flows above for one posting:
-   fit and gaps, qualifications you confirm, an agreed approach (positioning, emphasis,
-   length, tone), the role alignment, then both documents checked and reported.
+## Keeping your profile current: update
 
-## The five authorities
+A new job, a certification, a shipped project, or a wrong date: run the update skill,
+`/careerdocs:update` or `$update`, and say what changed. It records your statement as the
+source, shows you the change, applies it after your yes, and tells you which earlier
+documents are now out of date.
 
-Kept separate, never folded into one opaque profile:
+## Your workspace
 
-- **Qualifications** — the `CareerProfile`, held by a provider — structured Markdown under
-  `profile/` in the workspace by default; a Basic Memory provider also exists.
-- **Voice** — how the applicant writes, in a `voice.md`.
-- **Identity** — who the applicant is beyond the facts (values, personality, motivations,
-  working style, career focus, interests, stories), in an `identity.md`; per application,
-  the brief's `alignment` records how the role connects to it.
-- **Document templates** — a DOCX template plus a sidecar `template.json` manifest.
-- **Target role** — the role brief for one application.
+| Folder or file | What it holds |
+| --- | --- |
+| `profile/` | your profile, one file per fact, with the record of every source, approval, and change |
+| `sources/` | the documents you imported |
+| `templates/` | your résumé and letter templates |
+| `voice/voice.md`, `identity/identity.md` | how you write; who you are beyond the facts |
+| `applications/<role>/` | the posting, the brief and map, and the finished documents |
+| `baselines/` | untargeted résumés |
 
-An optional `careerdocs.json` only *locates* these; it stores no qualifications and no
-credentials.
+Documents are named `<Your Name>-<Organization>-<Role>-Resume.docx` and `-Cover.docx`,
+with PDFs when LibreOffice is installed. If your workspace is a git repository (onboard
+offers to make it one), every round is committed there; otherwise a replaced version
+moves to an `archive/` folder beside the new one.
 
-## No applicant data, ever
+## Privacy
 
-Qualifications, voice samples, identity profiles, personal templates, credentials, and
-generated documents
-stay outside this repository. Everything under `examples/` and `templates/` here is
-sanitized and fictional. A repository guard fails the build on anything that looks like
-real personal data.
-
-## Authoritative updates are proposals
-
-Every change to an applicant's profile is a reviewable diff the applicant approves —
-never a silent write. Content is bound to the entities it cites; a factual check rejects
-any claim that is not traceable to the profile.
+Everything stays in your workspace. The plugin itself sends nothing anywhere (its first
+run may download its Python libraries); the agent you run talks to its model as it always
+does. This repository holds no applicant data; its examples are fictional.
 
 ## Documentation
 
-Start at [docs/README.md](docs/README.md). Guides:
+- [docs/install.md](docs/install.md): every platform, verifying, updating, removing.
+- [docs/templates-and-voice.md](docs/templates-and-voice.md): restyling your templates,
+  the voice profile, and the identity profile.
+- [DEVELOPMENT.md](DEVELOPMENT.md): how the plugin is built, tested, and released.
 
-- Setup: [docs/setup-claude.md](docs/setup-claude.md), [docs/setup-codex.md](docs/setup-codex.md)
-- [docs/configuration.md](docs/configuration.md) — the optional `careerdocs.json`
-- [docs/profile-schema.md](docs/profile-schema.md) — the versioned `CareerProfile` model
-- [docs/provider-contract.md](docs/provider-contract.md) — the provider interface and the two providers
-- [docs/checks.md](docs/checks.md) — the five output checks
-- [docs/templates-and-voice.md](docs/templates-and-voice.md) — authoring templates, the voice profile, and the identity profile
-- [docs/migration.md](docs/migration.md) — migrating an existing career folder
-
-## License
-
-MIT — see [LICENSE](LICENSE).
+MIT license, see [LICENSE](LICENSE).

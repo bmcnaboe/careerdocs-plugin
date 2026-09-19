@@ -145,22 +145,6 @@ def test_diff_store_and_load(tmp_path):
         provider.load_diff("diff_missing")
 
 
-def test_capabilities(tmp_path):
-    caps = make_provider(tmp_path).capabilities()
-    assert caps == {"authoritative_ok": True, "search": False, "context": False}
-
-
-def test_export_produces_derived_copy(tmp_path):
-    provider = make_provider(tmp_path)
-    provider.write(sample_profile())
-    dest = tmp_path / "derived"
-    summary = provider.export({"provider": "markdown", "path": str(dest)})
-    assert summary["derived"] is True
-    copy = MarkdownProvider.at(dest).read()
-    assert copy["derived"] is True
-    assert len(copy["entities"]) == 3
-
-
 def test_read_refuses_too_new_schema(tmp_path):
     provider = make_provider(tmp_path)
     profile = sample_profile()

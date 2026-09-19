@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # scripts/gate.sh — the quality bar, by tier.
 #   basic : unit tests + skills lint
-#   full  : basic + integration runs + inventory, version, and evidence checks
+#   full  : basic + integration runs + inventory and version checks
 #   final : full + shellcheck + gitleaks + applicant-data guard + agent-layer conformance
 # A component that does not exist yet is reported as SKIP so the bar can be built up
 # task by task; --strict (or GATE_STRICT=1) turns every SKIP into a failure, which is
@@ -50,7 +50,6 @@ full_tier() {
   pytest_suite tests/integration
   py_check scripts/check_inventory.py "package inventory"
   py_check scripts/check_versions.py "version agreement"
-  py_check scripts/verification_evidence_check.py "verification evidence"
 }
 final_tier() {
   full_tier

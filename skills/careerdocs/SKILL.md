@@ -1,147 +1,80 @@
 ---
 name: careerdocs
-description: Core conventions and the careerdocs CLI shared by the careerdocs flows (onboard, update, resume, cover letter, apply). Consult this skill for how the five authorities (qualifications, voice, identity, templates, target role) are modeled and located, how flow skills invoke the careerdocs CLI, the diff-then-approve rule for every profile change, visibility semantics, and where workflow state and generated outputs live. Load it before running any careerdocs command or when a flow skill references a convention it does not restate.
+description: Shared conventions and the careerdocs CLI behind the onboard, update, and apply skills. Load it before running any careerdocs command. It covers the five authorities (qualifications, voice, identity, templates, target role), how to run the CLI and locate the workspace, the diff-then-approve rule for every profile change, visibility, and where every artifact lives.
 license: MIT
 user-invocable: false
-compatibility: "Python 3.10+; uv recommended (uv run), python3 fallback. Offline except optional link checks. Optional LibreOffice (soffice) for PDF conversion."
+compatibility: "Python 3.10+; uv recommended (uv run), python3 fallback. Offline. Optional LibreOffice (soffice) for PDF output and the PDF checks."
 metadata:
-  version: "0.5.0"
+  version: "0.6.0"
   author: "careerdocs-plugin contributors"
 ---
 
 # careerdocs
 
-Shared conventions and the `careerdocs` CLI behind five flows: **onboard**, **update**,
-**resume**, **cover-letter**, and **apply**, which orchestrates the last three through a
-guided interview. The flow skills own the conversation; this skill owns the rules they all
-obey and the deterministic commands they all call. Read it before running any
-`careerdocs` command.
+The rules every flow obeys and the deterministic CLI they all call. The CLI does the
+mechanical work (parsing, merging, planning, rendering, checking); judgement happens
+between commands, in the conversation. Command and file detail: `references/cli.md`.
 
-## The five authorities
+## Five authorities, kept separate
 
-Kept separate, never folded into one opaque profile:
+1. **Qualifications**: the profile, typed entities with stable ids, provenance,
+   verification, and visibility, stored as structured Markdown under `profile/`.
+2. **Voice**: how the applicant writes, `voice/voice.md`.
+3. **Identity**: who they are beyond the facts (values, personality, motivations,
+   working style, career focus, interests, stories), `identity/identity.md`. Never a
+   source of qualifications.
+4. **Templates**: a DOCX plus a `template.json` manifest per kind, under `templates/`.
+5. **Target role**: the brief for one application, under `applications/<slug>/`.
 
-1. **Qualifications** — the `CareerProfile`: entities (contact, experience, achievement,
-   education, skill, project, credential, patent, publication, award, interest,
-   affiliation) with stable IDs,
-   provenance, verification state, visibility, and conflict records. Held by a
-   **provider** — structured Markdown under `profile/` by default. A Basic Memory provider
-   also exists, but no flow uses its search, and making it authoritative implies a derived
-   Markdown mirror at `providers.markdown.path`.
-2. **Voice** — how the applicant writes, in a `voice.md` with frontmatter (`voice.path`).
-3. **Identity** — who the applicant is beyond the facts: values, personality, motivations,
-   working style, career focus, interests, and the stories they tell about themselves, in
-   an `identity.md` with frontmatter (`identity.path`). Never a source of qualifications.
-   Per application, the brief's `alignment` records how the role connects to it.
-4. **Document templates** — a DOCX plus a sidecar `template.json` manifest, one per kind
-   (`resume`, `cover_letter`), under `templates.dir`.
-5. **Target role** — the `RoleBrief` for one application, under
-   `outputs.applications_dir/<role-slug>/`.
+`careerdocs.json` only locates these. It never holds qualifications or credentials.
 
-An optional `careerdocs.json` only **locates** these; it stores no qualifications
-and no credentials. Forbidden keys/values (credentials like `token`, `api_key`; or
-qualification content like `entities`, `experience`) are refused by `config validate`.
-
-## Invoking the CLI
-
-Entry point: `skills/careerdocs/scripts/careerdocs.py`. Flow skills call it by
-relative path:
+## Running the CLI
 
 ```sh
-uv run <skill-root>/careerdocs/scripts/careerdocs.py <command> --workspace <dir> [--json]
-# python3 works too: the entry point declares its runtime deps inline (PEP 723) and,
-# without uv, installs them with pip on its first run (PyPI must be reachable).
+uv run <plugin>/skills/careerdocs/scripts/careerdocs.py <command> [--workspace <dir>] [--json]
 ```
 
-- `--workspace <dir>` overrides the workspace. Otherwise it resolves from
-  `CAREERDOCS_WORKSPACE`, then the nearest `careerdocs.json` at or above the current
-  directory, then the default the installer or `config workspace <dir>` recorded in
-  `~/.config/careerdocs/workspace`. A bare current directory is **not** a workspace: data
-  commands refuse it (`WORKSPACE_UNRESOLVED`). Never make one implicitly — when nothing
-  resolves, ask the applicant which folder should hold their profile and run
-  `config workspace <dir>`. `doctor` shows what resolved and how. **In Cowork** the
-  workspace is the folder attached to the session (mounted under `/sessions/<session>/mnt/`):
-  use it without asking, pass it as `--workspace`, and run `config init` there when it has
-  no `careerdocs.json` yet — the sandbox's own home directory does not persist, so a
-  recorded default is not available there.
-- `--json` prints machine output on stdout; human output otherwise. Diagnostics go to
-  stderr.
-- Exit codes: **0** ok, **1** a check failed, **2** contract or usage error.
+`python3` works without uv. `--json` gives machine output; diagnostics go to stderr; exit
+0 ok, 1 a check failed, 2 usage or contract error.
 
-Commands (full contract in `references/`): `doctor`, `config init|validate|workspace`,
-`profile validate|import|diff|approve|apply|export|status`, `brief`, `map`, `plan`,
-`render`, `check`, `commit`, `identity show|validate|questions`,
-`state show|answer|resume`, `version`.
+The **workspace** is the one folder holding everything above. It resolves from
+`--workspace`, then `CAREERDOCS_WORKSPACE`, then the nearest `careerdocs.json` at or
+above the current directory, then the default recorded in `~/.config/careerdocs/workspace`.
+A bare folder is refused (`WORKSPACE_UNRESOLVED`); never make one implicitly. When
+nothing resolves, ask which folder it should be and run `config workspace <dir>`. In
+Cowork the folder attached to the session is the workspace: pass it as `--workspace` on
+every command and run `config init` there if it lacks `careerdocs.json`. `doctor` shows
+what resolved and how.
 
-The CLI is deterministic; the judgement steps happen **between** commands. A command
-emits a JSON skeleton or candidate set, the agent fills it in, and the next command
-validates and persists it. The agent never writes provider files directly.
+## Diff, then approve
 
-## The diff-then-approve rule
+Every profile change is a proposal. `profile diff` builds a diff and mutates nothing;
+show its summary and get an explicit yes; `profile approve`; `profile apply`, which
+refuses if the profile changed underneath. Never approve without a real yes. Never edit
+`profile/` by hand.
 
-Every change to the authoritative profile is a reviewable proposal, never a silent
-write:
+## Honesty
 
-1. `profile diff <candidates.json>` → a `ProfileDiff` with a `base_hash` and a rendered
-   Markdown summary. This never mutates the profile.
-2. Show the rendered diff to the applicant and get an **explicit yes**.
-3. `profile approve <diff_id>` → records a hash-bound approval (append-only).
-4. `profile apply <diff_id>` → applies atomically, but only when the approval's hash
-   matches the diff and the diff's `base_hash` still matches the current profile;
-   otherwise it refuses. Apply refreshes derived exports and marks affected output
-   records stale.
+Every line of a document traces to a cited entity; the factual check rejects anything
+that does not. A gap requirement is named, never claimed. `private` entities never
+render; `restricted` ones render only into a document approved for them; `unverified`
+facts never render; an unresolved conflict blocks its field.
 
-Never call `approve` without a real applicant yes. Never hand-edit provider files to
-skip a diff.
+## Where things live
 
-## Visibility semantics
+| Path | Holds |
+| --- | --- |
+| `profile/` | the profile, with `sources.jsonl`, `approvals.jsonl`, `diffs/` |
+| `voice/voice.md`, `identity/identity.md` | voice and identity |
+| `templates/resume/`, `templates/cover-letter/` | DOCX plus manifest |
+| `applications/<slug>/` | `job-description.md`, `brief.json`, `map.json`, `plan.<kind>.json`, the documents and their `.record.json` |
+| `baselines/<positioning>/` | role-less résumés |
+| `.careerdocs/state/<flow>/<subject>.json` | resumable interview state |
+| `.careerdocs/layout/` | page renders from the layout check |
 
-Every entity has `visibility` (`public` / `restricted` / `private`) and `verification`
-(`unverified` / `imported` / `applicant_verified` / `externally_verified`).
+Documents are `<Name>-<Org>-<Role>-Resume.docx` and `-Cover.docx`, with a PDF when
+LibreOffice is present. In a git workspace `render` commits an uncommitted previous
+render before overwriting it and every round ends with `commit`; elsewhere the previous
+render moves to `archive/` and `commit` is a no-op.
 
-- `private` entities are **never** rendered into a document and **never** appear in an
-  export.
-- `restricted` entities render only into a document that has a matching per-document
-  approval (`profile approve --document <path>`).
-- `unverified` facts never render.
-- An **unresolved conflict** blocks the affected field from every document.
-
-Renderers and exports call `visible_for(document)`; nothing bypasses it.
-
-## Where state and outputs live
-
-Relative to the workspace, under the configured directories (defaults shown):
-
-- Authoritative profile: `profile/` (markdown provider) or the Basic Memory vault folder.
-- Voice and identity profiles: `voice/voice.md` and `identity/identity.md` (`voice.path`,
-  `identity.path`).
-- Sources ledger: `sources.jsonl`; approvals: `approvals.jsonl`; diffs: `diffs/`.
-- Application artifacts: `applications/<role-slug>/` — `brief.json` (with the agreed
-  `approach` and the role `alignment`), `map.json`, `plan.json`.
-- Rendered documents and their records: `outputs/` (`<Name>-<Org>-<Role>-Resume.docx`
-  and `-Cover.docx`, `.pdf`, `.record.json`; the pattern is `outputs.file_name`). The
-  newest render carries the plain name. When the workspace sits in a git repository
-  (`doctor` shows `history: git`), `render` commits an uncommitted previous render before
-  overwriting it, and every generation or revision round ends with
-  `careerdocs commit --role-slug <slug> -m "<Conventional Commit message>"`, which stages
-  only that round's paths (the application folder, its state, the profile). Otherwise a
-  replaced render moves to `outputs/archive/` under its generation stamp, never
-  overwritten, and `commit` is a no-op.
-- Generated baselines: `baselines/<positioning>/`.
-- Workflow state: `.careerdocs/state/<flow>/<subject>.json` — append-only
-  questions, the pending diff, and artifact paths, so any flow resumes without repeating
-  a question.
-
-## No applicant data in this repository
-
-This is the plugin source. Real qualifications, voice samples, identity profiles, personal
-templates, and generated documents live in the applicant's workspace, never here. Everything under
-`examples/` is a sanitized fictional applicant. The applicant-data guard fails the build
-on anything that looks like real personal data.
-
-## References
-
-- `references/schema.md` — the `CareerProfile` model and `careerdocs.json` schema.
-- `references/provider-contract.md` — the provider interface and the two providers.
-- `references/checks.md` — the five output checks.
-- `references/configuration.md` — every config key and its default.
+No applicant data lives in this plugin; `examples/` is a fictional applicant.

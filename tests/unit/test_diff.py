@@ -143,24 +143,6 @@ def test_apply_operations_retire_and_visibility():
     assert [e["id"] for e in updated["entities"]] == [contact["id"]]
 
 
-def test_apply_refreshes_derived_export_for_basic_memory(tmp_path):
-    cfg = default_config()
-    vault = tmp_path / "vault"
-    cfg["providers"] = {
-        "authoritative": "basic_memory",
-        "markdown": {"path": "profile"},
-        "basic_memory": {"vault_path": str(vault), "project": "p", "folder": "career"},
-    }
-    provider = load_provider(tmp_path, cfg)
-    _, _, ops = add_contact_and_experience()
-    d = diff.make_diff(provider, ops)
-    diff.approve(provider, d["diff_id"])
-    result = diff.apply(provider, d["diff_id"], cfg=cfg, workspace=tmp_path)
-    export_index = tmp_path / "profile" / "profile.md"
-    assert export_index.exists()
-    assert result["exported"] == [str(tmp_path / "profile")]
-
-
 # --- CLI ---
 
 
@@ -181,25 +163,19 @@ def test_cli_diff_approve_apply_validate(tmp_path):
     assert len(load_provider(tmp_path).read()["entities"]) == 2
 
 
-def test_cli_export_refuses_authoritative(tmp_path):
-    cli.main(["config", "init", "--workspace", str(tmp_path)])
-    # markdown is authoritative by default; exporting to markdown is refused.
-    assert cli.main(["profile", "export", "--to", "markdown", "--workspace", str(tmp_path)]) == 2
-
-
 def _write_output_record(tmp_path, source_ids):
-    outputs = tmp_path / "applications" / "role" / "outputs"
-    outputs.mkdir(parents=True)
+    app = tmp_path / "applications" / "role"
+    app.mkdir(parents=True)
     record = {
-        "document": "applications/role/outputs/resume-x.docx", "kind": "resume",
+        "document": "applications/role/resume-x.docx", "kind": "resume",
         "generated_at": NOW, "plugin_version": "0.1.0", "schema_version": "1.0.0",
-        "content_plan": "applications/role/plan.json", "template": {"name": "t"},
+        "content_plan": "applications/role/plan.resume.json", "template": {"name": "t"},
         "positioning": "builder", "source_ids": source_ids,
         "checks": {n: {"status": "pass", "details": ""} for n in
                    ("factual", "links_dates", "extraction", "pagination", "layout")},
         "stale": False, "stale_reason": None,
     }
-    path = outputs / "resume-x.record.json"
+    path = app / "resume-x.record.json"
     path.write_text(json.dumps(record), encoding="utf-8")
     return path
 
@@ -258,4 +234,3 @@ def test_cli_status_reports_stale(tmp_path, capsys):
     assert cli.main(["profile", "status", "--workspace", str(tmp_path), "--json"]) == 0
     report = json.loads(capsys.readouterr().out)
     assert len(report["stale_outputs"]) == 1
-    assert report["derived_export"]["applicable"] is False

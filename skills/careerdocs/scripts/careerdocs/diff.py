@@ -4,7 +4,7 @@ Every change to the authoritative profile is a reviewable ProfileDiff — a ``ba
 (the hash of the profile it was proposed against), a list of operations, and a rendered
 Markdown summary. Nothing mutates the profile until ``apply``, and ``apply`` refuses
 unless a recorded approval's hash matches the diff and the diff's ``base_hash`` still
-matches the current profile. Applying refreshes any derived export.
+matches the current profile.
 
 Operations (each an object with an ``op`` discriminator):
 
@@ -24,9 +24,10 @@ from pathlib import Path
 
 from . import config as config_module
 from . import ids, schema, util
-from .errors import ApprovalMissing, BaseHashMismatch, CareerDocsError, ConfigError
+from .errors import ApprovalMissing, BaseHashMismatch, CareerDocsError
 from .providers import load_provider
 from .providers.base import hash_profile
+from .state import FLOWS
 
 OP_KINDS = {"add_entity", "update_field", "resolve_conflict", "set_visibility", "retire_entity"}
 
@@ -153,18 +154,6 @@ def approve(provider, diff_id: str, *, scope="all", by="applicant", note=None, d
     return approval
 
 
-def refresh_exports(provider, cfg: dict, workspace) -> list[str]:
-    """Refresh the derived export (the non-authoritative copy), if one is implied."""
-    if cfg is None:
-        return []
-    authoritative = cfg["providers"]["authoritative"]
-    if authoritative == "basic_memory":
-        path = Path(workspace) / cfg["providers"]["markdown"]["path"]
-        provider.export({"provider": "markdown", "path": str(path)})
-        return [str(path)]
-    return []
-
-
 def apply(provider, diff_id: str, *, cfg: dict | None = None, workspace=None) -> dict:
     diff = provider.load_diff(diff_id)
     approval = provider.find_approval(diff_id)
@@ -182,20 +171,18 @@ def apply(provider, diff_id: str, *, cfg: dict | None = None, workspace=None) ->
     new_profile = apply_operations(current, diff["operations"])
     schema.assert_valid_profile(new_profile)
     new_hash = provider.write(new_profile)
-    exported = refresh_exports(provider, cfg, workspace)
     stale = mark_stale_outputs(workspace, cfg, changed_entity_ids(diff))
-    return {"applied": diff_id, "hash": new_hash, "exported": exported, "stale_outputs": stale}
+    return {"applied": diff_id, "hash": new_hash, "stale_outputs": stale}
 
 
 def _output_record_paths(workspace, cfg: dict) -> list[Path]:
+    """Every output record under the applications and baselines folders."""
     base = Path(workspace)
     paths: list[Path] = []
-    apps = base / cfg["outputs"]["applications_dir"]
-    if apps.is_dir():
-        paths += apps.glob("*/outputs/*.record.json")
-    baselines = base / cfg["outputs"]["baselines_dir"]
-    if baselines.is_dir():
-        paths += baselines.glob("*/*.record.json")
+    for key in ("applications_dir", "baselines_dir"):
+        folder = base / cfg["outputs"][key]
+        if folder.is_dir():
+            paths += folder.rglob("*.record.json")
     return sorted(paths)
 
 
@@ -215,20 +202,6 @@ def mark_stale_outputs(workspace, cfg: dict | None, changed_ids: set[str]) -> li
             path.write_text(json.dumps(record, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
             stale.append(record.get("document", str(path)))
     return stale
-
-
-def derived_freshness(provider, cfg: dict, workspace) -> dict:
-    if cfg["providers"]["authoritative"] != "basic_memory":
-        return {"applicable": False}
-    from .providers.markdown import MarkdownProvider
-    from .visibility import filter_visible
-
-    md_path = Path(workspace) / cfg["providers"]["markdown"]["path"]
-    if not (md_path / "profile.md").exists():
-        return {"applicable": True, "present": False, "fresh": False}
-    expected = {e["id"] for e in filter_visible(provider.read(), for_export=True)["entities"]}
-    actual = {e["id"] for e in MarkdownProvider.at(md_path).read()["entities"]}
-    return {"applicable": True, "present": True, "fresh": expected == actual, "path": str(md_path)}
 
 
 # --- CLI ---
@@ -251,7 +224,7 @@ def register(subparsers, common: argparse.ArgumentParser) -> None:
 
     diff_parser = actions.add_parser("diff", parents=[common], help="build a ProfileDiff")
     diff_parser.add_argument("input", help="JSON file of diff operations or extracted candidates")
-    diff_parser.add_argument("--flow", choices=["onboard", "update", "resume", "cover_letter"])
+    diff_parser.add_argument("--flow", choices=FLOWS)
     diff_parser.add_argument("--subject", help="workflow subject to persist questions under")
     diff_parser.set_defaults(func=cmd_diff)
 
@@ -266,11 +239,7 @@ def register(subparsers, common: argparse.ArgumentParser) -> None:
     apply_parser.add_argument("diff_id")
     apply_parser.set_defaults(func=cmd_apply)
 
-    export_parser = actions.add_parser("export", parents=[common], help="write a derived copy")
-    export_parser.add_argument("--to", choices=["markdown", "basic_memory"], required=True)
-    export_parser.set_defaults(func=cmd_export)
-
-    status_parser = actions.add_parser("status", parents=[common], help="report stale outputs and export freshness")
+    status_parser = actions.add_parser("status", parents=[common], help="report documents a profile change made stale")
     status_parser.set_defaults(func=cmd_status)
 
 
@@ -391,55 +360,24 @@ def cmd_approve(args) -> int:
 def cmd_apply(args) -> int:
     provider, cfg = _provider(args)
     result = apply(provider, args.diff_id, cfg=cfg, workspace=args.workspace)
-    if args.json:
-        print(json.dumps(result))
-    else:
-        print(f"applied {args.diff_id}")
-        if result["exported"]:
-            print("refreshed derived export: " + ", ".join(result["exported"]))
+    print(json.dumps(result) if args.json else f"applied {args.diff_id}")
     return 0
 
 
 def cmd_status(args) -> int:
-    provider, cfg = _provider(args)
+    _, cfg = _provider(args)
     stale = []
     for path in _output_record_paths(args.workspace, cfg):
         record = json.loads(path.read_text(encoding="utf-8"))
         if record.get("stale"):
             stale.append({"document": record.get("document", str(path)), "reason": record.get("stale_reason")})
-    report = {"stale_outputs": stale, "derived_export": derived_freshness(provider, cfg, args.workspace)}
+    report = {"stale_outputs": stale}
     if args.json:
         print(json.dumps(report))
+    elif stale:
+        print(f"{len(stale)} stale output(s):")
+        for item in stale:
+            print(f"  - {item['document']} ({item['reason']})")
     else:
-        if stale:
-            print(f"{len(stale)} stale output(s):")
-            for item in stale:
-                print(f"  - {item['document']} ({item['reason']})")
-        else:
-            print("no stale outputs")
-        derived = report["derived_export"]
-        if derived.get("applicable"):
-            print(f"derived export: {'fresh' if derived.get('fresh') else 'stale'}")
-    return 0
-
-
-def cmd_export(args) -> int:
-    provider, cfg = _provider(args)
-    if args.to == cfg["providers"]["authoritative"]:
-        raise ConfigError(f"{args.to} is the authoritative provider; export targets the other one")
-    if args.to == "markdown":
-        path = Path(args.workspace) / cfg["providers"]["markdown"]["path"]
-        target = {"provider": "markdown", "path": str(path)}
-    else:
-        bm = cfg["providers"].get("basic_memory")
-        if not bm:
-            raise ConfigError("no basic_memory provider is configured to export to")
-        target = {
-            "provider": "basic_memory",
-            "vault_path": bm["vault_path"],
-            "project": bm["project"],
-            "folder": bm.get("folder", "career"),
-        }
-    summary = provider.export(target)
-    print(json.dumps(summary) if args.json else f"exported derived copy to {summary['location']}")
+        print("no stale outputs")
     return 0

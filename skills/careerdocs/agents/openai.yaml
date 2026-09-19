@@ -1,3 +1,3 @@
 name: careerdocs
-description: Core conventions and the careerdocs CLI shared by the careerdocs flows.
+description: Shared conventions and the careerdocs CLI behind the onboard, update, and apply skills.
 allow_implicit_invocation: false

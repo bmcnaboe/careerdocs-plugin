@@ -20,8 +20,7 @@ from . import paths, workspace
 from .errors import ConfigError
 from .workspace import CONFIG_FILENAME
 
-# Every key with its default. basic_memory is intentionally omitted: it has required
-# sub-keys, so it is only present when the applicant opts into that provider.
+# Every key with its default.
 DEFAULT_CONFIG: dict = {
     "version": "1",
     "providers": {

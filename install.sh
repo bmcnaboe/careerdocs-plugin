@@ -37,7 +37,8 @@ REF="${CAREERDOCS_REF:-main}"
 MARKETPLACE="careerdocs-plugin"   # the marketplace is named after the repository
 PLUGIN="careerdocs"               # the plugin inside it; skills invoke as /careerdocs:<skill>
 LEGACY_PLUGIN="careerdocs-plugin" # the plugin's name before it was shortened; replaced on upgrade
-SKILLS=(careerdocs onboard update resume cover-letter apply)
+SKILLS=(careerdocs onboard update apply)
+RETIRED_SKILLS=(resume cover-letter)   # folded into apply; their legacy copies go too
 LEGACY_SKILLS_DIR="${HOME}/.agents/skills"   # where earlier versions of this script copied the skills
 CODEX_HOME_DIR="${CODEX_HOME:-${HOME}/.codex}"
 CONFIG_DIR="${XDG_CONFIG_HOME:-${HOME}/.config}/careerdocs"
@@ -101,7 +102,7 @@ python_ok() {
 
 preflight() {
   case "$(uname -s)" in
-    MINGW*|MSYS*|CYGWIN*) die "Windows shells are not supported yet; use WSL, or follow docs/setup-claude.md and docs/setup-codex.md by hand" ;;
+    MINGW*|MSYS*|CYGWIN*) die "Windows shells are not supported yet; use WSL, or follow docs/install.md by hand" ;;
   esac
   say "Prerequisites"
   if python_ok; then
@@ -184,7 +185,7 @@ codex_plugin_present() { codex plugin list 2>/dev/null | grep -q "^${PLUGIN}@${M
 # name that did not come from this plugin is left alone.
 remove_legacy_codex_copies() {
   local skill dir removed=0
-  for skill in "${SKILLS[@]}"; do
+  for skill in "${SKILLS[@]}" "${RETIRED_SKILLS[@]}"; do
     dir="${LEGACY_SKILLS_DIR}/${skill}"
     if [ -L "$dir" ] || [ -e "$dir" ]; then
       if [ -L "$dir" ] || grep -qs "careerdocs-plugin contributors" "$dir/SKILL.md"; then
@@ -201,7 +202,7 @@ remove_legacy_codex_copies() {
 install_codex() {
   say "Codex"
   if ! codex_has_plugins; then
-    warn "this Codex ($(codex --version 2>/dev/null | head -n 1)) has no plugin commands; update Codex and re-run, or see docs/setup-codex.md"
+    warn "this Codex ($(codex --version 2>/dev/null | head -n 1)) has no plugin commands; update Codex and re-run, or see docs/install.md"
     return 0
   fi
   local source="${REPO}"
@@ -378,7 +379,7 @@ main() {
   if [ "$only" = "codex" ] && [ "$want_codex" = 0 ]; then die "Codex (codex) is not on PATH"; fi
   if [ "$want_claude" = 0 ] && [ "$want_codex" = 0 ]; then
     say "Neither Claude Code (claude) nor Codex (codex) is on PATH."
-    say "Install one of them and re-run. Cowork needs no install here (see docs/setup-claude.md);"
+    say "Install one of them and re-run. Cowork needs no install here (see docs/install.md);"
     say "other agents: npx skills add ${REPO} -g"
     exit 1
   fi

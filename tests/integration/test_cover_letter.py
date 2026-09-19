@@ -59,7 +59,7 @@ def résumé_then_letter(tmp_path):
     run(["map", "--role-slug", SLUG, "--workspace", ws])
     run(["plan", "--positioning", "builder", "--kind", "resume", "--role-slug", SLUG, "--workspace", ws])
     resume = run_json(["render", "--kind", "resume", "--role-slug", SLUG, "--workspace", ws, "--json"])
-    resume_plan = json.loads((app / "plan.json").read_text())
+    resume_plan = json.loads((app / "plan.resume.json").read_text())
 
     return ws, app, resume, resume_plan
 
@@ -88,7 +88,7 @@ def test_reuses_brief_and_map(tmp_path):
 def test_checks_and_budget(tmp_path):
     ws, app, _, _ = résumé_then_letter(tmp_path)
     run(["plan", "--positioning", "builder", "--kind", "cover_letter", "--role-slug", SLUG, "--workspace", ws])
-    letter_plan = json.loads((app / "plan.json").read_text())
+    letter_plan = json.loads((app / "plan.cover_letter.json").read_text())
     # Fits the one-page budget (page_budget 1 * units_per_page 6).
     assert len(letter_plan["units"]) <= COVER_JSON["page_budget"] * COVER_JSON["units_per_page"]
 
@@ -106,7 +106,7 @@ def test_checks_and_budget(tmp_path):
 def test_no_verbatim_bullets(tmp_path):
     ws, app, _, resume_plan = résumé_then_letter(tmp_path)
     run(["plan", "--positioning", "builder", "--kind", "cover_letter", "--role-slug", SLUG, "--workspace", ws])
-    letter_plan = json.loads((app / "plan.json").read_text())
+    letter_plan = json.loads((app / "plan.cover_letter.json").read_text())
     rendered = run_json(["render", "--kind", "cover_letter", "--role-slug", SLUG, "--workspace", ws, "--json"])
     letter_text = docx_text(rendered["document"])
 
@@ -125,6 +125,17 @@ def test_no_verbatim_bullets(tmp_path):
     without = factual.check(letter_text, letter_plan, profile, allowlist=COVER_JSON["allowlist"])
     assert without["status"] == "fail" and "unsourced line" in without["details"]
     assert Path(rendered["document"]).name == "Jordan-Rivera-Wonka-Industries-Director-of-Engineering-Cover.docx"
+    assert run_json(["check", rendered["document"], "--workspace", ws, "--json"])["checks"]["factual"]["status"] == "pass"
+
+    # A letter that lifts a résumé bullet word for word fails the CLI check: the résumé
+    # record beside it supplies the bullets.
+    bullet = next(u for u in resume_plan["units"] if u["kind"] == "bullet")
+    body = next(u for u in letter_plan["units"] if u["section_id"] != "header")
+    body["text"], body["source_ids"] = bullet["text"], bullet["source_ids"]
+    (app / "plan.cover_letter.json").write_text(json.dumps(letter_plan), encoding="utf-8")
+    rendered = run_json(["render", "--kind", "cover_letter", "--role-slug", SLUG, "--workspace", ws, "--json"])
+    rc, out = run(["check", rendered["document"], "--workspace", ws, "--json"])
+    assert rc == 1 and "verbatim" in json.loads(out)["checks"]["factual"]["details"]
 
 
 def test_letter_plan_carries_identity_and_alignment(tmp_path):
@@ -144,7 +155,7 @@ def test_letter_plan_carries_identity_and_alignment(tmp_path):
     assert [q["field"] for q in open_questions] == ["interests", "focus"]
 
     run(["plan", "--positioning", "builder", "--kind", "cover_letter", "--role-slug", SLUG, "--workspace", ws])
-    letter_plan = json.loads((app / "plan.json").read_text())
+    letter_plan = json.loads((app / "plan.cover_letter.json").read_text())
     assert letter_plan["identity"] == {"path": "identity/identity.md"}
     assert letter_plan["alignment"] == role["alignment"]
 

@@ -70,7 +70,7 @@ def test_record_validates(tmp_path):
     p, profile, _ = build(tmp_path)
     rec = render.build_record(
         p, document=Path("out.docx"), kind="resume", positioning="builder",
-        plan_path=Path("plan.json"), brief_path=None, map_path=None, pdf_path=None, pdf_available=False,
+        plan_path=Path("plan.resume.json"), brief_path=None, map_path=None, pdf_path=None, pdf_available=False,
     )
     results = {n: {"status": "pass", "details": "ok"} for n in record.CHECK_NAMES}
     record.apply_results(rec, results)
@@ -93,7 +93,7 @@ def test_cli_render_then_check(tmp_path, capsys):
     p["page_budget"] = 1  # Explicit one-page request for the one-page fixture.
     app = tmp_path / "applications" / "example-role"
     app.mkdir(parents=True)
-    (app / "plan.json").write_text(json.dumps(p), encoding="utf-8")
+    (app / "plan.resume.json").write_text(json.dumps(p), encoding="utf-8")
 
     capsys.readouterr()
     assert cli.main(["render", "--kind", "resume", "--role-slug", "example-role", "--pdf", "--workspace", ws, "--json"]) == 0
@@ -108,3 +108,33 @@ def test_cli_render_then_check(tmp_path, capsys):
     assert result["checks"]["factual"]["status"] == "pass"
     if shutil.which("soffice"):
         assert result["checks"]["pagination"]["status"] == "pass"
+        # The page renders land under .careerdocs/layout/, not in the application folder.
+        assert list((tmp_path / ".careerdocs" / "layout" / "applications" / "example-role").glob("*-p1.png"))
+        assert not (app / "layout").exists()
+
+
+def test_verbatim_resume_bullet_fails_the_factual_check(tmp_path):
+    p, profile, text = build(tmp_path)
+    bullets = [u["text"] for u in p["units"] if u["kind"] == "bullet"]
+    results = record.run_checks(text, None, p, profile, TEMPLATE_JSON, resume_bullets=bullets)
+    assert results["factual"]["status"] == "fail" and "verbatim" in results["factual"]["details"]
+    clean = record.run_checks(text, None, p, profile, TEMPLATE_JSON, resume_bullets=["a bullet the document does not contain"])
+    assert clean["factual"]["status"] == "pass"
+
+
+def test_layout_dir_mirrors_the_document_folder(tmp_path):
+    document = tmp_path / "applications" / "role" / "Name-Resume.docx"
+    assert record.layout_dir(tmp_path, document) == tmp_path.resolve() / ".careerdocs" / "layout" / "applications" / "role"
+    elsewhere = Path("/somewhere/else/Name-Resume.docx")
+    assert record.layout_dir(tmp_path, elsewhere) == tmp_path.resolve() / ".careerdocs" / "layout" / "else"
+
+
+def test_resume_bullets_come_from_the_resume_records_beside_the_document(tmp_path):
+    p, _, _ = build(tmp_path)
+    app = tmp_path / "applications" / "role"
+    app.mkdir(parents=True)
+    plan_path = app / "plan.resume.json"
+    plan_path.write_text(json.dumps(p), encoding="utf-8")
+    (app / "Name-Resume.record.json").write_text(json.dumps({"kind": "resume", "content_plan": str(plan_path)}), encoding="utf-8")
+    (app / "Name-Cover.record.json").write_text(json.dumps({"kind": "cover_letter", "content_plan": str(plan_path)}), encoding="utf-8")
+    assert record.resume_bullets(app / "Name-Cover.docx") == [u["text"] for u in p["units"] if u["kind"] == "bullet"]

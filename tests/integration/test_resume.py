@@ -71,7 +71,7 @@ def test_pipeline_artifacts(tmp_path):
     ws, app, rendered = run_pipeline(tmp_path)
     brief_p = app / "brief.json"
     map_p = app / "map.json"
-    plan_p = app / "plan.json"
+    plan_p = app / "plan.resume.json"
     document = Path(rendered["document"])
     for artifact in (brief_p, map_p, plan_p, document):
         assert artifact.exists()
@@ -95,9 +95,9 @@ def test_positioning_inverts(tmp_path):
     run(["map", "--role-slug", SLUG, "--workspace", ws])
 
     run(["plan", "--positioning", "builder", "--kind", "resume", "--role-slug", SLUG, "--workspace", ws])
-    builder_plan = json.loads((app / "plan.json").read_text())
+    builder_plan = json.loads((app / "plan.resume.json").read_text())
     run(["plan", "--positioning", "executive", "--kind", "resume", "--role-slug", SLUG, "--workspace", ws])
-    executive_plan = json.loads((app / "plan.json").read_text())
+    executive_plan = json.loads((app / "plan.resume.json").read_text())
 
     def first_skill(plan):
         return next(u["source_ids"][0] for u in plan["units"] if u["section_id"] == "skills")
@@ -124,7 +124,7 @@ def test_five_checks(tmp_path):
 
 def test_default_two_page_target_rejects_short_resume(tmp_path):
     ws, app, rendered = run_pipeline(tmp_path)
-    assert json.loads((app / "plan.json").read_text())["page_budget"] == 2
+    assert json.loads((app / "plan.resume.json").read_text())["page_budget"] == 2
     # Supply a known one-page PDF so this check also runs without LibreOffice.
     shutil.copyfile(ROOT / "tests" / "fixtures" / "rendered" / "example-resume.pdf",
                     Path(rendered["document"]).with_suffix(".pdf"))
@@ -146,5 +146,5 @@ def test_budget_cuts_reported(tmp_path):
     run(["map", "--role-slug", SLUG, "--workspace", ws])
     out = run_json(["plan", "--positioning", "builder", "--kind", "resume", "--role-slug", SLUG, "--workspace", ws, "--json"])
     assert out["cuts"] >= 1
-    plan = json.loads((app / "plan.json").read_text())
+    plan = json.loads((app / "plan.resume.json").read_text())
     assert plan["cuts"]

@@ -158,7 +158,7 @@ def register(subparsers, common: argparse.ArgumentParser) -> None:
                         help="report which of a brief's requirement keywords the profile lacks")
     parser.add_argument("--alignment", action="store_true",
                         help="list the role-alignment questions a completed brief has not answered")
-    parser.add_argument("--flow", choices=["apply", "resume", "cover_letter"],
+    parser.add_argument("--flow", choices=["apply"],
                         help="with --alignment: persist the questions under this flow")
     parser.add_argument("--subject", help="with --alignment: the workflow subject (the role slug)")
     parser.set_defaults(func=cmd_brief)

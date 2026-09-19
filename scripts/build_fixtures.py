@@ -138,7 +138,7 @@ RESUME_TEMPLATE_JSON = {
         {"id": "interests", "title": "Interests", "placeholder": "interests", "join": ", ", "entity_types": ["interest"], "max_items": 8, "required": False},
     ],
     "allowlist": ["Summary", "Experience", "Projects", "Education", "Certifications", "Patents", "Publications", "Awards", "Affiliations", "Volunteer Experience", "Technical Focus", "Interests"],
-    "style_notes": "Two-page budget; verb-first bullets; no buzzwords. Single column, Calibri, 0.7-inch margins: centered name, ruled capitalized headings, bold role with the organization and location muted and the dates on a right tab, an italic descriptor under the role, projects as italic sub-heads under their role, bulleted achievements, bold-label skill lines, degrees and awards with the year on the right tab. Every section is optional except the header and Experience; the approach's `sections` picks the ones a role uses.",
+    "style_notes": "Two-page budget; verb-first bullets; no buzzwords. Single column, Calibri, 0.7-inch margins: centered name, ruled capitalized headings, bold role with the organization and location muted and the dates on a right tab, an italic descriptor under the role, projects as italic sub-heads under their role, bulleted achievements, bold-label skill lines, degrees and awards with the year on the right tab. Every section is optional except the header and Experience; the approach's `sections` picks the ones a role uses. Role descriptors go on the summary line, never in the role line.",
 }
 
 COVER_LETTER_TEMPLATE_JSON = {

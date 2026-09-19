@@ -8,7 +8,7 @@
   "properties": {
     "schema_version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
     "applicant_ref": { "type": "string", "minLength": 1 },
-    "authoritative_provider": { "enum": ["markdown", "basic_memory"] },
+    "authoritative_provider": { "const": "markdown" },
     "derived": { "type": "boolean" },
     "updated_at": { "type": "string", "format": "date-time" },
     "entities": { "type": "array", "items": { "$ref": "#/$defs/entity" } },

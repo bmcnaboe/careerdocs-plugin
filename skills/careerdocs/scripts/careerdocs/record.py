@@ -3,6 +3,9 @@
 ``check <document>`` extracts the document text, runs the factual, links/dates,
 extraction, pagination, and layout checks (the last three need a PDF; skipped with a
 reason when there is none), updates the output record, and exits 1 if any check failed.
+A cover letter's factual check also fails when it reproduces a bullet of the résumé
+rendered beside it. The layout check renders one PNG per page under
+``.careerdocs/layout/<application>/`` in the workspace, out of the application folder.
 A document is only "done" when its record shows every check passed or skipped.
 """
 
@@ -35,12 +38,22 @@ def document_text(document: Path) -> str:
 
 
 def run_checks(text: str, pdf_path: Path | None, plan: dict, profile: dict, template: dict,
-               *, layout_dir: Path | None = None, layout_name: str = "layout", template_lines=()) -> dict:
+               *, layout_dir: Path | None = None, layout_name: str = "layout", template_lines=(),
+               resume_bullets=()) -> dict:
+    """``resume_bullets`` are the bullets of the résumé a cover letter accompanies; one
+    reproduced verbatim fails the factual check."""
     allowlist = template.get("allowlist", []) if template else []
     results = {
         "factual": factual.check(text, plan, profile, allowlist=allowlist, template_lines=template_lines),
         "links_dates": links_dates.check(text),
     }
+    if resume_bullets:
+        verbatim = factual.verbatim_bullet_check(text, resume_bullets)
+        if verbatim["status"] == "fail":
+            details = verbatim["details"]
+            if results["factual"]["status"] == "fail":
+                details = results["factual"]["details"] + "; " + details
+            results["factual"] = {"status": "fail", "details": details}
     if pdf_path is not None:
         results["extraction"] = extraction.check(pdf_path)
         results["pagination"] = pagination_check(pdf_path, plan)
@@ -92,6 +105,31 @@ def _record_path(document: Path) -> Path:
     return document.parent / (document.stem + ".record.json")
 
 
+def layout_dir(workspace, document: Path) -> Path:
+    """Where the layout check renders a document's pages: ``.careerdocs/layout/`` in the
+    workspace, mirroring the document's folder (``applications/<slug>``)."""
+    root = Path(workspace).resolve()
+    parent = document.resolve().parent
+    try:
+        relative = parent.relative_to(root)
+    except ValueError:
+        relative = Path(parent.name)
+    return root / ".careerdocs" / "layout" / relative
+
+
+def resume_bullets(document: Path) -> list[str]:
+    """The bullets of every résumé rendered in the same folder as ``document``."""
+    bullets: list[str] = []
+    for record_path in sorted(document.parent.glob("*.record.json")):
+        record = json.loads(record_path.read_text(encoding="utf-8"))
+        plan_path = Path(record.get("content_plan") or "")
+        if record.get("kind") != "resume" or not plan_path.is_file():
+            continue
+        plan = json.loads(plan_path.read_text(encoding="utf-8"))
+        bullets += [unit["text"] for unit in plan["units"] if unit["kind"] == "bullet"]
+    return bullets
+
+
 def cmd_check(args) -> int:
     cfg = config_module.resolve_config(args.workspace)
     document = Path(args.document)
@@ -113,10 +151,10 @@ def cmd_check(args) -> int:
         pdf_path = Path(record["pdf"])
 
     text = document_text(document)
-    layout_dir = document.parent / "layout"
     results = run_checks(text, pdf_path, plan, profile, template,
-                         layout_dir=layout_dir if pdf_path else None, layout_name=document.stem,
-                         template_lines=record.get("template_lines", []))
+                         layout_dir=layout_dir(args.workspace, document) if pdf_path else None,
+                         layout_name=document.stem, template_lines=record.get("template_lines", []),
+                         resume_bullets=resume_bullets(document) if record["kind"] == "cover_letter" else ())
 
     apply_results(record, results)
     errors = validate_record(record)

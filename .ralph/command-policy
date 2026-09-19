@@ -8,9 +8,9 @@
 # ─────────────────────────────────────────────────────────────────────
 # [gates] — REQUIRED. One script owns the quality bar and takes the tier as an
 # argument, so these pins stay valid as the tiers' contents grow: basic runs
-# the unit tests and skills lint, full adds integration runs and the inventory,
-# version, and evidence checks, final adds shellcheck, gitleaks, the
-# applicant-data guard, and the agent-layer conformance check.
+# the unit tests and skills lint, full adds integration runs and the inventory
+# and version checks, final adds shellcheck, gitleaks, the applicant-data guard,
+# and the agent-layer conformance check.
 
 [gates]
 basic | ./scripts/gate.sh basic

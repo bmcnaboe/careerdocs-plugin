@@ -1,16 +1,14 @@
-"""Visibility filtering for renderers and exports.
+"""Visibility filtering for renderers.
 
 The rules (from the provider contract and data model):
 
-* ``private`` is never rendered and never exported.
+* ``private`` is never rendered.
 * ``unverified`` facts never render.
 * ``restricted`` renders into a document only when an approval names that document.
 * an unresolved conflict is handled separately (``schema.unresolved_conflict_fields``).
 
-A derived export keeps everything except ``private`` (it is a mirror the applicant owns);
-a rendered document applies the full rules for a specific document. When an entity is
-hidden, references to it are stripped and dependent achievements are dropped, so the
-filtered profile stays internally consistent.
+When an entity is hidden, references to it are stripped and dependent achievements are
+dropped, so the filtered profile stays internally consistent.
 """
 
 from __future__ import annotations
@@ -27,13 +25,10 @@ def is_visible(
     *,
     document: str | None = None,
     approved_docs=frozenset(),
-    for_export: bool = False,
 ) -> bool:
     visibility = entity.get("visibility", "public")
     if visibility == "private":
         return False
-    if for_export:
-        return True
     if entity.get("verification") == "unverified":
         return False
     if visibility == "restricted":
@@ -46,13 +41,10 @@ def filter_visible(
     *,
     document: str | None = None,
     approved_docs=frozenset(),
-    for_export: bool = False,
 ) -> dict:
     entities = profile["entities"]
     visible = {
-        e["id"]
-        for e in entities
-        if is_visible(e, document=document, approved_docs=approved_docs, for_export=for_export)
+        e["id"] for e in entities if is_visible(e, document=document, approved_docs=approved_docs)
     }
 
     # Cascade: an achievement whose parent is hidden cannot survive.

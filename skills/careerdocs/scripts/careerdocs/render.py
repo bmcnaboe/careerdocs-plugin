@@ -1,14 +1,14 @@
 """Render a content plan into the DOCX template, and record what was produced.
 
-``render`` fills the template (docxtpl) from the content plan and writes the document under
-the application's ``outputs/`` (a baseline under ``baselines/<positioning>/``) as
-``<Name>-<Org>-<Role>-<Kind>.docx`` — ``outputs.file_name`` in the config, with
-``{name}``, ``{org}``, ``{role}``, ``{kind}``, and ``{slug}`` placeholders — beside an
-output-record skeleton carrying the union of the plan's source ids and every check marked
-pending. The newest render always carries the plain name. In a workspace versioned with
-git (see :mod:`history`) the previous render is committed if it was not already, then
-overwritten in place; otherwise it moves into ``archive/`` beside it, named with its
-generation stamp, together with its PDF, record, and layout renders, so ``outputs/``
+``render`` fills the template (docxtpl) from the content plan (``plan.<kind>.json``) and
+writes the document into the application folder (a baseline into
+``baselines/<positioning>/``) as ``<Name>-<Org>-<Role>-<Kind>.docx`` — ``outputs.file_name``
+in the config, with ``{name}``, ``{org}``, ``{role}``, ``{kind}``, and ``{slug}``
+placeholders — beside an output-record skeleton carrying the union of the plan's source
+ids and every check marked pending. The newest render always carries the plain name. In a
+workspace versioned with git (see :mod:`history`) the previous render is committed if it
+was not already, then overwritten in place; otherwise it moves into ``archive/`` beside
+it, named with its generation stamp, together with its PDF and record, so the folder
 holds only the current documents and nothing is overwritten or lost. ``--pdf`` converts
 via LibreOffice (`soffice`) when it is on PATH, and records the conversion as skipped with
 a reason when it is not. Every link the profile holds (contact and project links, patent
@@ -81,12 +81,8 @@ def document_stem(plan: dict, template: dict, kind: str, pattern: str, *, slug: 
 
 
 def render_files(directory: Path, stem: str) -> list[Path]:
-    """The files one render of ``stem`` owns: document, PDF, record, and layout renders."""
-    files = [directory / f"{stem}{suffix}" for suffix in _SIDE_SUFFIXES]
-    layout = directory / "layout"
-    if layout.is_dir():
-        files += sorted(layout.glob(f"{stem}-p*.png"))
-    return files
+    """The files one render of ``stem`` owns: document, PDF, and record."""
+    return [directory / f"{stem}{suffix}" for suffix in _SIDE_SUFFIXES]
 
 
 def _move_render(source_dir: Path, old_stem: str, target_dir: Path, new_stem: str) -> None:
@@ -94,14 +90,6 @@ def _move_render(source_dir: Path, old_stem: str, target_dir: Path, new_stem: st
         source = source_dir / f"{old_stem}{suffix}"
         if source.exists():
             source.rename(target_dir / f"{new_stem}{suffix}")
-    layout = source_dir / "layout"
-    if layout.is_dir():
-        page = re.compile(rf"^{re.escape(old_stem)}(-p\d+\.png)$")
-        for png in sorted(layout.iterdir()):
-            match = page.match(png.name)
-            if match:
-                (target_dir / "layout").mkdir(exist_ok=True)
-                png.rename(target_dir / "layout" / f"{new_stem}{match.group(1)}")
     record_path = target_dir / f"{new_stem}.record.json"
     if record_path.is_file():
         record = json.loads(record_path.read_text(encoding="utf-8"))
@@ -123,9 +111,9 @@ def _generation_stamp(record_path: Path, fallback: Path) -> str:
 
 
 def archive_previous(directory: Path, stem: str) -> Path | None:
-    """Move an existing render of ``stem`` — document, PDF, record (paths rewritten), and
-    layout renders — into ``archive/`` under its generation stamp, so the plain name is free
-    and the output folder holds only the current documents. Returns the archived document."""
+    """Move an existing render of ``stem`` — document, PDF, and record (paths rewritten) —
+    into ``archive/`` under its generation stamp, so the plain name is free and the folder
+    holds only the current documents. Returns the archived document."""
     present = [directory / f"{stem}{suffix}" for suffix in _SIDE_SUFFIXES if (directory / f"{stem}{suffix}").exists()]
     if not present:
         return None
@@ -351,7 +339,9 @@ def cmd_render(args) -> int:
         brief_path = app_dir / "brief.json"
         map_path = app_dir / "map.json"
 
-    plan_path = app_dir / "plan.json"
+    plan_path = app_dir / f"plan.{args.kind}.json"
+    if not plan_path.is_file():
+        raise CareerDocsError(f"no content plan at {plan_path}; run plan --kind {args.kind} first", code="USAGE")
     plan = json.loads(plan_path.read_text(encoding="utf-8"))
     template = plan_module.load_template(args.workspace, cfg, args.kind)
     templates = cfg["templates"]
@@ -360,8 +350,7 @@ def cmd_render(args) -> int:
     if not template_docx.is_file():
         raise CareerDocsError(f"template not found at {template_docx}", code="USAGE")
 
-    # Baselines land directly under baselines/<positioning>/; role outputs under outputs/.
-    out_dir = app_dir if args.baseline else app_dir / "outputs"
+    out_dir = app_dir
     brief = None
     if brief_path and brief_path.is_file():
         brief = json.loads(brief_path.read_text(encoding="utf-8"))

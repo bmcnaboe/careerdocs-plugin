@@ -5,8 +5,8 @@ current documents in place (committing an uncommitted previous render first, so 
 is lost), and ``commit`` records each generation or revision round — the application
 folder, the workflow state for that subject, and the profile when the round changed
 it — under a Conventional Commit message. Nothing else in the work tree is staged, so
-unrelated edits stay untouched. Without git the previous render moves to
-``outputs/archive/`` under its generation stamp, as before.
+unrelated edits stay untouched. Without git the previous render moves to an
+``archive/`` folder beside the documents, under its generation stamp.
 
 ``outputs.history`` in the config chooses: ``auto`` (the default: git when the workspace
 sits in a work tree with a committer identity), ``git`` (required), or ``archive``
