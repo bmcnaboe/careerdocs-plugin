@@ -149,10 +149,42 @@ def link_map(profile: dict) -> dict[str, str]:
     return links
 
 
-def linkify(docx_path: Path, links: dict[str, str]) -> int:
-    """Wrap each occurrence of a link's display text in a hyperlink to its target, keeping
-    the run's own formatting so the text reads as before. Returns the number of links."""
-    if not links:
+def _entity_url(entity: dict) -> str | None:
+    links = [link.get("url") for link in entity.get("links") or [] if link.get("url")]
+    return (links or [entity.get("url")])[0]
+
+
+def named_links(plan: dict, profile: dict) -> dict[str, str]:
+    """Name → target for the names a résumé sets apart: a project sub-head's name, the
+    name leading a ``Name:<tab>text`` bullet, and a role line's organization, each linked
+    to the one cited project or experience that has a link. A name citing several linked
+    entities stays plain."""
+    by_id = {e["id"]: e for e in profile["entities"] if plan_module.is_visible(e)}
+    names: dict[str, str] = {}
+    for unit in plan["units"]:
+        cited = [by_id[i] for i in unit["source_ids"] if i in by_id]
+        context = _unit_context(unit, [e["organization"] for e in cited if e.get("organization")])
+        if unit["kind"] == "subhead":
+            name, linked = context["lead"], [e for e in cited if e["type"] == "project"]
+        elif unit["kind"] == "bullet" and context["tail"]:
+            name, linked = context["head"].rstrip(":"), [e for e in cited if e["type"] in ("project", "experience")]
+        elif unit["kind"] == "field" and context["place"]:
+            name, linked = context["org"].removeprefix(plan_module.DASH), [e for e in cited if e["type"] == "experience"]
+        else:
+            continue
+        urls = {url for url in (_entity_url(e) for e in linked) if url}
+        if name.strip() and len(urls) == 1:
+            names[name.strip()] = urls.pop()
+    return names
+
+
+def linkify(docx_path: Path, links: dict[str, str], names: dict[str, str] | None = None) -> int:
+    """Wrap each occurrence of a link's display text in a hyperlink to its target, and each
+    of ``names`` where a run holds that name alone (give or take a leading dash and a
+    trailing colon), keeping the run's own formatting so the text reads as before.
+    Returns the number of links."""
+    names = names or {}
+    if not links and not names:
         return 0
     import copy
 
@@ -163,22 +195,28 @@ def linkify(docx_path: Path, links: dict[str, str]) -> int:
     from docx.text.run import Run
 
     document = Document(str(docx_path))
-    pattern = re.compile("|".join(re.escape(d) for d in sorted(links, key=len, reverse=True)))
+    pattern = re.compile("|".join(re.escape(d) for d in sorted(links, key=len, reverse=True))) if links else None
     made = 0
     for paragraph in document.paragraphs:
         for run in list(paragraph.runs):
             text = run.text
-            if not pattern.search(text):
-                continue
+            name = text.strip().removeprefix(plan_module.DASH.strip()).strip().removesuffix(":")
             pieces: list[tuple[str, str | None]] = []
-            position = 0
-            for match in pattern.finditer(text):
-                if match.start() > position:
-                    pieces.append((text[position:match.start()], None))
-                pieces.append((match.group(0), links[match.group(0)]))
-                position = match.end()
-            if position < len(text):
-                pieces.append((text[position:], None))
+            if name and name in names:
+                start = text.index(name)
+                pieces = [(text[:start], None), (name, names[name]), (text[start + len(name):], None)]
+                pieces = [piece for piece in pieces if piece[0]]
+            elif pattern and pattern.search(text):
+                position = 0
+                for match in pattern.finditer(text):
+                    if match.start() > position:
+                        pieces.append((text[position:match.start()], None))
+                    pieces.append((match.group(0), links[match.group(0)]))
+                    position = match.end()
+                if position < len(text):
+                    pieces.append((text[position:], None))
+            else:
+                continue
             anchor = run._r
             for piece, target in pieces:
                 new_run = copy.deepcopy(anchor)
@@ -197,17 +235,25 @@ def linkify(docx_path: Path, links: dict[str, str]) -> int:
     return made
 
 
-def _unit_context(unit: dict) -> dict:
+def _unit_context(unit: dict, organizations=()) -> dict:
     # The first line splits at a tab into a head and a tail (a role and its dates, a label
     # and its text); the head splits at the first " — " into a lead (the title, the
     # institution) and the rest, which keeps the dash; any further lines are the note (a
-    # role's summary). A template styles each part separately: a bold lead, a muted rest, a
+    # role's summary). When the rest names a cited organization followed by a place, it
+    # splits again into the org (with the dash) and the place (with its comma). A template
+    # styles each part separately: a bold lead, the organization, a muted place, a
     # right-aligned date, a plain descriptor line.
     first, _, note = unit["text"].partition("\n")
     head, _, tail = first.partition("\t")
     lead, dash, after = head.partition(plan_module.DASH)
+    rest = dash + after if dash else ""
+    org, place = rest, ""
+    for name in organizations:
+        if dash and name and after.startswith(name + ", "):
+            org, place = dash + name, after[len(name):]
+            break
     return {"text": unit["text"], "kind": unit["kind"], "head": head, "tail": tail, "note": note,
-            "lead": lead, "rest": dash + after if dash else ""}
+            "lead": lead, "rest": rest, "org": org, "place": place}
 
 
 def date_line(today: date | None = None) -> str:
@@ -223,7 +269,13 @@ def role_line(brief: dict | None) -> str:
     return f"{role} at {organization}" if role and organization else role or organization
 
 
-def build_context(plan: dict, template: dict, *, brief: dict | None = None, today: date | None = None) -> dict:
+def build_context(plan: dict, template: dict, *, brief: dict | None = None, today: date | None = None,
+                  profile: dict | None = None) -> dict:
+    by_id = {e["id"]: e for e in (profile or {}).get("entities", [])}
+
+    def organizations(unit: dict) -> list[str]:
+        return [by_id[i]["organization"] for i in unit["source_ids"] if by_id.get(i, {}).get("organization")]
+
     by_section: dict[str, list] = defaultdict(list)
     for unit in plan["units"]:
         by_section[unit["section_id"]].append(unit)
@@ -238,7 +290,7 @@ def build_context(plan: dict, template: dict, *, brief: dict | None = None, toda
         sections.append({
             "id": section["id"],
             "title": section.get("title", ""),
-            "units": [_unit_context(u) for u in units],
+            "units": [_unit_context(u, organizations(u)) for u in units],
         })
     # The contact unit is two lines: the name, then the details line.
     contact_name, _, contact_details = contact_text.partition("\n")
@@ -256,15 +308,16 @@ def build_context(plan: dict, template: dict, *, brief: dict | None = None, toda
 
 
 def render_document(plan: dict, template: dict, template_docx: Path, out_path: Path, *,
-                    brief: dict | None = None, today: date | None = None) -> list[str]:
+                    brief: dict | None = None, today: date | None = None,
+                    profile: dict | None = None) -> list[str]:
     """Fill the template and save it. Returns the composed lines the template placed
     (``role_line``, ``date_line``) so the record can allow them."""
     from docxtpl import DocxTemplate
 
     doc = DocxTemplate(str(template_docx))
-    context = build_context(plan, template, brief=brief, today=today)
+    context = build_context(plan, template, brief=brief, today=today, profile=profile)
     used = doc.get_undeclared_template_variables()
-    doc.render(context)
+    doc.render(context, autoescape=True)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     doc.save(str(out_path))
     return [context[field] for field in _TEMPLATE_LINE_FIELDS if field in used and context[field]]
@@ -364,8 +417,9 @@ def cmd_render(args) -> int:
     else:
         archive_previous(out_dir, stem)
     out_docx = out_dir / f"{stem}.docx"
-    template_lines = render_document(plan, template, template_docx, out_docx, brief=brief)
-    linkify(out_docx, link_map(load_provider(args.workspace, cfg).read()))
+    profile = load_provider(args.workspace, cfg).read()
+    template_lines = render_document(plan, template, template_docx, out_docx, brief=brief, profile=profile)
+    linkify(out_docx, link_map(profile), named_links(plan, profile))
 
     pdf_path = None
     pdf_available = shutil.which("soffice") is not None

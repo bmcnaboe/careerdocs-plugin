@@ -116,6 +116,16 @@ def test_verbatim_bullet_check_ignores_short_fragments():
     assert factual.verbatim_bullet_check("I write Python daily.", bullets)["status"] == "pass"
 
 
+def test_factual_reads_thousands_separators():
+    profile = {"entities": [{"id": "experience_g", "type": "experience", "summary": "more than 12,500 stores"}]}
+    line = "Operator with more than 12,500 stores."
+    plan_ = {"units": [{"text": line, "source_ids": ["experience_g"]}]}
+    assert factual.check(line, plan_, profile)["status"] == "pass"
+    other = "Operator with more than 13,500 stores."
+    result = factual.check(other, {"units": [{"text": other, "source_ids": ["experience_g"]}]}, profile)
+    assert result["status"] == "fail" and "13,500" in result["details"]
+
+
 def test_factual_allows_each_line_of_a_multiline_unit(tmp_path):
     p, profile, text = build(tmp_path)
     # The header renders the contact unit's name and details as separate lines.

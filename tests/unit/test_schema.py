@@ -119,6 +119,15 @@ def test_end_before_start_fails():
     assert any("before start_date" in e for e in errors)
 
 
+def test_year_only_dates_validate_and_compare_at_their_precision():
+    contact = common("contact", name="A")
+    years = common("experience", organization="Acme", title="Eng", start_date="2014", end_date="2021")
+    same_year = common("experience", organization="Initech", title="Dev", start_date="2014-06", end_date="2014")
+    assert schema.validate_profile(make_profile([contact, years, same_year])) == []
+    backwards = common("experience", organization="Globex", title="Ops", start_date="2014-06", end_date="2013")
+    assert any("before start_date" in e for e in schema.validate_profile(make_profile([contact, backwards])))
+
+
 def test_unresolved_reference_fails():
     contact = common("contact", name="A")
     exp = common(
@@ -188,12 +197,12 @@ def test_new_entity_types_validate():
     entities = [
         _entity("contact", name="A B"),
         _entity("experience", organization="Lab", title="Advisor", kind="advising", start_date="2021-01"),
-        _entity("award", title="Founders' Award", issuer="Adobe", date="2004-06"),
-        _entity("interest", name="Backcountry skiing"),
+        _entity("award", title="Innovator Award", issuer="Initech", date="2004-06"),
+        _entity("interest", name="Rock climbing"),
         _entity("affiliation", organization="ACM", role="Member", start_date="2016-01", end_date=None),
     ]
     assert schema.validate_profile(_profile(entities)) == []
-    assert schema.profile_schema_version() == "1.1.0"
+    assert schema.profile_schema_version() == "1.2.0"
 
 
 def test_new_entity_types_keep_the_date_rules():

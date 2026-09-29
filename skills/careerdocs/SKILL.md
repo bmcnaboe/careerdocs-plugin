@@ -5,7 +5,7 @@ license: MIT
 user-invocable: false
 compatibility: "Python 3.10+; uv recommended (uv run), python3 fallback. Offline. Optional LibreOffice (soffice) for PDF output and the PDF checks."
 metadata:
-  version: "0.6.0"
+  version: "0.7.0"
   author: "careerdocs-plugin contributors"
 ---
 
@@ -13,7 +13,8 @@ metadata:
 
 The rules every flow obeys and the deterministic CLI they all call. The CLI does the
 mechanical work (parsing, merging, planning, rendering, checking); judgement happens
-between commands, in the conversation. Command and file detail: `references/cli.md`.
+between commands, in the conversation. Command and file detail: `references/cli.md`;
+how a résumé is written: `references/resume-writing.md`.
 
 ## Five authorities, kept separate
 

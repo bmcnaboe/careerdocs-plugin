@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/bmcnaboe/careerdocs-plugin/schemas/career-profile.schema.json#1.1.0",
+  "$id": "https://github.com/bmcnaboe/careerdocs-plugin/schemas/career-profile.schema.json#1.2.0",
   "title": "CareerProfile",
   "type": "object",
   "required": ["schema_version", "applicant_ref", "authoritative_provider", "derived", "updated_at", "entities", "sources"],
@@ -16,7 +16,7 @@
   },
   "$defs": {
     "id": { "type": "string", "pattern": "^(contact|experience|achievement|education|skill|project|credential|patent|publication|award|interest|affiliation)_[0-9A-HJKMNP-TV-Z]{26}$" },
-    "date": { "type": "string", "pattern": "^\\d{4}-\\d{2}(-\\d{2})?$" },
+    "date": { "type": "string", "pattern": "^\\d{4}(-\\d{2}(-\\d{2})?)?$" },
     "provenance": {
       "type": "object",
       "required": ["source_id", "method", "recorded_at", "actor"],
@@ -68,7 +68,7 @@
         {
           "oneOf": [
             { "properties": { "type": { "const": "contact" }, "name": { "type": "string" }, "headline": { "type": "string" }, "location": { "type": "string" }, "email": { "type": "string", "format": "email" }, "phone": { "type": "string" }, "links": { "type": "array", "items": { "$ref": "#/$defs/link" } } }, "required": ["name"] },
-            { "properties": { "type": { "const": "experience" }, "organization": { "type": "string" }, "title": { "type": "string" }, "kind": { "enum": ["employment", "advising", "board", "volunteer"] }, "employment_type": { "type": "string" }, "location": { "type": "string" }, "start_date": { "$ref": "#/$defs/date" }, "end_date": { "anyOf": [{ "$ref": "#/$defs/date" }, { "type": "null" }] }, "summary": { "type": "string" }, "achievement_ids": { "type": "array", "items": { "$ref": "#/$defs/id" } }, "skill_ids": { "type": "array", "items": { "$ref": "#/$defs/id" } } }, "required": ["organization", "title", "start_date"] },
+            { "properties": { "type": { "const": "experience" }, "organization": { "type": "string" }, "title": { "type": "string" }, "kind": { "enum": ["employment", "advising", "board", "volunteer"] }, "employment_type": { "type": "string" }, "location": { "type": "string" }, "url": { "type": "string", "format": "uri" }, "start_date": { "$ref": "#/$defs/date" }, "end_date": { "anyOf": [{ "$ref": "#/$defs/date" }, { "type": "null" }] }, "summary": { "type": "string" }, "achievement_ids": { "type": "array", "items": { "$ref": "#/$defs/id" } }, "skill_ids": { "type": "array", "items": { "$ref": "#/$defs/id" } } }, "required": ["organization", "title", "start_date"] },
             { "properties": { "type": { "const": "achievement" }, "statement": { "type": "string", "minLength": 1 }, "metrics": { "type": "array", "items": { "type": "object", "required": ["value"], "properties": { "value": { "type": "string" }, "unit": { "type": "string" }, "context": { "type": "string" } } } }, "parent_id": { "$ref": "#/$defs/id" }, "skill_ids": { "type": "array", "items": { "$ref": "#/$defs/id" } } }, "required": ["statement", "parent_id"] },
             { "properties": { "type": { "const": "education" }, "institution": { "type": "string" }, "degree": { "type": "string" }, "field_of_study": { "type": "string" }, "start_date": { "$ref": "#/$defs/date" }, "end_date": { "anyOf": [{ "$ref": "#/$defs/date" }, { "type": "null" }] }, "honors": { "type": "array", "items": { "type": "string" } } }, "required": ["institution"] },
             { "properties": { "type": { "const": "skill" }, "name": { "type": "string" }, "category": { "type": "string" }, "level": { "enum": ["familiar", "working", "expert"] }, "evidence_ids": { "type": "array", "items": { "$ref": "#/$defs/id" } } }, "required": ["name"] },

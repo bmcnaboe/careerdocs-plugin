@@ -145,8 +145,8 @@ def test_achievement_on_existing_parent_links_both_directions(tmp_path):
 def test_awards_interests_and_affiliations_dedupe_on_their_match_keys():
     prov = {"source_id": "src_AAAAAAAAAAAAAAAAAAAAAAAAAA", "method": "extraction", "recorded_at": "2024-01-01T00:00:00Z", "actor": "agent"}
     candidates = [
-        {"type": "award", "provenance": prov, "title": "Founders' Award", "issuer": "Adobe", "date": "2004-06"},
-        {"type": "award", "provenance": prov, "title": "founders' award", "issuer": "ADOBE"},
+        {"type": "award", "provenance": prov, "title": "Innovator Award", "issuer": "Initech", "date": "2004-06"},
+        {"type": "award", "provenance": prov, "title": "innovator award", "issuer": "INITECH"},
         {"type": "interest", "provenance": prov, "name": "Skiing"},
         {"type": "interest", "provenance": prov, "name": "skiing"},
         {"type": "affiliation", "provenance": prov, "organization": "ACM", "role": "Member"},

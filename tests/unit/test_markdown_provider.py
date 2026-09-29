@@ -147,8 +147,17 @@ def test_diff_store_and_load(tmp_path):
 
 def test_read_refuses_too_new_schema(tmp_path):
     provider = make_provider(tmp_path)
-    profile = sample_profile()
-    profile["schema_version"] = "99.0.0"
-    provider.write(profile)
+    provider.write(sample_profile())
+    # A newer plugin wrote this profile.
+    current = schema.profile_schema_version()
+    provider.index_file.write_text(provider.index_file.read_text().replace(current, "99.0.0"))
     with pytest.raises(SchemaTooNew):
         provider.read()
+
+
+def test_write_records_the_current_schema_version(tmp_path):
+    provider = make_provider(tmp_path)
+    profile = sample_profile()
+    profile["schema_version"] = "1.0.0"
+    provider.write(profile)
+    assert provider.read()["schema_version"] == schema.profile_schema_version()

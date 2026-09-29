@@ -266,6 +266,9 @@ def cmd_import(args) -> int:
     registered: list[dict] = []
     results: list[dict] = []
     workspace_root = Path(args.workspace).resolve()
+    # A file already in the ledger keeps its one source id: importing it again only
+    # re-reads its text, so every fact still cites a single source.
+    known = {s["sha256"]: s for s in provider.read_sources()}
     for source in args.sources:
         path = Path(source)
         sha = hashlib.sha256(path.read_bytes()).hexdigest()
@@ -276,17 +279,22 @@ def cmd_import(args) -> int:
             location = str(path.resolve().relative_to(workspace_root))
         except ValueError:
             location = str(path)
-        source_record = {
-            "source_id": ids.new_source_id(),
-            "kind": kind,
-            "location": location,
-            "sha256": sha,
-            "captured_at": util.now(),
-        }
-        provider.append_source(source_record)
+        source_record = known.get(sha)
+        already = source_record is not None
+        if not already:
+            source_record = {
+                "source_id": ids.new_source_id(),
+                "kind": kind,
+                "location": location,
+                "sha256": sha,
+                "captured_at": util.now(),
+            }
+            provider.append_source(source_record)
+            known[sha] = source_record
         registered.append(source_record)
         extracted = importers.import_source(path, source_record["source_id"])
-        results.append({"source_id": source_record["source_id"], "kind": kind, "location": location, **extracted})
+        results.append({"source_id": source_record["source_id"], "kind": kind, "location": location,
+                        "already_registered": already, **extracted})
 
     payload = {"sources": registered, "imports": results}
     if args.out:
@@ -295,9 +303,10 @@ def cmd_import(args) -> int:
         print(json.dumps(payload, ensure_ascii=False))
     else:
         for result in results:
+            note = f" (already registered as {result['source_id']})" if result["already_registered"] else ""
             print(
                 f"{result['kind']}: {result['location']} — "
-                f"{len(result['text_blocks'])} text block(s), {len(result['candidates'])} candidate(s)"
+                f"{len(result['text_blocks'])} text block(s), {len(result['candidates'])} candidate(s){note}"
             )
     return 0
 

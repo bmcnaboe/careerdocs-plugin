@@ -75,6 +75,21 @@ def test_cli_import_registers_sources_with_sha256(tmp_path, capsys):
         ).hexdigest()
 
 
+def test_cli_import_keeps_one_source_per_file(tmp_path, capsys):
+    cli.main(["config", "init", "--workspace", str(tmp_path)])
+    capsys.readouterr()
+    first_copy = tmp_path / "copy-of-resume-a.docx"
+    first_copy.write_bytes((SOURCES / "resume-a.docx").read_bytes())
+    cli.main(["profile", "import", str(SOURCES / "resume-a.docx"), "--workspace", str(tmp_path), "--json"])
+    first = json.loads(capsys.readouterr().out)
+    # The same bytes again, under another name, reuse the registered source.
+    cli.main(["profile", "import", str(first_copy), "--workspace", str(tmp_path), "--json"])
+    again = json.loads(capsys.readouterr().out)
+    assert again["sources"][0]["source_id"] == first["sources"][0]["source_id"]
+    assert again["imports"][0]["already_registered"] and again["imports"][0]["text_blocks"]
+    assert len(load_provider(tmp_path).read_sources()) == 1
+
+
 def test_cli_import_writes_out_file(tmp_path):
     cli.main(["config", "init", "--workspace", str(tmp_path)])
     out_file = tmp_path / "imports.json"

@@ -12,7 +12,7 @@ workspace.
 | `config init` | write a default `careerdocs.json` if none exists |
 | `config validate` | validate it; refuse credential or qualification content |
 | `config workspace [<dir>]` | show how the workspace resolves, or record `<dir>` as the default and initialize it |
-| `profile import <path>...` | register sources by sha256; return their text blocks and, for a LinkedIn CSV, draft candidates |
+| `profile import <path>...` | register sources by sha256 (a known file keeps its source id); return their text blocks and, for a LinkedIn CSV, draft candidates |
 | `profile diff <file> [--flow f --subject s]` | build a ProfileDiff from candidates or operations; persist the questions it generates to state |
 | `profile approve <diff_id> [--document <path>]` | record a hash-bound approval; `--document` also admits restricted entities into that document |
 | `profile apply <diff_id>` | apply atomically; mark records citing changed entities stale |
@@ -24,8 +24,8 @@ workspace.
 | `brief <brief.json> --alignment [--flow apply --subject s]` | the alignment questions the brief has not answered, with identity options |
 | `map [--role-slug s]` | propose evidence and a classification per requirement into `map.json` |
 | `map --validate <map.json>` | validate an edited map |
-| `plan --kind resume\|cover_letter [--positioning m] [--page-budget n] [--sections ids] [--role-slug s]` | select and order evidence into `plan.<kind>.json` within the page budget; defaults come from the brief's `approach` |
-| `plan --baseline --positioning m [--kind resume]` | a role-less plan from all visible evidence into `baselines/<m>/` |
+| `plan --kind resume\|cover_letter [--positioning m] [--page-budget n] [--sections ids] [--role-slug s] [--fresh]` | write `plan.<kind>.json`; defaults come from the brief's `approach`. A résumé starts as the baseline plan the approach names (`baseline`; absent, the positioning's when one exists; `none` or `--fresh` selects evidence afresh within the page budget, as a letter always does) |
+| `plan --baseline --positioning m [--kind resume] [--replace]` | a role-less plan from all visible evidence into `baselines/<m>/`; refuses to overwrite an existing baseline plan without `--replace` |
 | `render --kind k [--pdf] [--role-slug s \| --baseline --positioning m]` | fill the template; write the document, its PDF, and a record skeleton |
 | `check <document>` | run the five checks, update the record; exit 1 on any failure |
 | `commit -m "<msg>" (--role-slug s \| --baseline [--positioning m] \| --path p)...` | in a git workspace, commit that round's paths |
@@ -50,7 +50,8 @@ experience or project. Candidates matching an existing entity's key become field
 
 **brief.json**: `organization`, `role`, `seniority`, `location`, `requirements[]`
 (`id`, `text`, `kind` must or nice, `keywords[]`), `keywords[]`,
-`recommended_positioning`, `notes`; `approach` (`positioning`, `lead_evidence[]` entity
+`recommended_positioning`, `notes`; `approach` (`baseline` builder, executive, or none;
+`positioning`, `lead_evidence[]` entity
 ids, `compress[]`, `resume_pages`, `sections[]` manifest ids, `letter_length` note or
 page, `tone`, `avoid[]`, `notes`); `alignment` (`why`, `values[]`, `interests[]`, `focus`,
 `through_line`, `lead_story`, `notes`).
@@ -60,14 +61,18 @@ transferable, or gap, `evidence[]` (`entity_id`, `why`), `note`. A gap has no ev
 
 **plan.<kind>.json**: `units[]` with `unit_id`, `section_id`, `kind` (bullet, sentence,
 field, subhead, labeled), `text`, `source_ids[]`, `emphasis`; `cuts[]` with `entity_id`
-and `reason`. The agent rewrites `text` and keeps `source_ids` true.
+and `reason`. A résumé started from a baseline also has `baseline` (its path) and
+`tailoring` (`add[]` mapped evidence no unit cites, must requirements first, with
+`entity_id`, `requirement_id`, `kind`; `compress[]` bullets serving no requirement, oldest
+first, with `unit_id` and `reason`). The agent rewrites `text` and may merge, split, add,
+or drop units, keeping every unit's `source_ids` true to what it states.
 
 ## Entities
 
 | Type | Required | Notable optional |
 | --- | --- | --- |
 | contact | `name` | `headline`, `location`, `email`, `phone`, `links[] {label, url}`; exactly one |
-| experience | `organization`, `title`, `start_date` | `kind` employment (default), advising, board, volunteer; `end_date` (null = current), `location`, `summary` |
+| experience | `organization`, `title`, `start_date` | `kind` employment (default), advising, board, volunteer; `end_date` (null = current), `location`, `url` (the organization), `summary` |
 | achievement | `statement`, `parent_id` | `metrics[] {value, unit, context}` |
 | education | `institution` | `degree`, `field_of_study`, `start_date`, `end_date`, `honors[]` |
 | skill | `name` | `category`, `level` familiar, working, expert |
@@ -81,7 +86,9 @@ and `reason`. The agent rewrites `text` and keeps `source_ids` true.
 
 Every entity carries `visibility` (public, restricted, private), `verification`
 (unverified, imported, applicant_verified, externally_verified), `provenance[]`, and
-optional `conflicts[]`. Dates are `YYYY-MM-DD` or `YYYY-MM`; none may be in the future.
+optional `conflicts[]`. Dates are `YYYY-MM-DD`, `YYYY-MM`, or `YYYY`, at the precision the
+source gives, and render at it (`2014 – 2021`, `Jan 2025 – present`); none may be in the
+future.
 The JSON Schemas under `assets/schemas/` are authoritative.
 
 ## Checks

@@ -52,8 +52,11 @@ It asks for your materials one at a time (résumés old and new, the LinkedIn da
 notes, writing samples), explains how to get each, imports them, asks only the questions
 your documents raise, and shows you the proposed profile before writing anything. Then it
 sets up your résumé and letter templates, captures how you write, and asks a few questions
-about who you are beyond the facts, so your letters have a through-line of your own. It
-ends with a short tour.
+about who you are beyond the facts, so your letters have a through-line of your own.
+Last, it builds a baseline résumé for each positioning you want (hands-on builder,
+executive, or both), modeled on your best existing résumé if you like, and revises it with
+you until you approve it: the standard every tailored résumé starts from. It ends with a
+short tour.
 
 Run it again any time. It only does what is missing.
 
@@ -67,11 +70,12 @@ it:
 2. Shows the fit: which requirements you meet directly, which transfer, which are gaps,
    and which of the posting's keywords your profile lacks. It asks which of those you
    genuinely have and records only those, with your approval.
-3. Proposes an approach and confirms it in one exchange: positioning (leadership first or
-   hands-on first), the three pieces of evidence that lead, what to compress, résumé
-   length, letter length and tone, and anything to avoid.
+3. Proposes an approach and confirms it in one exchange: which baseline résumé to start
+   from (leadership first or hands-on first), the three pieces of evidence that lead, what
+   to compress, résumé length, letter length and tone, and anything to avoid.
 4. For the letter, asks why this role, in your words.
-5. Drafts, renders, and checks each document, then reports what was cut for space and
+5. Drafts, renders, and checks each document. The résumé keeps the baseline's structure
+   and wording and changes only what the role needs; the report says what changed and
    which requirements remain gaps.
 
 Interrupted? Run it again for the same posting; it continues where it stopped.
@@ -92,7 +96,7 @@ documents are now out of date.
 | `templates/` | your résumé and letter templates |
 | `voice/voice.md`, `identity/identity.md` | how you write; who you are beyond the facts |
 | `applications/<role>/` | the posting, the brief and map, and the finished documents |
-| `baselines/` | untargeted résumés |
+| `baselines/` | your standard résumé per positioning; tailored résumés start from it |
 
 Documents are named `<Your Name>-<Organization>-<Role>-Resume.docx` and `-Cover.docx`,
 with PDFs when LibreOffice is installed. If your workspace is a git repository (onboard

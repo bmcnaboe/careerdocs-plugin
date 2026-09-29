@@ -1,10 +1,10 @@
 ---
 name: apply
-description: Produce the application for one job posting through a short guided interview, either the tailored résumé, the cover letter, or both. Use when the applicant has an onboarded profile and a posting, or asks to tailor a résumé, write a cover letter, or apply to a role. It builds the role brief and requirement map, shows the fit and the keywords the profile lacks, records qualifications they confirm, agrees an approach (positioning, lead evidence, what to compress, length, tone), settles the role alignment for the letter, then drafts, renders, and checks each document and reports the cuts and gaps. Every question carries a suggested answer so a yes moves on; nothing enters the profile without an explicit approval; a gap is never claimed. Resumable.
+description: Produce the application for one job posting through a short guided interview, either the tailored résumé, the cover letter, or both, or a baseline résumé with no posting. Use when the applicant has an onboarded profile and a posting, or asks to tailor a résumé, write a cover letter, apply to a role, or build a baseline résumé for a positioning. It builds the role brief and requirement map, shows the fit and the keywords the profile lacks, records qualifications they confirm, agrees an approach (positioning, lead evidence, what to compress, length, tone), settles the role alignment for the letter, then drafts, renders, and checks each document and reports the cuts and gaps. Every question carries a suggested answer so a yes moves on; nothing enters the profile without an explicit approval; a gap is never claimed. Resumable.
 license: MIT
 compatibility: "Python 3.10+; uv recommended. Requires the careerdocs core skill, an onboarded profile, templates, and voice. Optional LibreOffice for PDF output and the PDF checks."
 metadata:
-  version: "0.6.0"
+  version: "0.7.0"
   author: "careerdocs-plugin contributors"
 ---
 
@@ -45,9 +45,14 @@ yes, apply); then run `map` again.
 Propose defaults, confirm in one exchange (question `approach`), write them to
 `brief.json` under `approach`, and validate:
 
-- `positioning`: the brief's recommendation and why. Executive leads with leadership,
-  scope, and outcomes; builder with hands-on delivery. It changes emphasis and order,
-  never a fact.
+- `baseline`: which baseline the résumé starts from, first and with a reason, for
+  example "the builder baseline (updated Sep 29): the posting asks for hands-on
+  delivery". Offer only the baselines under `baselines/`, each with its date, plus
+  `none` to select evidence afresh. When the recommended positioning has none, offer to
+  build it first (section 8) or start fresh.
+- `positioning`: the chosen baseline's, else the brief's recommendation and why.
+  Executive leads with leadership, scope, and outcomes; builder with hands-on delivery.
+  It changes emphasis and order, never a fact.
 - `lead_evidence`: the three entities that lead, as ids with a label each.
 - `compress`: roles, sections, or projects to shorten or leave out.
 - `sections`: the manifest sections this résumé uses; default every section with
@@ -71,10 +76,19 @@ no identity profile, ask anyway and suggest `onboard` afterwards.
 
 ## 5. The résumé
 
-1. `plan --kind resume` reads positioning, pages, and sections from the approach. Review
-   the cut list; re-emphasize rather than inflate.
-2. Rewrite each unit's `text` in the voice profile, every claim still traceable to its
-   `source_ids`, nothing added from outside the profile. The template relies on:
+1. `plan --kind resume` reads positioning, pages, and sections from the approach. When
+   the positioning has a baseline (section 8) the plan starts as a copy of it, and the
+   baseline is the standard: change only what the role needs (the summary's angle, the
+   order that brings the lead evidence forward, the posting's terms for held skills, the
+   `tailoring.add` evidence a must requirement needs, the `tailoring.compress` bullets
+   when space is short) and leave every other unit as the baseline wrote it. With no
+   baseline, offer to build one first; otherwise review the cut list and re-emphasize
+   rather than inflate.
+2. Write or revise each unit's `text` in the voice profile and by the core skill's
+   `references/resume-writing.md`, every claim still traceable to its `source_ids`,
+   nothing added from outside the profile. Merge, split, add, or drop units as the
+   writing needs (two bullets into one, an Advising line, the patents as one sentence),
+   each unit citing every entity it states. The template relies on:
    - the contact line staying on one line (abbreviate the state or drop a link);
    - a summary of two or three sentences the cited lead evidence supports, which may
      name the career focus from the identity profile;
@@ -82,6 +96,8 @@ no identity profile, ask anyway and suggest `onboard` afterwards.
      summary line beneath it, never in the role line (parsers read the whole line as
      title and company);
    - a project sub-head `Name — one-line descriptor` under its role;
+   - a name-led bullet `Name:<tab>text`, for small projects grouped under one sub-head
+     (the name renders bold);
    - skills as `Label<tab>skill, skill` lines, one per group, each citing every skill;
    - dated lines `Institution — Degree<tab>Year`, keeping the tab.
 3. `render --kind resume --pdf`, then `check <document>`. A résumé must land exactly on
@@ -112,9 +128,18 @@ no identity profile, ask anyway and suggest `onboard` afterwards.
 
 ## 7. The report
 
-One screen: what the plan cut for space, the honest gaps, the qualifications confirmed
-and added, and the document paths. A revision is its own round: revise, render, check,
+One screen: the baseline the résumé started from and what changed from it (or what the
+plan cut for space), the honest gaps, the qualifications confirmed and added, and the document paths. A revision is its own round: revise, render, check,
 commit (`fix(<slug>): ...`).
+
+## 8. A baseline résumé
+
+With no posting, the applicant can still want a résumé for a positioning; it becomes the
+standard every tailored résumé for that positioning starts from. Skip sections 1 to 4:
+`plan --baseline --positioning <m>` (`--replace` to rebuild an existing one), draft as in
+section 5 step 2, `render --kind resume --baseline --positioning <m> --pdf`, `check`, show
+the applicant the render, revise until they approve it, and `commit --baseline
+--positioning <m> -m "feat(baseline): <m> résumé"`.
 
 ## Guardrails
 

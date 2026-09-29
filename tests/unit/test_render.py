@@ -283,6 +283,49 @@ def test_linkify_makes_profile_links_clickable_without_changing_text(tmp_path):
     assert document.element.body.findall(".//{http://schemas.openxmlformats.org/wordprocessingml/2006/main}hyperlink")
 
 
+def _linked_world():
+    widget = {"id": "project_w", "type": "project", "name": "widget", "visibility": "public",
+              "verification": "applicant_verified", "links": [{"label": "Repo", "url": "https://example.com/widget"}]}
+    gadget = {"id": "project_g", "type": "project", "name": "gadget", "visibility": "public",
+              "verification": "applicant_verified", "links": [{"label": "Site", "url": "https://example.com/gadget"}]}
+    globex = {"id": "experience_g", "type": "experience", "organization": "Globex Corporation", "visibility": "public",
+              "verification": "applicant_verified", "url": "https://globex.example.com"}
+    plan_ = {"positioning": "builder", "units": [
+        {"unit_id": "u1", "section_id": "header", "kind": "field", "text": "Jordan Rivera\nMetropolis, USA", "source_ids": []},
+        {"unit_id": "u2", "section_id": "experience", "kind": "field",
+         "text": "Engineer — Globex Corporation, Metropolis, USA\t2018 – 2021", "source_ids": ["experience_g"]},
+        {"unit_id": "u3", "section_id": "experience", "kind": "subhead", "text": "Gadget — a small tool", "source_ids": ["project_g"]},
+        {"unit_id": "u4", "section_id": "experience", "kind": "bullet", "text": "Widget:\tthe Gadget companion.", "source_ids": ["project_w"]},
+        {"unit_id": "u5", "section_id": "experience", "kind": "subhead", "text": "Open-source tools — MIT-licensed",
+         "source_ids": ["project_w", "project_g"]},
+    ]}
+    return plan_, {"entities": [widget, gadget, globex]}
+
+
+def test_named_links_link_a_name_set_apart_to_its_one_cited_link():
+    plan_, profile = _linked_world()
+    assert render.named_links(plan_, profile) == {
+        "Globex Corporation": "https://globex.example.com",
+        "Gadget": "https://example.com/gadget",
+        "Widget": "https://example.com/widget",
+    }  # a sub-head citing two linked projects stays plain
+
+
+def test_linkify_links_names_set_apart_but_not_the_same_name_in_running_text(tmp_path):
+    from docx import Document
+
+    plan_, profile = _linked_world()
+    out = tmp_path / "resume.docx"
+    render.render_document(plan_, TEMPLATE_JSON, TEMPLATE_DOCX, out, profile=profile)
+    before = read_docx_text(out)
+    assert render.linkify(out, {}, render.named_links(plan_, profile)) == 3
+    assert read_docx_text(out) == before
+    document = Document(str(out))
+    ns = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
+    linked = ["".join(t.text for t in h.iter(f"{ns}t")) for h in document.element.body.iter(f"{ns}hyperlink")]
+    assert sorted(linked) == ["Gadget", "Globex Corporation", "Widget"]
+
+
 # --- naming, composed lines, and git history ---
 
 
@@ -319,12 +362,54 @@ def _provision(tmp_path, kinds=("resume",)):
 
 
 def test_unit_context_splits_the_lead_from_the_rest():
-    unit = {"text": "Founder — Oxford Heavy, Cambridge, MA\tJan 2025 – present\nA product studio.", "kind": "field"}
+    unit = {"text": "Founder — Globex Corporation, Metropolis, USA\tJan 2025 – present\nA product studio.", "kind": "field"}
     context = render._unit_context(unit)
-    assert (context["lead"], context["rest"]) == ("Founder", " — Oxford Heavy, Cambridge, MA")
-    assert (context["head"], context["tail"], context["note"]) == ("Founder — Oxford Heavy, Cambridge, MA", "Jan 2025 – present", "A product studio.")
+    assert (context["lead"], context["rest"]) == ("Founder", " — Globex Corporation, Metropolis, USA")
+    assert (context["head"], context["tail"], context["note"]) == ("Founder — Globex Corporation, Metropolis, USA", "Jan 2025 – present", "A product studio.")
     plain = render._unit_context({"text": "Python, Go", "kind": "labeled"})
     assert (plain["lead"], plain["rest"], plain["tail"]) == ("Python, Go", "", "")
+
+
+def test_unit_context_splits_the_organization_from_its_place():
+    role = {"text": "Engineer — Globex Corporation, Metropolis, USA\t2018 – 2021", "kind": "field"}
+    context = render._unit_context(role, ["Globex Corporation"])
+    assert (context["org"], context["place"]) == (" — Globex Corporation", ", Metropolis, USA")
+    # An organization whose name holds commas still splits where the name ends.
+    group = {"text": "Analyst — Acme, Initech, various locations\t3 years", "kind": "field"}
+    assert render._unit_context(group, ["Acme, Initech"])["place"] == ", various locations"
+    # Without a matching organization the whole rest is the organization.
+    context = render._unit_context(role)
+    assert (context["org"], context["place"]) == (" — Globex Corporation, Metropolis, USA", "")
+
+
+def _small_plan():
+    return {"positioning": "builder", "units": [
+        {"unit_id": "u1", "section_id": "header", "kind": "field", "text": "Jordan Rivera\nMetropolis, USA", "source_ids": []},
+        {"unit_id": "u2", "section_id": "experience", "kind": "field",
+         "text": "Engineer — Globex Corporation, Metropolis, USA\t2018 – 2021", "source_ids": ["experience_g"]},
+        {"unit_id": "u3", "section_id": "experience", "kind": "bullet", "text": "Widget:\tR&D tool for teams.", "source_ids": []},
+        {"unit_id": "u4", "section_id": "experience", "kind": "bullet", "text": "Shipped the billing platform.", "source_ids": []},
+    ]}
+
+
+def test_render_styles_name_led_bullets_places_and_the_last_bullet(tmp_path):
+    from docx import Document
+    from docx.shared import Pt
+
+    profile = {"entities": [{"id": "experience_g", "type": "experience", "organization": "Globex Corporation"}]}
+    out = tmp_path / "resume.docx"
+    render.render_document(_small_plan(), TEMPLATE_JSON, TEMPLATE_DOCX, out, profile=profile)
+    paragraphs = {p.text: p for p in Document(str(out)).paragraphs if p.text}
+    # Text renders escaped, so an ampersand survives.
+    lead = paragraphs["Widget: R&D tool for teams."]
+    assert [r.text for r in lead.runs if r.bold] == ["Widget:"]
+    role = paragraphs["Engineer — Globex Corporation, Metropolis, USA\t2018 – 2021"]
+    colors = {r.text: str(r.font.color.rgb) for r in role.runs if r.text.strip()}
+    assert colors[" — Globex Corporation"] == "1F1F1F" and colors[", Metropolis, USA"] == "555555"
+    assert next(r for r in role.runs if r.text == "2018 – 2021").bold
+    # The last bullet of a group sits a little further from what follows.
+    assert lead.paragraph_format.space_after == Pt(2)
+    assert paragraphs["Shipped the billing platform."].paragraph_format.space_after == Pt(3.5)
 
 
 def test_role_and_date_lines():

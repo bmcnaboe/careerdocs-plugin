@@ -40,6 +40,39 @@
           "reason": { "type": "string" }
         }
       }
+    },
+    "baseline": { "type": "string" },
+    "tailoring": {
+      "type": "object",
+      "required": ["add", "compress"],
+      "additionalProperties": false,
+      "properties": {
+        "add": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["entity_id", "requirement_id", "kind"],
+            "additionalProperties": false,
+            "properties": {
+              "entity_id": { "type": "string" },
+              "requirement_id": { "type": "string" },
+              "kind": { "enum": ["must", "nice"] }
+            }
+          }
+        },
+        "compress": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["unit_id", "reason"],
+            "additionalProperties": false,
+            "properties": {
+              "unit_id": { "type": "string" },
+              "reason": { "type": "string" }
+            }
+          }
+        }
+      }
     }
   }
 }

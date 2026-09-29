@@ -17,9 +17,10 @@ templates/cover-letter/template.json
 
 The plugin ships a default design under `examples/applicant/templates/`: a plain single
 column in Calibri with 0.7-inch margins, a centered name and contact line, ruled
-capitalized headings, a bold role with the organization muted and the dates on a right
-tab, an italic descriptor under the role, projects as italic sub-heads under their role,
-bulleted achievements, bold-label skill lines, and dated lines with the year on the
+capitalized headings, a bold role with the organization in body text, the location
+muted, and bold dates on a right tab, an italic descriptor under the role, projects as
+italic sub-heads under their role, small bulleted achievements with a slightly wider gap
+after the last of a group, bold-label skill lines, and dated lines with a bold year on the
 right. The letter shares the header, then places the role line, the date, the body, and
 a sign-off. You can restyle the DOCX freely (fonts, spacing, margins, colors); the plugin
 replaces only the placeholder content.
@@ -36,7 +37,10 @@ placeholders. The render context:
 - `sections`: a list of `{ id, title, units }`. Each unit has `text`, `kind` (`bullet`,
   `field`, `sentence`, `subhead`, `labeled`), `head` and `tail` (the first line split at
   its tab: a role and its dates, a label and its text), `lead` and `rest` (the head split
-  at the first ` — `), and `note` (any further lines, such as a role's summary).
+  at the first ` — `), `org` and `place` (the rest split where a cited entity's
+  organization ends: ` — Globex Corporation` and `, Metropolis, USA`; with no match, `org`
+  is the whole rest), and `note` (any further lines, such as a role's summary). Text is
+  escaped, so `&` and `<` render as written.
 
 The shipped résumé body, in outline:
 
@@ -46,17 +50,20 @@ The shipped résumé body, in outline:
 {%p for section in sections %}{%p if section.units %}
 {{ section.title }}
 {%p for unit in section.units %}
-{%p if unit.kind == 'bullet' %}{{ unit.text }}                          (List Bullet)
+{%p if unit.kind == 'bullet' %}{{ unit.head }} {{ unit.tail }} or {{ unit.text }}   (List Bullet; a tab makes a bold name lead)
 {%p elif unit.kind == 'subhead' %}{{ unit.lead }}{{ unit.rest }}         (bold italic, muted descriptor)
 {%p elif unit.kind == 'labeled' and unit.tail %}{{ unit.head }}  {{ unit.tail }}   (bold label)
-{%p elif unit.kind == 'field' and unit.tail %}{{ unit.lead }}{{ unit.rest }}<tab>{{ unit.tail }}
+{%p elif unit.kind == 'field' and unit.tail %}{{ unit.lead }}{{ unit.org }}{{ unit.place }}<tab>{{ unit.tail }}
 {%p if unit.note %}{{ unit.note }}{%p endif %}                            (italic summary)
 {%p else %}{{ unit.text }}{%p endif %}
 {%p endfor %}{%p endif %}{%p endfor %}
 ```
 
 Links need no placeholder: every link in the profile is written as its bare display form
-and turned into a real hyperlink after rendering, so the DOCX and PDF are clickable.
+and turned into a real hyperlink after rendering, so the DOCX and PDF are clickable. Names
+link too: a project sub-head's name, the name leading a `Name:<tab>text` bullet, and the
+organization in a role line link to the one cited project's first link or the
+experience's `url`; the same name inside running text stays plain.
 
 Two rules keep a restyled template compatible with the checks: every fixed string the
 template adds (a sign-off, boilerplate) goes on the manifest's `allowlist`, because the

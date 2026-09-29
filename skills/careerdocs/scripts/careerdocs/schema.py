@@ -74,7 +74,7 @@ def profile_schema_version() -> str:
 
 
 def parse_date(value: str) -> date:
-    """Parse ``YYYY-MM-DD`` or ``YYYY-MM`` (day defaults to the 1st)."""
+    """Parse ``YYYY-MM-DD``, ``YYYY-MM``, or ``YYYY`` (month and day default to the 1st)."""
     parts = value.split("-")
     year = int(parts[0])
     month = int(parts[1]) if len(parts) > 1 else 1
@@ -115,7 +115,9 @@ def _semantic_errors(profile: dict) -> list[str]:
 
         for earlier, later in ORDER_PAIRS.get(etype, ()):
             ev, lv = entity.get(earlier), entity.get(later)
-            if ev and lv and parse_date(lv) < parse_date(ev):
+            # Compare at the precision both dates share: 2014 does not precede 2014-06.
+            shared = min(len(ev), len(lv)) if ev and lv else 0
+            if shared and lv[:shared] < ev[:shared]:
                 errors.append(f"{eid}: {later} {lv} is before {earlier} {ev}")
 
         if etype == "achievement":

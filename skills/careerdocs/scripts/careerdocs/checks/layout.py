@@ -18,6 +18,9 @@ def render_page_pngs(pdf_path, out_dir: Path, name: str, scale: float = 1.0) -> 
     import pypdfium2 as pdfium
 
     out_dir.mkdir(parents=True, exist_ok=True)
+    for stale in out_dir.glob(f"{name}-p*.png"):  # a longer earlier render leaves extra pages
+        if stale.stem[len(name) + 2:].isdigit():
+            stale.unlink()
     paths: list[Path] = []
     pdf = pdfium.PdfDocument(str(Path(pdf_path)))
     try:

@@ -4,7 +4,7 @@ description: Add a new qualification or correct an existing one in the applicant
 license: MIT
 compatibility: "Python 3.10+; uv recommended. Requires the careerdocs core skill and an onboarded profile."
 metadata:
-  version: "0.6.0"
+  version: "0.7.0"
   author: "careerdocs-plugin contributors"
 ---
 

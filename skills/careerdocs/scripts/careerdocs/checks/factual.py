@@ -43,7 +43,8 @@ def cited_entity_ids(plan: dict) -> set[str]:
 
 def digits_of(lines) -> set[str]:
     """The digit groups in ``lines``, in the form the number check compares against."""
-    return set(re.sub(r"\D", " ", " ".join(lines)).split())
+    text = re.sub(r"(?<=\d),(?=\d{3}\b)", "", " ".join(lines))
+    return set(re.sub(r"\D", " ", text).split())
 
 
 def check(document_text: str, plan: dict, profile: dict, allowlist=(), template_lines=()) -> dict:

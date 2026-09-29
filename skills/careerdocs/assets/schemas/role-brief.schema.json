@@ -33,6 +33,7 @@
       "additionalProperties": false,
       "properties": {
         "positioning": { "enum": ["executive", "builder"] },
+        "baseline": { "enum": ["executive", "builder", "none"] },
         "lead_evidence": { "type": "array", "items": { "type": "string" } },
         "compress": { "type": "array", "items": { "type": "string" } },
         "resume_pages": { "type": "integer", "minimum": 1 },

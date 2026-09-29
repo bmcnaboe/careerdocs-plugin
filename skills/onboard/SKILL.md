@@ -1,10 +1,10 @@
 ---
 name: onboard
-description: Set up careerdocs and build the applicant's one authoritative profile from their existing materials (résumés, a LinkedIn data export, notes), then teach them how the plugin works. Use when the applicant wants to set up, get started, onboard, import a résumé or LinkedIn export, or revisit their voice or identity profile. Idempotent and resumable, so it checks what exists and does only what is missing.
+description: Set up careerdocs and build the applicant's one authoritative profile from their existing materials (résumés, a LinkedIn data export, notes) and a baseline résumé per positioning, then teach them how the plugin works. Use when the applicant wants to set up, get started, onboard, import a résumé or LinkedIn export, or revisit their voice or identity profile. Idempotent and resumable, so it checks what exists and does only what is missing.
 license: MIT
 compatibility: "Python 3.10+; uv recommended. Requires the careerdocs core skill."
 metadata:
-  version: "0.6.0"
+  version: "0.7.0"
   author: "careerdocs-plugin contributors"
 ---
 
@@ -23,8 +23,9 @@ Run `doctor --json` and branch on it:
   voice, and documents. Ask which folder (default `~/career-workspace`) and run
   `config workspace <dir>`. In Cowork use the attached folder without asking.
 - **The profile already has entities**: say what it holds (roles, date range, counts,
-  what is set up), give the tour (section 5), then offer: new sources, one new fact (the
-  `update` skill), missing setup, a revisit of career focus and interests, or an
+  what is set up), give the tour (section 6), then offer: new sources, one new fact (the
+  `update` skill), missing setup (templates, voice, identity, a baseline), a revisit of
+  career focus and interests, or an
   application (the `apply` skill).
 - **Pending onboard state** (`state resume onboard <subject>`): continue from it.
 - **No git repository** (`history: archive`): offer `git init` in the workspace, never a
@@ -45,8 +46,8 @@ At least one résumé; everything else is optional.
 - **Notes**: reviews, brag documents, write-ups, a bio.
 - **Writing samples** for the voice profile; not imported as facts.
 
-Confirm the list with paths before importing. Never re-import a file whose sha256 is
-already in `sources.jsonl`.
+Confirm the list with paths before importing. A file whose sha256 is already in
+`sources.jsonl` keeps its source id; importing it again only re-reads its text.
 
 ## 3. Build the profile
 
@@ -55,7 +56,10 @@ already in `sources.jsonl`.
 2. Write `candidates.json` from the text. Type every candidate; an experience that is
    advising, a board seat, or volunteer work carries `kind`; a skill carries a
    `category`; name skills the way postings do (the literal tool, method, and model
-   names). Each candidate cites its `source_id` with an `excerpt`. Never invent a fact.
+   names). Extract every fact a source states: each role's location, its dates at the
+   precision given, the organization's descriptor and scale markers, every bullet,
+   advising roles with `kind`, and interests. Each candidate cites its `source_id` with
+   an `excerpt`. Never invent a fact.
    When sources disagree, include both; the merge records the conflict.
 3. `profile diff candidates.json --flow onboard --subject <name>` merges, applies
    precedence (applicant statement, then verified import, then newest import), and
@@ -90,11 +94,22 @@ Whatever `doctor` reports missing, once the profile exists:
 Close with `commit -m "feat: onboard the profile" --path careerdocs.json --path templates
 --path voice --path identity --path sources` (a no-op without git).
 
-## 5. The tour
+## 5. Baselines
+
+Once the profile, templates, and voice exist, and for any positioning still missing under
+`baselines/`: ask which positionings they want (builder leads with hands-on delivery,
+executive with leadership and scope) and whether one of their own résumés should be the
+model. With a model, match its content, order, and wording wherever the profile supports
+it, and propose an `update` for any fact it states that the profile lacks. Build each
+through the `apply` skill's section 8; the approved baseline is the standard every
+tailored résumé for that positioning starts from.
+
+## 6. The tour
 
 End every run, first or returning, by explaining in your own words, adapted to what they
 have: one profile with a source behind every fact; nothing changes without a diff they
-approve; nothing leaves their machine; how to get more material in; and the flows in this
+approve; nothing leaves their machine; how to get more material in; each positioning's
+baseline résumé as the standard tailored résumés start from; and the flows in this
 environment. `apply` takes a posting and produces the résumé, the letter, or both;
 `update` records a new fact or a correction; `onboard` again revisits focus and
 interests; "run careerdocs doctor" shows the setup at any time. Then offer to start

@@ -119,7 +119,7 @@ def build_resume_b_pdf(path: Path) -> None:
 RESUME_TEMPLATE_JSON = {
     "name": "example-resume",
     "kind": "resume",
-    "version": "2",
+    "version": "3",
     "page_budget": 2,
     "units_per_page": 22,
     "sections": [
@@ -138,7 +138,7 @@ RESUME_TEMPLATE_JSON = {
         {"id": "interests", "title": "Interests", "placeholder": "interests", "join": ", ", "entity_types": ["interest"], "max_items": 8, "required": False},
     ],
     "allowlist": ["Summary", "Experience", "Projects", "Education", "Certifications", "Patents", "Publications", "Awards", "Affiliations", "Volunteer Experience", "Technical Focus", "Interests"],
-    "style_notes": "Two-page budget; verb-first bullets; no buzzwords. Single column, Calibri, 0.7-inch margins: centered name, ruled capitalized headings, bold role with the organization and location muted and the dates on a right tab, an italic descriptor under the role, projects as italic sub-heads under their role, bulleted achievements, bold-label skill lines, degrees and awards with the year on the right tab. Every section is optional except the header and Experience; the approach's `sections` picks the ones a role uses. Role descriptors go on the summary line, never in the role line.",
+    "style_notes": "Two-page budget; verb-first bullets; no buzzwords. Single column, Calibri, 0.7-inch margins: centered name, ruled capitalized headings, bold role, the organization in body text, the location muted, and bold dates on a right tab, an italic descriptor under the role, projects as italic sub-heads under their role, bulleted achievements (a bullet written `Name:<tab>text` sets the name in bold), bold-label skill lines, degrees and awards with a bold year on the right tab. Every section is optional except the header and Experience; the approach's `sections` picks the ones a role uses. Role descriptors go on the summary line, never in the role line.",
 }
 
 COVER_LETTER_TEMPLATE_JSON = {
@@ -188,6 +188,33 @@ def _base_document():
     bullets.font.name, bullets.font.size = "Calibri", Pt(_BODY_PT)
     bullets.font.color.rgb = RGBColor.from_string(_INK)
     return document
+
+
+def _bullet_numbering(document) -> int:
+    """A text-font bullet with the text at 0.21 inch and the bullet 0.14 inch before it.
+
+    Bullet paragraphs cite this numbering directly rather than through a list style:
+    LibreOffice follows a style's numbering, but Word's and Apple's renderers can drop its
+    indent. Returns the numbering id."""
+    from docx.oxml import parse_xml
+
+    numbering = document.part.numbering_part.element
+    w = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"'
+    abstract_id = 1 + max(int(a.get(_w("abstractNumId"))) for a in numbering.findall(_w("abstractNum")))
+    num_id = 1 + max(int(n.get(_w("numId"))) for n in numbering.findall(_w("num")))
+    abstract = parse_xml(
+        f'<w:abstractNum {w} w:abstractNumId="{abstract_id}"><w:multiLevelType w:val="singleLevel"/>'
+        '<w:lvl w:ilvl="0"><w:start w:val="1"/><w:numFmt w:val="bullet"/><w:lvlText w:val="\u2022"/>'
+        '<w:lvlJc w:val="left"/><w:pPr><w:ind w:left="300" w:hanging="200"/></w:pPr></w:lvl></w:abstractNum>')
+    numbering.findall(_w("abstractNum"))[-1].addnext(abstract)  # every abstractNum precedes every num
+    numbering.append(parse_xml(f'<w:num {w} w:numId="{num_id}"><w:abstractNumId w:val="{abstract_id}"/></w:num>'))
+    return num_id
+
+
+def _w(tag: str) -> str:
+    from docx.oxml.ns import qn
+
+    return qn(f"w:{tag}")
 
 
 def _run(paragraph, text, *, size=None, bold=None, italic=None, color=None, caps=False):
@@ -273,31 +300,58 @@ def _finish(document, directory: Path, manifest: dict) -> None:
     (directory / "template.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
 
 
-def _dated_line(document, *, before: float, after: float, lead_color=_INK, rest_color=_INK,
-                tail_color=_INK, keep_next=False):
-    """``lead`` bold, ``rest`` after it, ``tail`` on the right tab stop."""
+def _dated_line(document, *, before: float, after: float, keep_next=False, place=False):
+    """``lead`` bold, ``rest`` after it, a bold ``tail`` on the right tab stop. With
+    ``place``, the rest is the organization in body text and the location muted."""
     paragraph = _paragraph(document, before=before, after=after, keep_next=keep_next, right_tab=True)
-    _run(paragraph, "{{ unit.lead }}", bold=True, color=lead_color)
-    _run(paragraph, "{{ unit.rest }}", color=rest_color)
+    _run(paragraph, "{{ unit.lead }}", bold=True, color=_INK)
+    if place:
+        _run(paragraph, "{{ unit.org }}", color=_INK)
+        _run(paragraph, "{{ unit.place }}", color=_MUTED)
+    else:
+        _run(paragraph, "{{ unit.rest }}", color=_INK)
     paragraph.add_run().add_tab()
-    _run(paragraph, "{{ unit.tail }}", color=tail_color)
+    _run(paragraph, "{{ unit.tail }}", bold=True, color=_INK)
     return paragraph
+
+
+def _bullet(document, num_id: int, *, after: float) -> None:
+    """A bullet; one written ``Name:<tab>text`` sets the name in bold."""
+    paragraph = _paragraph(document, style="List Paragraph", before=0, after=after, line_spacing=1.08)
+    numbering = paragraph._p.get_or_add_pPr().get_or_add_numPr()
+    numbering.get_or_add_ilvl().val = 0
+    numbering.get_or_add_numId().val = num_id
+    _run(paragraph, "{%r if unit.tail %}")
+    _run(paragraph, "{{ unit.head }}", bold=True)
+    _run(paragraph, " {{ unit.tail }}")
+    _run(paragraph, "{%r else %}")
+    _run(paragraph, "{{ unit.text }}")
+    _run(paragraph, "{%r endif %}")
 
 
 def build_resume_template(directory: Path) -> None:
     """Single column: centered name and contact line, ruled uppercase section headings, a
-    bold role with the organization muted and the dates on a right tab stop, the role's
-    summary beneath in italics, projects as italic sub-heads under their role, bulleted
-    achievements, bold-label skill lines, and dated lines for degrees, awards, and the like."""
+    bold role, the organization in body text with the location muted, and bold dates on a
+    right tab stop, the role's summary beneath in italics, projects as italic sub-heads under
+    their role, bulleted achievements with a wider gap after the last of a group, bold-label
+    skill lines, and dated lines for degrees, awards, and the like."""
     document = _base_document()
+    num_id = _bullet_numbering(document)
+    # A plain list style: the numbering places the bullet, and the gap between bullets holds.
+    list_style = document.styles["List Paragraph"].element.pPr
+    for tag in ("ind", "contextualSpacing"):
+        for element in list_style.findall(_w(tag)):
+            list_style.remove(element)
     _header(document, after=3)
     _tag(document, "{%p for section in sections %}")
     _tag(document, "{%p if section.units %}")
     _rule_below(_paragraph(document, "{{ section.title }}", size=_BODY_PT, bold=True, before=10, after=3.5,
                            caps=True, keep_next=True))
     _tag(document, "{%p for unit in section.units %}")
-    _tag(document, "{%p if unit.kind == 'bullet' %}")
-    _paragraph(document, "{{ unit.text }}", style="List Bullet", after=2, line_spacing=1.08)
+    _tag(document, "{%p if unit.kind == 'bullet' and loop.nextitem and loop.nextitem.kind == 'bullet' %}")
+    _bullet(document, num_id, after=2)
+    _tag(document, "{%p elif unit.kind == 'bullet' %}")
+    _bullet(document, num_id, after=3.5)
     _tag(document, "{%p elif unit.kind == 'subhead' %}")
     subhead = _paragraph(document, before=3.5, after=1, keep_next=True, indent=0.1)
     _run(subhead, "{{ unit.lead }}", bold=True, italic=True, color=_INK)
@@ -307,14 +361,14 @@ def build_resume_template(directory: Path) -> None:
     _run(labeled, "{{ unit.head }}", bold=True)
     _run(labeled, "  {{ unit.tail }}")
     _tag(document, "{%p elif unit.kind == 'field' and unit.tail and section.id == 'experience' %}")
-    _dated_line(document, before=5.5, after=0, rest_color=_MUTED, tail_color=_MUTED, keep_next=True)
+    _dated_line(document, before=5.5, after=0, keep_next=True, place=True)
     _tag(document, "{%p if unit.note %}")
-    _paragraph(document, "{{ unit.note }}", size=_SMALL_PT, italic=True, color=_MUTED, after=1)
+    _paragraph(document, "{{ unit.note }}", size=_SMALL_PT, italic=True, color=_MUTED, after=1, keep_next=True)
     _tag(document, "{%p endif %}")
     _tag(document, "{%p elif unit.kind == 'field' and unit.tail %}")
-    _dated_line(document, before=2, after=0, tail_color=_MUTED, keep_next=True)
+    _dated_line(document, before=2, after=0, keep_next=True)
     _tag(document, "{%p if unit.note %}")
-    _paragraph(document, "{{ unit.note }}", size=_SMALL_PT, italic=True, color=_MUTED, after=1)
+    _paragraph(document, "{{ unit.note }}", size=_SMALL_PT, italic=True, color=_MUTED, after=1, keep_next=True)
     _tag(document, "{%p endif %}")
     _tag(document, "{%p else %}")
     _paragraph(document, "{{ unit.text }}", after=3.5)

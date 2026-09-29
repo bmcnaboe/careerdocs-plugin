@@ -148,3 +148,57 @@ def test_budget_cuts_reported(tmp_path):
     assert out["cuts"] >= 1
     plan = json.loads((app / "plan.resume.json").read_text())
     assert plan["cuts"]
+
+
+def test_a_tailored_plan_starts_from_the_positioning_baseline(tmp_path):
+    ws, app = build_workspace(tmp_path)
+    run(["plan", "--baseline", "--positioning", "builder", "--workspace", ws])
+    baseline = json.loads((tmp_path / "baselines" / "builder" / "plan.resume.json").read_text())
+    baseline["units"][1]["text"] = baseline["units"][1]["text"] + " (as the baseline wrote it)"
+    (tmp_path / "baselines" / "builder" / "plan.resume.json").write_text(json.dumps(baseline))
+    run(["brief", str(app / "job-description.md"), "--role-slug", SLUG, "--workspace", ws])
+    run(["map", "--role-slug", SLUG, "--workspace", ws])
+
+    out = run_json(["plan", "--kind", "resume", "--role-slug", SLUG, "--workspace", ws, "--json"])
+    tailored = json.loads((app / "plan.resume.json").read_text())
+    assert out["baseline"] == "baselines/builder/plan.resume.json"
+    assert tailored["units"][1]["text"].endswith("(as the baseline wrote it)")
+    assert set(tailored["tailoring"]) == {"add", "compress"}
+
+    # --fresh selects afresh and records no baseline.
+    run(["plan", "--kind", "resume", "--role-slug", SLUG, "--fresh", "--workspace", ws])
+    assert "baseline" not in json.loads((app / "plan.resume.json").read_text())
+
+
+def test_the_approach_names_the_baseline_to_start_from(tmp_path):
+    ws, app = build_workspace(tmp_path)
+    run(["plan", "--baseline", "--positioning", "builder", "--workspace", ws])
+    run(["brief", str(app / "job-description.md"), "--role-slug", SLUG, "--workspace", ws])
+    run(["map", "--role-slug", SLUG, "--workspace", ws])
+    brief_path = app / "brief.json"
+
+    def plan_with(baseline):
+        brief = json.loads(brief_path.read_text())
+        brief["approach"] = {**brief.get("approach", {}), "baseline": baseline}
+        brief_path.write_text(json.dumps(brief))
+        return run(["plan", "--kind", "resume", "--role-slug", SLUG, "--workspace", ws, "--json"])
+
+    rc, out = plan_with("builder")
+    assert rc == 0 and json.loads(out)["baseline"] == "baselines/builder/plan.resume.json"
+    assert json.loads(out)["positioning"] == "builder"
+    rc, out = plan_with("none")
+    assert rc == 0 and json.loads(out)["baseline"] is None
+    rc, _ = plan_with("executive")  # chosen, but never built
+    assert rc == 2
+
+
+def test_a_baseline_plan_is_replaced_only_on_request(tmp_path):
+    ws, _ = build_workspace(tmp_path)
+    assert run(["plan", "--baseline", "--positioning", "builder", "--workspace", ws])[0] == 0
+    baseline = tmp_path / "baselines" / "builder" / "plan.resume.json"
+    baseline.write_text(baseline.read_text().replace("Globex", "Globex (edited)"))
+    edited = baseline.read_text()
+    assert run(["plan", "--baseline", "--positioning", "builder", "--workspace", ws])[0] == 2
+    assert baseline.read_text() == edited
+    assert run(["plan", "--baseline", "--positioning", "builder", "--replace", "--workspace", ws])[0] == 0
+    assert baseline.read_text() != edited

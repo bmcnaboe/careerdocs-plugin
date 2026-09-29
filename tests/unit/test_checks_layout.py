@@ -55,6 +55,15 @@ def test_layout_renders_page_pngs(tmp_path):
     assert pngs[0].stat().st_size > 0
 
 
+def test_layout_replaces_the_previous_page_renders(tmp_path):
+    out_dir = tmp_path / "layout"
+    out_dir.mkdir()
+    (out_dir / "example-resume-p3.png").write_bytes(b"stale")  # an earlier, longer render
+    (out_dir / "example-resume-proposal-p1.png").write_bytes(b"other")  # another document
+    layout.check(PDF, out_dir=out_dir, name="example-resume")
+    assert sorted(p.name for p in out_dir.iterdir()) == ["example-resume-p1.png", "example-resume-proposal-p1.png"]
+
+
 def test_layout_flags_margin_violation():
     result = layout.check(PDF, margin=300)  # absurd margin the content cannot satisfy
     assert result["status"] == "fail"

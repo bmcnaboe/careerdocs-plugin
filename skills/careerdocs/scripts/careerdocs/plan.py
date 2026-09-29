@@ -146,7 +146,7 @@ def _entity_text(entity: dict, section: dict | None = None) -> str:
     if etype == "contact":
         details = [entity.get("location"), entity.get("phone"), entity.get("email")]
         details += [display_link(link["url"]) for link in entity.get("links") or [] if link.get("url")]
-        line = " · ".join(p for p in details if p)
+        line = "  ·  ".join(p for p in details if p)  # a wide separator keeps the fields apart
         name = entity.get("name", "")
         return f"{name}\n{line}" if line else name
     return entity.get("name") or entity.get("title") or ""
@@ -260,8 +260,10 @@ def _with_parents(pool: list[dict], types: set, kinds: set, by_id: dict, claimed
     a project with no role among the section's roles is left for a projects section, and
     an achievement whose parent belongs elsewhere (another kind of role, a claimed
     entity) goes with it. Parents that hold a kept achievement come first, then the
-    achievements, then any cited parent without one, each group in emphasis order, so a
-    ``max_items`` cap trims evidence before structure."""
+    achievements, then any cited parent without one, so a ``max_items`` cap trims evidence
+    before structure. Parents and the rest go in emphasis order; achievements go by
+    coverage, each parent's strongest first, then each one's second, so a cap keeps a
+    bullet under every role before a second under any."""
     def fits(entity: dict) -> bool:
         return (entity["type"] in types and is_visible(entity) and entity["id"] not in claimed
                 and (entity["type"] != "experience" or not kinds or experience_kind(entity) in kinds))
@@ -302,11 +304,19 @@ def _with_parents(pool: list[dict], types: set, kinds: set, by_id: dict, claimed
     def by_emphasis(entities):
         return sorted(entities, key=lambda e: _EMPHASIS_WEIGHT[emphasis_for(e, positioning)])
 
+    def by_coverage(entities):
+        depth: dict = defaultdict(int)
+        ranked = []
+        for entity in by_emphasis(entities):
+            ranked.append((depth[entity.get("parent_id")], entity))
+            depth[entity.get("parent_id")] += 1
+        return [entity for _, entity in sorted(ranked, key=lambda pair: pair[0])]
+
     orgs = {_norm(e.get("organization")) for e in pool if e["type"] == "experience"} | {
         _norm(e.get("organization")) for e in parents.values() if e["type"] == "experience"}
     others = [e for e in pool if e["type"] in ("experience", "project") and e["id"] not in parents
               and (e["type"] != "project" or "experience" not in types or _norm(e.get("organization")) in orgs)]
-    return by_emphasis(parents.values()) + by_emphasis(achievements) + by_emphasis(others)
+    return by_emphasis(parents.values()) + by_coverage(achievements) + by_emphasis(others)
 
 
 def _unit(entity: dict, section: dict, positioning: str) -> dict:
@@ -461,9 +471,18 @@ def generate_plan(mapping: list[dict], profile: dict, template: dict, positionin
             for u in units if by_id.get(u["source_ids"][0], {}).get("type") == "achievement"
         )
 
+    def bullets_under(unit: dict) -> int:
+        """How many achievement units share this achievement's parent; 0 for any other unit."""
+        entity = by_id.get(unit["source_ids"][0], {})
+        if entity.get("type") != "achievement":
+            return 0
+        return sum(1 for u in units if by_id.get(u["source_ids"][0], {}).get("parent_id") == entity.get("parent_id"))
+
     while len(units) > cap:
         candidates = [i for i in range(len(units)) if not protected(units[i])] or list(range(len(units)))
-        idx = max(candidates, key=lambda i: (_EMPHASIS_WEIGHT[units[i]["emphasis"]], i))
+        # A role's only bullet goes last: cut the others by emphasis, the deepest role first.
+        idx = max(candidates, key=lambda i: (bullets_under(units[i]) != 1, _EMPHASIS_WEIGHT[units[i]["emphasis"]],
+                                             bullets_under(units[i]), i))
         removed = units.pop(idx)
         cuts.append({"entity_id": removed["source_ids"][0], "reason": f"exceeds page budget of {page_budget}"})
 
@@ -473,6 +492,9 @@ def generate_plan(mapping: list[dict], profile: dict, template: dict, positionin
         types = set(section.get("entity_types", []))
         if not is_letter and "achievement" in types and types & {"experience", "project"}:
             section_units = _arrange(section_units, by_id)
+        elif types == {"education"}:  # the most recent degree first
+            section_units.sort(key=lambda u: max((by_id.get(i, {}).get("end_date") or by_id.get(i, {}).get("start_date")
+                                                  or "" for i in u["source_ids"]), default=""), reverse=True)
         ordered.extend(section_units)
     for number, unit in enumerate(ordered, start=1):
         unit["unit_id"] = f"u{number}"
@@ -487,6 +509,64 @@ def generate_plan(mapping: list[dict], profile: dict, template: dict, positionin
         "page_budget": page_budget,
         "units": ordered,
         "cuts": cuts,
+    }
+
+
+def tailor_from_baseline(baseline: dict, mapping: list[dict], profile: dict, template: dict, *,
+                         source: str, brief=None, sections=None, page_budget: int | None = None,
+                         voice=None, identity=None, alignment=None) -> dict:
+    """A tailored résumé plan that starts as the positioning's baseline.
+
+    The baseline's units carry over verbatim, in order, so a tailored résumé keeps the
+    baseline's structure and wording; the drafting step changes only what the role needs.
+    ``tailoring.add`` names mapped evidence no baseline unit cites (must requirements
+    first); ``tailoring.compress`` names bullets that serve no requirement, oldest first.
+    A unit citing an entity that is no longer visible is dropped as a cut."""
+    by_id = {e["id"]: e for e in profile["entities"]}
+    contact_ids = {s["id"] for s in template["sections"] if _is_contact_section(s)}
+    wanted = set(sections) | contact_ids if sections else None
+    units: list[dict] = []
+    cuts: list[dict] = []
+    for unit in baseline["units"]:
+        if wanted is not None and unit["section_id"] not in wanted:
+            continue
+        hidden = [i for i in unit["source_ids"] if not (i in by_id and is_visible(by_id[i]))]
+        if hidden:
+            cuts.extend({"entity_id": i, "reason": "no longer visible in the profile"} for i in hidden)
+            continue
+        units.append(dict(unit, source_ids=list(unit["source_ids"])))
+
+    kinds = {r["id"]: r.get("kind", "nice") for r in (brief or {}).get("requirements", [])}
+    placed = {i for unit in units for i in unit["source_ids"]}
+    used: set[str] = set()
+    add: list[dict] = []
+    for entry in mapping:
+        if entry["classification"] == "gap":
+            continue
+        for evidence in entry["evidence"]:
+            used.add(evidence["entity_id"])
+            entity = by_id.get(evidence["entity_id"])
+            if entity and is_visible(entity) and entity["id"] not in placed | {a["entity_id"] for a in add}:
+                add.append({"entity_id": entity["id"], "requirement_id": entry["requirement_id"],
+                            "kind": kinds.get(entry["requirement_id"], "nice")})
+    add.sort(key=lambda item: item["kind"] != "must")
+    compress = [
+        {"unit_id": unit["unit_id"], "reason": "serves no requirement"}
+        for unit in reversed(units)
+        if unit["kind"] == "bullet" and not used & set(unit["source_ids"])
+    ]
+    return {
+        "positioning": baseline["positioning"],
+        "kind": "resume",
+        "template": {"name": template.get("name"), "version": template.get("version")},
+        "voice": voice,
+        "identity": identity,
+        "alignment": alignment,
+        "page_budget": page_budget or baseline.get("page_budget") or template.get("page_budget", 2),
+        "units": units,
+        "cuts": cuts,
+        "baseline": source,
+        "tailoring": {"add": add, "compress": compress},
     }
 
 
@@ -510,6 +590,10 @@ def register(subparsers, common: argparse.ArgumentParser) -> None:
     parser.add_argument("--kind", choices=["resume", "cover_letter"], default="resume")
     parser.add_argument("--role-slug")
     parser.add_argument("--baseline", action="store_true", help="role-less baseline from all visible evidence")
+    parser.add_argument("--replace", action="store_true",
+                        help="with --baseline, overwrite the positioning's existing baseline plan")
+    parser.add_argument("--fresh", action="store_true",
+                        help="select a tailored résumé's evidence afresh instead of starting from the baseline")
     parser.add_argument("--page-budget", type=int, metavar="PAGES",
                         help="pages for this plan (default: the brief's approach, then the configured default)")
     parser.add_argument("--sections", metavar="IDS",
@@ -558,6 +642,10 @@ def cmd_plan(args) -> int:
                              voice=voice, identity=identity, baseline=True,
                              page_budget=page_budget, sections=_section_ids(args.sections))
         out_dir = Path(args.workspace) / cfg["outputs"]["baselines_dir"] / positioning
+        # A baseline is the standard tailored résumés start from; never replace it by accident.
+        if (out_dir / f"plan.{args.kind}.json").is_file() and not args.replace:
+            raise CareerDocsError(f"{out_dir / f'plan.{args.kind}.json'} already exists and tailored résumés "
+                                  "start from it; pass --replace to rebuild it", code="USAGE")
     else:
         slug = _resolve_slug(args, cfg)
         app_dir = Path(args.workspace) / cfg["outputs"]["applications_dir"] / slug
@@ -566,15 +654,28 @@ def cmd_plan(args) -> int:
         brief = json.loads(brief_path.read_text(encoding="utf-8")) if brief_path.is_file() else None
         # The agreed approach on the brief supplies the defaults; flags override it.
         approach = (brief or {}).get("approach") or {}
-        positioning = args.positioning or approach.get("positioning") or cfg["workflow"]["positioning_default"]
+        chosen = approach.get("baseline")
+        positioning = (args.positioning or (chosen if chosen not in (None, "none") else None)
+                       or approach.get("positioning") or cfg["workflow"]["positioning_default"])
         page_budget = args.page_budget or (
             approach.get("resume_pages") or cfg["workflow"]["page_budget"]["resume"]
             if args.kind == "resume" else None
         )
         sections = _section_ids(args.sections) or (approach.get("sections") if args.kind == "resume" else None)
-        plan = generate_plan(mapping, profile, template, positioning,
-                             voice=voice, identity=identity, alignment=(brief or {}).get("alignment"),
-                             brief=brief, page_budget=page_budget, sections=sections)
+        # The approach names the baseline to start from; without one, the positioning's is used.
+        baseline_path = Path(args.workspace) / cfg["outputs"]["baselines_dir"] / positioning / "plan.resume.json"
+        if args.kind == "resume" and chosen not in (None, "none") and not args.fresh and not baseline_path.is_file():
+            raise CareerDocsError(f"the approach starts from the {positioning} baseline, but {baseline_path} does not exist; "
+                                  f"build it with plan --baseline --positioning {positioning}", code="USAGE")
+        if args.kind == "resume" and baseline_path.is_file() and not args.fresh and chosen != "none":
+            plan = tailor_from_baseline(
+                json.loads(baseline_path.read_text(encoding="utf-8")), mapping, profile, template,
+                source=str(baseline_path.relative_to(Path(args.workspace))), brief=brief, sections=sections,
+                page_budget=page_budget, voice=voice, identity=identity, alignment=(brief or {}).get("alignment"))
+        else:
+            plan = generate_plan(mapping, profile, template, positioning,
+                                 voice=voice, identity=identity, alignment=(brief or {}).get("alignment"),
+                                 brief=brief, page_budget=page_budget, sections=sections)
         out_dir = app_dir
 
     errors = validate_plan(plan, template)
@@ -586,8 +687,17 @@ def cmd_plan(args) -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / f"plan.{args.kind}.json"
     out_path.write_text(json.dumps(plan, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    tailoring = plan.get("tailoring")
     if args.json:
-        print(json.dumps({"plan": str(out_path), "units": len(plan["units"]), "cuts": len(plan["cuts"]), "positioning": positioning}))
+        print(json.dumps({"plan": str(out_path), "units": len(plan["units"]), "cuts": len(plan["cuts"]),
+                          "positioning": positioning, "baseline": plan.get("baseline"),
+                          "add": len(tailoring["add"]) if tailoring else None,
+                          "compress": len(tailoring["compress"]) if tailoring else None}))
     else:
         print(f"wrote {out_path} — {len(plan['units'])} unit(s), {len(plan['cuts'])} cut(s), positioning {positioning}")
+        if tailoring:
+            print(f"from baseline {plan['baseline']}: {len(tailoring['add'])} to add, "
+                  f"{len(tailoring['compress'])} to compress")
+        elif args.kind == "resume" and not args.baseline and not args.fresh and chosen != "none":
+            print(f"no {positioning} baseline yet; build one first so tailored résumés share its structure")
     return 0

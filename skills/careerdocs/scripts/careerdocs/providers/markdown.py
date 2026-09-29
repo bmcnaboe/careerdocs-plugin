@@ -167,6 +167,9 @@ class MarkdownProvider(Provider):
         self._by_id = {e["id"]: e for e in profile["entities"]}
 
         index = {field: profile[field] for field in INDEX_FIELDS}
+        # The profile is now in this plugin's schema, so an older plugin refuses it by
+        # version instead of misreading what it cannot validate.
+        index["schema_version"] = schema.profile_schema_version()
         _write_frontmatter_file(self.index_file, index, body="# Career profile")
 
         desired = {f"{e['type']}/{e['id']}.md": e for e in profile["entities"]}

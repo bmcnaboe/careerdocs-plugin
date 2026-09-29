@@ -179,7 +179,7 @@ RESUME_SECTION = {"id": "experience", "entity_types": ["experience", "achievemen
 def test_contact_unit_is_name_then_details():
     contact = entity("contact", name="A B", email="a@example.com", phone="(555) 555-0100",
                      location="Metropolis, USA", links=[{"label": "GitHub", "url": "https://github.com/ab/"}])
-    assert plan._entity_text(contact) == "A B\nMetropolis, USA · (555) 555-0100 · a@example.com · github.com/ab"
+    assert plan._entity_text(contact) == "A B\nMetropolis, USA  ·  (555) 555-0100  ·  a@example.com  ·  github.com/ab"
     assert plan.display_link("https://www.linkedin.com/in/handle/") == "linkedin.com/in/handle"
 
 
@@ -188,6 +188,13 @@ def test_experience_unit_separates_role_and_dates_with_a_tab():
     assert plan._entity_text(exp) == "Eng — Acme\tMar 2018 – Jun 2021"
     current = entity("experience", organization="Acme", title="Eng", start_date="2022", location="Metropolis, USA")
     assert plan._entity_text(current) == "Eng — Acme, Metropolis, USA\t2022 – present"
+
+
+def test_dates_render_at_the_precision_the_profile_holds():
+    past = entity("experience", organization="Acme", title="Eng", start_date="2014", end_date="2021")
+    current = entity("experience", organization="Globex", title="Lead", start_date="2025-01")
+    assert plan._entity_text(past).endswith("\t2014 – 2021")
+    assert plan._entity_text(current).endswith("\tJan 2025 – present")
 
 
 def test_experience_section_is_reverse_chronological_with_achievements_under_their_role():
@@ -243,7 +250,7 @@ def test_dated_units_put_the_lead_before_a_dash_and_the_dates_after_a_tab():
                  start_date="2011-09", end_date="2015-05")
     assert plan._entity_text(edu) == "State University — B.S., Computer Science\t2015"
     assert plan._entity_text(entity("education", institution="Night School", start_date="2020-01")) == "Night School\t2020 – present"
-    assert plan._entity_text(entity("award", title="Founders' Award", issuer="Adobe", date="2004-06")) == "Founders' Award — Adobe\t2004"
+    assert plan._entity_text(entity("award", title="Innovator Award", issuer="Initech", date="2004-06")) == "Innovator Award — Initech\t2004"
     assert plan._entity_text(entity("credential", name="CKA", issuer="CNCF", issued_date="2019-06")) == "CKA — CNCF\t2019"
     assert plan._entity_text(entity("publication", title="Paper", venue="Journal", date="2020-01")) == "Paper — Journal\t2020"
     assert plan._entity_text(entity("patent", title="Widget", status="granted", grant_date="2025-06")) == "Widget\t2025"
@@ -376,3 +383,98 @@ def test_max_items_trims_evidence_before_structure():
     result = plan.generate_plan(map_all_direct(wins), profile_with([role, *wins]), template, "builder")
     kept = [u["source_ids"][0] for u in result["units"]]
     assert kept[0] == role["id"] and len(kept) == 3 and len(result["cuts"]) == 2
+
+
+def _deep_and_shallow_roles():
+    recent = entity("experience", organization="Globex", title="Lead", start_date="2020-01")
+    older = entity("experience", organization="Initech", title="Eng", start_date="2012-01")
+    deep = [entity("achievement", statement=f"Win {i}", parent_id=recent["id"], positioning=["builder"]) for i in range(3)]
+    only = entity("achievement", statement="Shipped the billing platform.", parent_id=older["id"])
+    return recent, older, deep, only
+
+
+def test_a_section_cap_keeps_a_bullet_under_every_role_before_a_second_under_any():
+    recent, older, deep, only = _deep_and_shallow_roles()
+    entities = [recent, older, *deep, only]
+    template = {"name": "t", "version": "1", "page_budget": 2, "sections": [
+        {"id": "experience", "entity_types": ["experience", "achievement"], "max_items": 4}]}
+    result = plan.generate_plan(map_all_direct([*deep, only]), profile_with(entities), template, "builder")
+    kept = {u["source_ids"][0] for u in result["units"]}
+    assert only["id"] in kept and deep[0]["id"] in kept
+    assert {c["entity_id"] for c in result["cuts"]} == {deep[1]["id"], deep[2]["id"]}
+
+
+def test_the_page_cap_cuts_the_deepest_role_before_another_role_s_only_bullet():
+    recent, older, deep, only = _deep_and_shallow_roles()
+    entities = [recent, older, *deep, only]
+    template = {"name": "t", "version": "1", "page_budget": 1, "units_per_page": 4, "sections": [
+        {"id": "experience", "entity_types": ["experience", "achievement"], "max_items": 20}]}
+    result = plan.generate_plan(map_all_direct([*deep, only]), profile_with(entities), template, "builder")
+    kept = [u["source_ids"][0] for u in result["units"]]
+    assert kept == [recent["id"], deep[0]["id"], older["id"], only["id"]]
+
+
+def test_education_lists_the_most_recent_degree_first():
+    degrees = [entity("education", institution=name, degree="B.S.", end_date=year)
+               for name, year in (("State", "1996"), ("Tech", "2024-05"), ("City", "2006"))]
+    template = {"name": "t", "version": "1", "page_budget": 2, "sections": [
+        {"id": "education", "entity_types": ["education"], "max_items": 5}]}
+    result = plan.generate_plan(map_all_direct(degrees), profile_with(degrees), template, "builder")
+    assert [u["text"].split(" — ")[0] for u in result["units"]] == ["Tech", "City", "State"]
+
+
+BASELINE_TEMPLATE = {"name": "t", "version": "1", "page_budget": 2, "sections": [
+    {"id": "header", "title": "", "placeholder": "contact", "entity_types": ["contact"], "max_items": 1},
+    {"id": "experience", "title": "Experience", "entity_types": ["experience", "achievement"], "max_items": 20},
+    {"id": "skills", "title": "Skills", "entity_types": ["skill"], "max_items": 10},
+]}
+
+
+def _baseline_world():
+    contact = entity("contact", name="A B")
+    role = entity("experience", organization="Acme", title="Eng", start_date="2020-01")
+    old_role = entity("experience", organization="Initech", title="Dev", start_date="2015-01")
+    shipped = entity("achievement", parent_id=role["id"], statement="Shipped the billing platform.")
+    legacy = entity("achievement", parent_id=old_role["id"], statement="Maintained the legacy reports.")
+    python = entity("skill", name="Python")
+    go = entity("skill", name="Go")
+    hidden = entity("achievement", parent_id=role["id"], statement="Private work.", visibility="private")
+    entities = [contact, role, old_role, shipped, legacy, python, go, hidden]
+    baseline = {"positioning": "builder", "kind": "resume", "template": {"name": "t", "version": "1"},
+                "page_budget": 2, "cuts": [], "units": [
+        {"unit_id": "u1", "section_id": "header", "kind": "field", "text": "A B", "source_ids": [contact["id"]], "emphasis": "medium"},
+        {"unit_id": "u2", "section_id": "experience", "kind": "field", "text": "Eng — Acme\t2020 – present", "source_ids": [role["id"]], "emphasis": "high"},
+        {"unit_id": "u3", "section_id": "experience", "kind": "bullet", "text": "Shipped billing; the baseline's wording.", "source_ids": [shipped["id"]], "emphasis": "high"},
+        {"unit_id": "u4", "section_id": "experience", "kind": "bullet", "text": "Kept private work.", "source_ids": [hidden["id"]], "emphasis": "low"},
+        {"unit_id": "u5", "section_id": "experience", "kind": "field", "text": "Dev — Initech\t2015 – 2019", "source_ids": [old_role["id"]], "emphasis": "medium"},
+        {"unit_id": "u6", "section_id": "experience", "kind": "bullet", "text": "Maintained legacy reports.", "source_ids": [legacy["id"]], "emphasis": "low"},
+        {"unit_id": "u7", "section_id": "skills", "kind": "labeled", "text": "Languages\tPython", "source_ids": [python["id"]], "emphasis": "medium"},
+    ]}
+    mapping = [
+        {"requirement_id": "req-1", "classification": "direct", "evidence": [{"entity_id": shipped["id"], "why": "x"}], "note": ""},
+        {"requirement_id": "req-2", "classification": "transferable", "evidence": [{"entity_id": go["id"], "why": "x"}], "note": ""},
+        {"requirement_id": "req-3", "classification": "gap", "evidence": [], "note": ""},
+    ]
+    brief = {"requirements": [{"id": "req-1", "kind": "nice"}, {"id": "req-2", "kind": "must"}, {"id": "req-3", "kind": "must"}]}
+    return entities, baseline, mapping, brief, {"go": go, "hidden": hidden}
+
+
+def test_a_tailored_plan_starts_as_the_baseline_and_names_what_to_add_and_compress():
+    entities, baseline, mapping, brief, named = _baseline_world()
+    result = plan.tailor_from_baseline(baseline, mapping, profile_with(entities), BASELINE_TEMPLATE,
+                                       source="baselines/builder/plan.resume.json", brief=brief)
+    # The baseline's units carry over verbatim and in order, minus one citing a private entity.
+    assert [u["unit_id"] for u in result["units"]] == ["u1", "u2", "u3", "u5", "u6", "u7"]
+    assert result["units"][2]["text"] == "Shipped billing; the baseline's wording."
+    assert result["cuts"] == [{"entity_id": named["hidden"]["id"], "reason": "no longer visible in the profile"}]
+    assert result["baseline"] == "baselines/builder/plan.resume.json"
+    assert result["tailoring"]["add"] == [{"entity_id": named["go"]["id"], "requirement_id": "req-2", "kind": "must"}]
+    assert result["tailoring"]["compress"] == [{"unit_id": "u6", "reason": "serves no requirement"}]
+    assert plan.validate_plan(result, BASELINE_TEMPLATE) == []
+
+
+def test_a_tailored_plan_keeps_only_the_approach_sections():
+    entities, baseline, mapping, brief, _ = _baseline_world()
+    result = plan.tailor_from_baseline(baseline, mapping, profile_with(entities), BASELINE_TEMPLATE,
+                                       source="b", brief=brief, sections=["experience"])
+    assert {u["section_id"] for u in result["units"]} == {"header", "experience"}
